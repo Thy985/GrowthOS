@@ -1,30 +1,44 @@
-import React, { useState, lazy, Suspense, useCallback, useMemo } from 'react';
+import React, { useState, lazy, Suspense, useCallback, useMemo, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import './App.css';
-import { GrowthProvider } from './contexts/GrowthContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import store from './store';
+import { loadData } from './store/slices/growthSlice';
+import { checkAuth, logout } from './store/slices/authSlice';
+import { toggleTheme } from './store/slices/themeSlice';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // 使用React.lazy实现代码分割
-const Dashboard = lazy(() => import('./components/Dashboard'));
-const GrowthTree = lazy(() => import('./components/GrowthTree'));
-const Analytics = lazy(() => import('./components/Analytics'));
-const RecordList = lazy(() => import('./components/RecordList'));
+const Dashboard = lazy(() => import('./pages/dashboard'));
+const GrowthTree = lazy(() => import('./pages/growth-tree'));
+const Analytics = lazy(() => import('./pages/analytics'));
+const RecordList = lazy(() => import('./pages/records'));
 const Tutorial = lazy(() => import('./components/Tutorial'));
-const Auth = lazy(() => import('./components/Auth'));
+const Auth = lazy(() => import('./pages/auth'));
 const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'));
 
 function Navbar() {
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector(state => state.auth);
+  const { isDarkMode } = useSelector(state => state.theme);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // 打开快捷键帮助的回调
   const handleOpenShortcuts = () => {
     const event = new CustomEvent('openShortcutsHelp');
     window.dispatchEvent(event);
+  };
+  
+  // 处理登出
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+  
+  // 处理主题切换
+  const handleToggleTheme = () => {
+    dispatch(toggleTheme());
   };
   
   return (
@@ -53,15 +67,15 @@ function Navbar() {
             ⌨️
           </button>
           <button 
-            onClick={toggleTheme} 
+            onClick={handleToggleTheme} 
             className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
             aria-label="切换主题"
           ></button>
-          {user && (
+          {isAuthenticated && (
             <div className="nav-user">
               <span className="nav-username">{user.username}</span>
               <button 
-                onClick={logout} 
+                onClick={handleLogout} 
                 className="nav-logout"
               >
                 登出
@@ -98,17 +112,17 @@ function Navbar() {
           <div className="nav-mobile-theme-toggle">
             <span>主题</span>
             <button 
-              onClick={toggleTheme} 
+              onClick={handleToggleTheme} 
               className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
               aria-label="切换主题"
             ></button>
           </div>
-          {user && (
+          {isAuthenticated && (
             <div className="nav-mobile-user">
               <span className="nav-username">{user.username}</span>
               <button 
                 onClick={() => {
-                  logout();
+                  handleLogout();
                   setIsMobileMenuOpen(false);
                 }} 
                 className="nav-logout"
@@ -124,13 +138,13 @@ function Navbar() {
 }
 
 function ProtectedRoute({ children }) {
-  const { user, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useSelector(state => state.auth);
   
   if (isLoading) {
     return <div className="loading">加载中...</div>;
   }
   
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/auth" />;
   }
   
@@ -139,28 +153,35 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <GrowthProvider>
-          <Router>
-            <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
-              <AppContent />
-            </div>
-          </Router>
-        </GrowthProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <Router>
+          <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
+            <AppContent />
+          </div>
+        </Router>
+      </Provider>
+    </ErrorBoundary>
   );
 }
 
 function AppContent() {
-  const { user } = useAuth();
+  const { isAuthenticated } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
+  // 初始化数据
+  useEffect(() => {
+    // 检查认证状态
+    dispatch(checkAuth());
+    // 加载数据
+    dispatch(loadData());
+  }, [dispatch]);
+
   // 监听自定义事件
-  React.useEffect(() => {
+  useEffect(() => {
     const handleOpenShortcuts = () => {
       setShowShortcutsHelp(true);
     };
@@ -173,19 +194,19 @@ function AppContent() {
   const shortcuts = useMemo(() => [
     {
       key: 'h',
-      callback: () => user && navigate('/'),
+      callback: () => isAuthenticated && navigate('/'),
     },
     {
       key: 'r',
-      callback: () => user && navigate('/records'),
+      callback: () => isAuthenticated && navigate('/records'),
     },
     {
       key: 't',
-      callback: () => user && navigate('/growth-tree'),
+      callback: () => isAuthenticated && navigate('/growth-tree'),
     },
     {
       key: 'a',
-      callback: () => user && navigate('/analytics'),
+      callback: () => isAuthenticated && navigate('/analytics'),
     },
     {
       key: '?',
@@ -194,7 +215,7 @@ function AppContent() {
     {
       key: 'k',
       ctrl: true,
-      callback: () => user && setShowSearch(!showSearch),
+      callback: () => isAuthenticated && setShowSearch(!showSearch),
     },
     {
       key: 'Escape',
@@ -203,28 +224,30 @@ function AppContent() {
         setShowSearch(false);
       },
     },
-  ], [user, navigate, showShortcutsHelp, showSearch]);
+  ], [isAuthenticated, navigate, showShortcutsHelp, showSearch]);
 
   useKeyboardShortcuts(shortcuts);
   
   return (
     <>
-      {user && <Navbar />}
+      {isAuthenticated && <Navbar />}
       <div className="main">
-        <Suspense fallback={<div className="loading-container"><div className="loading"></div><span>加载中...</span></div>}>
-          {user && <Tutorial />}
-          <KeyboardShortcutsHelp 
-            isOpen={showShortcutsHelp} 
-            onClose={() => setShowShortcutsHelp(false)} 
-          />
-          <Routes>
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/records" element={<ProtectedRoute><RecordList /></ProtectedRoute>} />
-            <Route path="/growth-tree" element={<ProtectedRoute><GrowthTree /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/auth" element={<Auth />} />
-          </Routes>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<div className="loading-container"><div className="loading"></div><span>加载中...</span></div>}>
+            {isAuthenticated && <Tutorial />}
+            <KeyboardShortcutsHelp 
+              isOpen={showShortcutsHelp} 
+              onClose={() => setShowShortcutsHelp(false)} 
+            />
+            <Routes>
+              <Route path="/" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/records" element={<ProtectedRoute><ErrorBoundary><RecordList /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/growth-tree" element={<ProtectedRoute><ErrorBoundary><GrowthTree /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><ErrorBoundary><Analytics /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </>
   );
