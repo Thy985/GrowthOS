@@ -2,12 +2,15 @@ import React from 'react';
 
 const GrowthTree = () => {
   return (
-    <div className="p-6">
+    <div>
       <h1 className="text-3xl font-bold mb-6">成长树</h1>
       <div className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">树管理</h2>
         <div className="h-96 bg-gray-100 rounded flex items-center justify-center">
-          <p>成长树可视化管理区域</p>
+          <div className="text-center">
+            <p className="text-gray-500">成长树可视化管理区域</p>
+            <p className="text-sm text-gray-400 mt-2">拖拽节点来调整树结构</p>
+          </div>
         </div>
         <div className="mt-6 flex space-x-4">
           <button className="bg-primary text-white p-2 rounded hover:bg-green-600">
@@ -19,6 +22,33 @@ const GrowthTree = () => {
           <button className="bg-red-500 text-white p-2 rounded hover:bg-red-600">
             删除节点
           </button>
+        </div>
+        <div className="mt-6">
+          <h3 className="font-medium mb-2">未分类节点（影子节点）</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              <span>#Python</span>
+              <div className="flex space-x-2">
+                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                  确认
+                </button>
+                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                  删除
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              <span>#阅读</span>
+              <div className="flex space-x-2">
+                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                  确认
+                </button>
+                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                  删除
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div className="mt-6 bg-white p-6 rounded-lg shadow">
