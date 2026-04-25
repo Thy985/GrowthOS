@@ -14,15 +14,15 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow w-full max-w-md">
+      <div className="card w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">{isLogin ? '登录' : '注册'}</h1>
         <form onSubmit={handleSubmit}>
           {!isLogin && (
-            <div className="mb-4">
-              <label className="block mb-2">姓名</label>
+            <div className="form-group">
+              <label className="form-label">姓名</label>
               <input 
                 type="text" 
-                className="w-full p-2 border rounded" 
+                className="input" 
                 placeholder="请输入姓名" 
                 value={name} 
                 onChange={(e) => setName(e.target.value)} 
@@ -30,29 +30,29 @@ const Auth = () => {
               />
             </div>
           )}
-          <div className="mb-4">
-            <label className="block mb-2">邮箱</label>
+          <div className="form-group">
+            <label className="form-label">邮箱</label>
             <input 
               type="email" 
-              className="w-full p-2 border rounded" 
+              className="input" 
               placeholder="请输入邮箱" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required
             />
           </div>
-          <div className="mb-6">
-            <label className="block mb-2">密码</label>
+          <div className="form-group">
+            <label className="form-label">密码</label>
             <input 
               type="password" 
-              className="w-full p-2 border rounded" 
+              className="input" 
               placeholder="请输入密码" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               required
             />
           </div>
-          <button type="submit" className="w-full bg-primary text-white p-2 rounded hover:bg-green-600 mb-4">
+          <button type="submit" className="btn btn-primary w-full mb-4">
             {isLogin ? '登录' : '注册'}
           </button>
           <div className="text-center">

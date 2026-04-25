@@ -3,8 +3,8 @@ import React from 'react';
 const GrowthTree = () => {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">成长树</h1>
-      <div className="bg-white p-6 rounded-lg shadow">
+      <h1 className="page-title">成长树</h1>
+      <div className="card">
         <h2 className="text-xl font-semibold mb-4">树管理</h2>
         <div className="h-96 bg-gray-100 rounded flex items-center justify-center">
           <div className="text-center">
@@ -31,77 +31,77 @@ const GrowthTree = () => {
           </div>
         </div>
         <div className="mt-6 flex space-x-4">
-          <button className="bg-primary text-white p-2 rounded hover:bg-green-600">
+          <button className="btn btn-primary">
             添加节点
           </button>
-          <button className="bg-secondary text-white p-2 rounded hover:bg-blue-600">
+          <button className="btn btn-secondary">
             编辑节点
           </button>
-          <button className="bg-red-500 text-white p-2 rounded hover:bg-red-600">
+          <button className="btn btn-danger">
             删除节点
           </button>
         </div>
         <div className="mt-6">
           <h3 className="font-medium mb-2">未分类节点（影子节点）</h3>
           <div className="space-y-2">
-            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+            <div className="flex items-center justify-between tree-node">
               <span>#Python</span>
               <div className="flex space-x-2">
-                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                <button className="btn btn-primary text-xs">
                   确认
                 </button>
-                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                <button className="btn btn-danger text-xs">
                   删除
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+            <div className="flex items-center justify-between tree-node">
               <span>#阅读</span>
               <div className="flex space-x-2">
-                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                <button className="btn btn-primary text-xs">
                   确认
                 </button>
-                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                <button className="btn btn-danger text-xs">
                   删除
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between p-2 bg-gray-200 rounded opacity-70">
+            <div className="flex items-center justify-between tree-node wilting">
               <span>#React</span>
               <div className="flex space-x-2">
-                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                <button className="btn btn-primary text-xs">
                   确认
                 </button>
-                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                <button className="btn btn-danger text-xs">
                   删除
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between p-2 bg-gray-200 rounded opacity-50">
+            <div className="flex items-center justify-between tree-node wilting">
               <span>#跑步</span>
               <div className="flex space-x-2">
-                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                <button className="btn btn-primary text-xs">
                   确认
                 </button>
-                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                <button className="btn btn-danger text-xs">
                   删除
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between p-2 bg-gray-200 rounded opacity-30">
+            <div className="flex items-center justify-between tree-node wilted">
               <span>#王者荣耀</span>
               <div className="flex space-x-2">
-                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                <button className="btn btn-primary text-xs">
                   确认
                 </button>
-                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                <button className="btn btn-danger text-xs">
                   删除
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-between p-2 bg-gray-100 rounded">
+            <div className="flex items-center justify-between tree-node">
               <span>...</span>
-              <button className="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-green-600">
+              <button className="btn btn-primary text-xs">
                 查看更多
               </button>
             </div>
@@ -116,10 +116,10 @@ const GrowthTree = () => {
             <h4 className="font-medium mb-2">智能归类建议</h4>
             <p className="mb-4">检测到你有多个关于「编程」的记录，是否自动创建一个「编程语言」分类，并将它们归纳进去？</p>
             <div className="flex space-x-4">
-              <button className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600">
+              <button className="btn btn-primary">
                 确认
               </button>
-              <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+              <button className="btn btn-outline">
                 取消
               </button>
             </div>
@@ -128,17 +128,17 @@ const GrowthTree = () => {
             <h4 className="font-medium mb-2">子分类建议</h4>
             <p className="mb-4">你的「技能树」太茂盛了，检测到其中「设计」、「插画」、「Figma」关联度高，是否创建一个「设计能力」子分类？</p>
             <div className="flex space-x-4">
-              <button className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600">
+              <button className="btn btn-primary">
                 确认
               </button>
-              <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+              <button className="btn btn-outline">
                 取消
               </button>
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-6 bg-white p-6 rounded-lg shadow">
+      <div className="mt-6 card">
         <h2 className="text-xl font-semibold mb-4">节点详情</h2>
         <div className="space-y-4">
           <div>
