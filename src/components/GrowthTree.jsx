@@ -10,6 +10,24 @@ const GrowthTree = () => {
           <div className="text-center">
             <p className="text-gray-500">成长树可视化管理区域</p>
             <p className="text-sm text-gray-400 mt-2">拖拽节点来调整树结构</p>
+            <div className="mt-4 space-y-2 text-left">
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                <span>技能树（编程、写作、外语...）</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                <span>认知树（阅读、课程、观影...）</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                <span>习惯树（运动、早起、冥想...）</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                <span>生活树（家庭、社交、旅行...）</span>
+              </div>
+            </div>
           </div>
         </div>
         <div className="mt-6 flex space-x-4">
@@ -47,6 +65,33 @@ const GrowthTree = () => {
                   删除
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
+          <h3 className="font-medium mb-4">AI 园丁模式</h3>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2">智能归类建议</h4>
+            <p className="mb-4">检测到你有多个关于「编程」的记录，是否自动创建一个「编程语言」分类，并将它们归纳进去？</p>
+            <div className="flex space-x-4">
+              <button className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600">
+                确认
+              </button>
+              <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+                取消
+              </button>
+            </div>
+          </div>
+          <div className="mt-4 bg-yellow-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2">子分类建议</h4>
+            <p className="mb-4">你的「技能树」太茂盛了，检测到其中「设计」、「插画」、「Figma」关联度高，是否创建一个「设计能力」子分类？</p>
+            <div className="flex space-x-4">
+              <button className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600">
+                确认
+              </button>
+              <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+                取消
+              </button>
             </div>
           </div>
         </div>
