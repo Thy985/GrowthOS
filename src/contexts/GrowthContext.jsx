@@ -118,21 +118,105 @@ export const GrowthProvider = ({ children }) => {
 
   // 提取标签
   const extractTags = (text) => {
+    // 提取显式标签（#tag）
     const tagRegex = /#([^\s]+)/g;
     const tags = [];
     let match;
     while ((match = tagRegex.exec(text)) !== null) {
       tags.push(match[1]);
     }
-    return tags;
+    
+    // 自动提取隐式标签（基于关键词）
+    const keywordTags = extractKeywordTags(text);
+    return [...new Set([...tags, ...keywordTags])];
+  };
+
+  // 从文本中提取关键词作为标签
+  const extractKeywordTags = (text) => {
+    const keywordMap = {
+      '编程': ['编程', '代码', '开发', 'coding', 'programming'],
+      '写作': ['写作', '文章', '博客', '写', 'writing'],
+      '外语': ['英语', '日语', '外语', '学习', 'language'],
+      '阅读': ['阅读', '读书', '书', 'reading', 'book'],
+      '运动': ['运动', '健身', '跑步', '锻炼', 'sports', 'exercise'],
+      '早起': ['早起', '早睡', '起床', 'morning'],
+      '冥想': ['冥想', '正念', '冥想练习', 'meditation'],
+      '家庭': ['家庭', '家人', '亲子', 'family'],
+      '社交': ['社交', '朋友', '聚会', 'social'],
+      '旅行': ['旅行', '旅游', '出行', 'travel']
+    };
+    
+    const extractedTags = [];
+    Object.entries(keywordMap).forEach(([tag, keywords]) => {
+      if (keywords.some(keyword => text.includes(keyword))) {
+        extractedTags.push(tag);
+      }
+    });
+    return extractedTags;
   };
 
   // 处理标签，创建影子节点
   const handleTags = (tags) => {
     if (!tags || tags.length === 0) return;
+    if (!treeData) return;
     
-    // 这里可以实现影子节点的创建逻辑
-    console.log('处理标签:', tags);
+    const updatedTree = JSON.parse(JSON.stringify(treeData));
+    let hasChanges = false;
+    
+    tags.forEach(tag => {
+      if (!isTagExists(updatedTree, tag)) {
+        addShadowNode(updatedTree, tag);
+        hasChanges = true;
+      }
+    });
+    
+    if (hasChanges) {
+      updateTree(updatedTree);
+    }
+  };
+
+  // 检查标签是否已存在
+  const isTagExists = (node, tag) => {
+    if (node.name === tag) return true;
+    if (node.children) {
+      for (const child of node.children) {
+        if (isTagExists(child, tag)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // 添加影子节点
+  const addShadowNode = (node, tag) => {
+    // 找到合适的父节点
+    const suitableParent = findSuitableParent(node, tag);
+    if (suitableParent) {
+      const newNode = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        name: tag,
+        type: 'shadow',
+        children: []
+      };
+      suitableParent.children.push(newNode);
+    }
+  };
+
+  // 找到合适的父节点
+  const findSuitableParent = (node, tag) => {
+    // 优先选择叶子节点作为父节点
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        const result = findSuitableParent(child, tag);
+        if (result) return result;
+      }
+    }
+    // 如果是叶子节点且不是影子节点，返回它
+    if (!node.children || node.children.length === 0) {
+      return node.type !== 'shadow' ? node : null;
+    }
+    return null;
   };
 
   // 更新成长树
@@ -188,6 +272,27 @@ export const GrowthProvider = ({ children }) => {
     return (totalMood / records.length).toFixed(1);
   };
 
+  // 导出数据
+  const exportData = () => {
+    const exportData = {
+      records,
+      treeData,
+      exportDate: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `growthos-export-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // 提供给子组件的值
   const value = {
     records,
@@ -198,7 +303,8 @@ export const GrowthProvider = ({ children }) => {
     updateTree,
     addTreeNode,
     getStats,
-    getAverageMood
+    getAverageMood,
+    exportData
   };
 
   return (

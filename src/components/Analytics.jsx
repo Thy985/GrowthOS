@@ -14,24 +14,20 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
+import { useGrowth } from '../contexts/GrowthContext';
 
 const Analytics = () => {
-  const [records, setRecords] = useState([]);
   const [chartData, setChartData] = useState({
     dailyRecords: [],
     moodTrend: [],
     activityDistribution: []
   });
+  const { records, getStats, getAverageMood, exportData } = useGrowth();
 
-  // 从localStorage加载数据
+  // 处理图表数据
   useEffect(() => {
-    const savedRecords = localStorage.getItem('growthos-records');
-    if (savedRecords) {
-      const parsedRecords = JSON.parse(savedRecords);
-      setRecords(parsedRecords);
-      processChartData(parsedRecords);
-    }
-  }, []);
+    processChartData(records);
+  }, [records]);
 
   // 处理图表数据
   const processChartData = (records) => {
@@ -100,47 +96,31 @@ const Analytics = () => {
     });
   };
 
-  // 计算情绪平均值
-  const calculateAverageMood = () => {
-    if (records.length === 0) return 0;
-    
-    const totalMood = records.reduce((sum, record) => {
-      switch (record.mood) {
-        case '很好':
-          return sum + 2;
-        case '一般':
-          return sum + 1;
-        case '不太好':
-          return sum + 0;
-        default:
-          return sum;
-      }
-    }, 0);
-    
-    return (totalMood / records.length).toFixed(1);
-  };
   return (
     <div>
-      <h1 className="page-title">分析</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="page-title">分析</h1>
+        <button 
+          onClick={exportData} 
+          className="btn btn-primary"
+        >
+          导出数据
+        </button>
+      </div>
       <div className="card mb-6">
         <h2 className="text-xl font-semibold mb-4">数据统计</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-gray-50 p-4 rounded">
             <p className="text-sm text-gray-600">本周记录</p>
-            <p className="text-2xl font-bold">{records.filter(record => {
-              const recordDate = new Date(record.createdAt);
-              const weekAgo = new Date();
-              weekAgo.setDate(weekAgo.getDate() - 7);
-              return recordDate >= weekAgo;
-            }).length}</p>
+            <p className="text-2xl font-bold">{getStats().weeklyRecords}</p>
           </div>
           <div className="bg-gray-50 p-4 rounded">
             <p className="text-sm text-gray-600">总记录</p>
-            <p className="text-2xl font-bold">{records.length}</p>
+            <p className="text-2xl font-bold">{getStats().totalRecords}</p>
           </div>
           <div className="bg-gray-50 p-4 rounded">
             <p className="text-sm text-gray-600">情绪平均值</p>
-            <p className="text-2xl font-bold">{calculateAverageMood()}</p>
+            <p className="text-2xl font-bold">{getAverageMood()}</p>
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

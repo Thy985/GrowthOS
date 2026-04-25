@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, memo } from 'react';
 import { useGrowth } from '../contexts/GrowthContext';
 
 const Dashboard = () => {
@@ -15,7 +15,7 @@ const Dashboard = () => {
   const feedbackRef = useRef(null);
   const treeRef = useRef(null);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -28,10 +28,10 @@ const Dashboard = () => {
         [name]: ''
       }));
     }
-  };
+  }, [errors]);
 
   // 表单验证
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors = {};
     if (!formData.activity.trim()) {
       newErrors.activity = '请输入做了什么';
@@ -40,9 +40,9 @@ const Dashboard = () => {
       newErrors.learning = '请输入学了什么';
     }
     return newErrors;
-  };
+  }, [formData]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
     
     // 验证表单
@@ -110,7 +110,7 @@ const Dashboard = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [formData, validateForm, addRecord]);
 
   return (
     <div>
@@ -258,4 +258,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default memo(Dashboard);
