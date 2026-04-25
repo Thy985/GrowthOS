@@ -32,4 +32,29 @@ function App() {
   )
 }
 
-export default App
+export default Appimport { BrowserRouter as Router, Routes,import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import Dashboard from './components/Dashboard'
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import Dashboard from './components/Dashboard'
+import GrowthTree from './components/GrowthTree'
+import Analytics from './components/Analytics'
+import Auth from './components/Auth'
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import Dashboard from './components/Dashboard'
+import GrowthTree from './components/GrowthTree'
+import Analytics from './components/Analytics'
+import Auth from './components/Auth'
+
+function App() {
+  return (
+    <Router>
+      <div className="import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import Dashboard from './components/Dashboard'
+import GrowthTree from './components/GrowthTree'
+import Analytics from './components/Analytics'
+import Auth from './components/Auth'
+
+function App() {
+  return (
+    <Router>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-9
