@@ -293,6 +293,24 @@ export const GrowthProvider = ({ children }) => {
     URL.revokeObjectURL(url);
   };
 
+  // 导入数据
+  const importData = (data) => {
+    try {
+      if (data.records) {
+        setRecords(data.records);
+        localStorage.setItem('growthos-records', JSON.stringify(data.records));
+      }
+      if (data.treeData) {
+        setTreeData(data.treeData);
+        localStorage.setItem('growthos-tree', JSON.stringify(data.treeData));
+      }
+      return true;
+    } catch (err) {
+      console.error('导入数据失败:', err);
+      return false;
+    }
+  };
+
   // 提供给子组件的值
   const value = {
     records,
@@ -304,7 +322,8 @@ export const GrowthProvider = ({ children }) => {
     addTreeNode,
     getStats,
     getAverageMood,
-    exportData
+    exportData,
+    importData
   };
 
   return (

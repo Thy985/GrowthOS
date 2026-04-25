@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import './App.css';
-import Dashboard from './components/Dashboard';
-import GrowthTree from './components/GrowthTree';
-import Analytics from './components/Analytics';
-import Auth from './components/Auth';
 import { GrowthProvider } from './contexts/GrowthContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+
+// 使用React.lazy实现代码分割
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const GrowthTree = lazy(() => import('./components/GrowthTree'));
+const Analytics = lazy(() => import('./components/Analytics'));
+const Auth = lazy(() => import('./components/Auth'));
 
 function Navbar() {
   const location = useLocation();
@@ -134,12 +136,14 @@ function AppContent() {
     <>
       {user && <Navbar />}
       <div className="main">
-        <Routes>
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/growth-tree" element={<ProtectedRoute><GrowthTree /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/auth" element={<Auth />} />
-        </Routes>
+        <Suspense fallback={<div className="loading-container"><div className="loading"></div><span>加载中...</span></div>}>
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/growth-tree" element={<ProtectedRoute><GrowthTree /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/auth" element={<Auth />} />
+          </Routes>
+        </Suspense>
       </div>
     </>
   );
