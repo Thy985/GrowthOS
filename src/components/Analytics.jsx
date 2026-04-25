@@ -16,18 +16,86 @@ import {
 } from 'recharts';
 import { useGrowth } from '../contexts/GrowthContext';
 
+// 自定义工具提示组件
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 rounded shadow-md border border-gray-200">
+        <p className="font-medium">{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: entry.color }}>
+            {entry.name}: {entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+// 图表颜色配置
+const chartColors = {
+  primary: '#4CAF50',
+  secondary: '#2196F3',
+  accent: '#FFC107',
+  purple: '#9C27B0',
+  error: '#F44336',
+  success: '#10B981',
+  warning: '#F59E0B',
+  info: '#3B82F6'
+};
+
+// 情绪标签映射
+const moodLabels = {
+  0: '不太好',
+  1: '一般',
+  2: '很好'
+};
+
 const Analytics = () => {
   const [chartData, setChartData] = useState({
     dailyRecords: [],
     moodTrend: [],
     activityDistribution: []
   });
-  const { records, getStats, getAverageMood, exportData } = useGrowth();
+  const [importStatus, setImportStatus] = useState({ success: false, message: '' });
+  const { records, getStats, getAverageMood, exportData, importData } = useGrowth();
 
   // 处理图表数据
   useEffect(() => {
     processChartData(records);
   }, [records]);
+
+  // 处理文件导入
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        const success = importData(data);
+        if (success) {
+          setImportStatus({ success: true, message: '数据导入成功！' });
+          setTimeout(() => {
+            setImportStatus({ success: false, message: '' });
+          }, 3000);
+        } else {
+          setImportStatus({ success: false, message: '数据导入失败，请检查文件格式。' });
+          setTimeout(() => {
+            setImportStatus({ success: false, message: '' });
+          }, 3000);
+        }
+      } catch (error) {
+        setImportStatus({ success: false, message: '数据导入失败，文件格式错误。' });
+        setTimeout(() => {
+          setImportStatus({ success: false, message: '' });
+        }, 3000);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   // 处理图表数据
   const processChartData = (records) => {
@@ -66,9 +134,14 @@ const Analytics = () => {
           break;
       }
       
+      // 获取记录日期
+      const recordDate = record.createdAt ? new Date(record.createdAt) : new Date();
+      const dateStr = recordDate.toISOString().split('T')[0];
+      
       moodData.push({
-        day: `Day ${index + 1}`,
-        mood: moodValue
+        day: dateStr,
+        mood: moodValue,
+        moodLabel: moodLabels[moodValue]
       });
     });
     
@@ -100,13 +173,35 @@ const Analytics = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="page-title">分析</h1>
-        <button 
-          onClick={exportData} 
-          className="btn btn-primary"
-        >
-          导出数据
-        </button>
+        <div className="flex space-x-4">
+          <div className="relative">
+            <input 
+              type="file" 
+              id="import-file" 
+              accept=".json" 
+              onChange={handleImport} 
+              className="hidden"
+            />
+            <label 
+              htmlFor="import-file" 
+              className="btn btn-secondary cursor-pointer"
+            >
+              导入数据
+            </label>
+          </div>
+          <button 
+            onClick={exportData} 
+            className="btn btn-primary"
+          >
+            导出数据
+          </button>
+        </div>
       </div>
+      {importStatus.message && (
+        <div className={`mb-6 ${importStatus.success ? 'success-message' : 'error-message'}`}>
+          {importStatus.message}
+        </div>
+      )}
       <div className="card mb-6">
         <h2 className="text-xl font-semibold mb-4">数据统计</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -127,26 +222,65 @@ const Analytics = () => {
           <div className="col-span-1 lg:col-span-2">
             <h3 className="font-medium mb-3">过去7天记录趋势</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData.dailyRecords}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
+              <BarChart data={chartData.dailyRecords} animationDuration={1500}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar dataKey="count" fill="#4CAF50" />
+                <Bar 
+                  dataKey="count" 
+                  fill={chartColors.primary} 
+                  name="记录数"
+                  radius={[4, 4, 0, 0]}
+                  animationEasing="ease-in-out"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div>
             <h3 className="font-medium mb-3">情绪趋势</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData.moodTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis domain={[0, 2]} />
-                <Tooltip />
+              <LineChart data={chartData.moodTrend} animationDuration={1500}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="day" 
+                  tick={{ fontSize: 10 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis 
+                  domain={[0, 2]} 
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => moodLabels[value]}
+                />
+                <Tooltip 
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-white p-3 rounded shadow-md border border-gray-200">
+                          <p className="font-medium">{label}</p>
+                          <p style={{ color: chartColors.secondary }}>
+                            情绪: {data.moodLabel}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
                 <Legend />
-                <Line type="monotone" dataKey="mood" stroke="#2196F3" activeDot={{ r: 8 }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="mood" 
+                  stroke={chartColors.secondary} 
+                  name="情绪" 
+                  activeDot={{ r: 8, fill: chartColors.secondary }}
+                  strokeWidth={2}
+                  animationEasing="ease-in-out"
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -154,7 +288,7 @@ const Analytics = () => {
         <div className="mt-6">
           <h3 className="font-medium mb-3">活动分布</h3>
           <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
+            <PieChart animationDuration={1500}>
               <Pie
                 data={chartData.activityDistribution}
                 cx="50%"
@@ -163,13 +297,19 @@ const Analytics = () => {
                 outerRadius={150}
                 fill="#8884d8"
                 dataKey="value"
+                nameKey="name"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                animationEasing="ease-in-out"
               >
                 {chartData.activityDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={['#4CAF50', '#2196F3', '#FFC107', '#9C27B0', '#F44336'][index % 5]} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={[chartColors.primary, chartColors.secondary, chartColors.accent, chartColors.purple, chartColors.error][index % 5]} 
+                  />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend layout="horizontal" verticalAlign="bottom" align="center" />
             </PieChart>
           </ResponsiveContainer>
         </div>

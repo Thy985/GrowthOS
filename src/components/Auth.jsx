@@ -5,15 +5,41 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const { login, register } = useAuth();
+
+  // 表单验证
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!username.trim()) {
+      newErrors.username = '请输入用户名';
+    } else if (username.length < 3) {
+      newErrors.username = '用户名至少需要3个字符';
+    } else if (username.length > 20) {
+      newErrors.username = '用户名最多20个字符';
+    }
+    
+    if (!password) {
+      newErrors.password = '请输入密码';
+    } else if (password.length < 6) {
+      newErrors.password = '密码至少需要6个字符';
+    } else if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
+      newErrors.password = '密码需要包含字母和数字';
+    }
+    
+    return newErrors;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
     
-    if (!username || !password) {
-      setError('请输入用户名和密码');
+    // 验证表单
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
@@ -25,7 +51,7 @@ const Auth = () => {
     }
 
     if (!success) {
-      setError('操作失败，请重试');
+      setError(isLogin ? '登录失败，请检查用户名和密码' : '注册失败，用户名可能已存在');
     }
   };
 
@@ -56,10 +82,21 @@ const Auth = () => {
               type="text"
               id="username"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (errors.username) {
+                  setErrors(prev => ({
+                    ...prev,
+                    username: ''
+                  }));
+                }
+              }}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors ${errors.username ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}`}
               placeholder="请输入用户名"
             />
+            {errors.username && (
+              <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+            )}
           </div>
 
           <div>
@@ -70,10 +107,21 @@ const Auth = () => {
               type="password"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errors.password) {
+                  setErrors(prev => ({
+                    ...prev,
+                    password: ''
+                  }));
+                }
+              }}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors ${errors.password ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'}`}
               placeholder="请输入密码"
             />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            )}
           </div>
 
           <button
