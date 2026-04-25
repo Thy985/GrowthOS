@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import GrowthTree from './components/GrowthTree';
 import Analytics from './components/Analytics';
 import Auth from './components/Auth';
+import { GrowthProvider } from './contexts/GrowthContext';
 
 function Navbar() {
   const location = useLocation();
@@ -33,19 +34,21 @@ function App() {
   const isAuthenticated = true;
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-100">
-        {isAuthenticated && <Navbar />}
-        <div className="main">
-          <Routes>
-            <Route path="/" element={isAuthenticated ? <Dashboard /> : <Navigate to="/auth" />} />
-            <Route path="/growth-tree" element={isAuthenticated ? <GrowthTree /> : <Navigate to="/auth" />} />
-            <Route path="/analytics" element={isAuthenticated ? <Analytics /> : <Navigate to="/auth" />} />
-            <Route path="/auth" element={<Auth />} />
-          </Routes>
+    <GrowthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-100">
+          {isAuthenticated && <Navbar />}
+          <div className="main">
+            <Routes>
+              <Route path="/" element={isAuthenticated ? <Dashboard /> : <Navigate to="/auth" />} />
+              <Route path="/growth-tree" element={isAuthenticated ? <GrowthTree /> : <Navigate to="/auth" />} />
+              <Route path="/analytics" element={isAuthenticated ? <Analytics /> : <Navigate to="/auth" />} />
+              <Route path="/auth" element={<Auth />} />
+            </Routes>
+          </div>
         </div>
-      </div>
-    </Router>
+      </Router>
+    </GrowthProvider>
   );
 }
 

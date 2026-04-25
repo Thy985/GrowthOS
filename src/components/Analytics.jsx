@@ -1,24 +1,197 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  BarChart, 
+  Bar, 
+  LineChart, 
+  Line, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 
 const Analytics = () => {
+  const [records, setRecords] = useState([]);
+  const [chartData, setChartData] = useState({
+    dailyRecords: [],
+    moodTrend: [],
+    activityDistribution: []
+  });
+
+  // 从localStorage加载数据
+  useEffect(() => {
+    const savedRecords = localStorage.getItem('growthos-records');
+    if (savedRecords) {
+      const parsedRecords = JSON.parse(savedRecords);
+      setRecords(parsedRecords);
+      processChartData(parsedRecords);
+    }
+  }, []);
+
+  // 处理图表数据
+  const processChartData = (records) => {
+    // 计算过去7天的记录数
+    const now = new Date();
+    const dailyData = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const dayRecords = records.filter(record => {
+        return record.createdAt.startsWith(dateStr);
+      });
+      
+      dailyData.push({
+        date: dateStr,
+        count: dayRecords.length
+      });
+    }
+    
+    // 计算情绪趋势
+    const moodData = [];
+    records.slice(0, 10).reverse().forEach((record, index) => {
+      let moodValue = 0;
+      switch (record.mood) {
+        case '很好':
+          moodValue = 2;
+          break;
+        case '一般':
+          moodValue = 1;
+          break;
+        case '不太好':
+          moodValue = 0;
+          break;
+      }
+      
+      moodData.push({
+        day: `Day ${index + 1}`,
+        mood: moodValue
+      });
+    });
+    
+    // 计算活动分布
+    const activityCounts = {};
+    records.forEach(record => {
+      if (record.activity) {
+        const activities = record.activity.split(' ').filter(word => word.startsWith('#'));
+        activities.forEach(activity => {
+          const activityName = activity.substring(1);
+          activityCounts[activityName] = (activityCounts[activityName] || 0) + 1;
+        });
+      }
+    });
+    
+    const activityData = Object.entries(activityCounts).map(([name, value]) => ({
+      name,
+      value
+    })).slice(0, 5); // 只取前5个
+    
+    setChartData({
+      dailyRecords: dailyData,
+      moodTrend: moodData,
+      activityDistribution: activityData
+    });
+  };
+
+  // 计算情绪平均值
+  const calculateAverageMood = () => {
+    if (records.length === 0) return 0;
+    
+    const totalMood = records.reduce((sum, record) => {
+      switch (record.mood) {
+        case '很好':
+          return sum + 2;
+        case '一般':
+          return sum + 1;
+        case '不太好':
+          return sum + 0;
+        default:
+          return sum;
+      }
+    }, 0);
+    
+    return (totalMood / records.length).toFixed(1);
+  };
   return (
     <div>
       <h1 className="page-title">分析</h1>
       <div className="card mb-6">
         <h2 className="text-xl font-semibold mb-4">数据统计</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-gray-50 p-4 rounded">
-            <p className="text-sm text-gray-600">本周打卡</p>
-            <p className="text-2xl font-bold">3</p>
+            <p className="text-sm text-gray-600">本周记录</p>
+            <p className="text-2xl font-bold">{records.filter(record => {
+              const recordDate = new Date(record.createdAt);
+              const weekAgo = new Date();
+              weekAgo.setDate(weekAgo.getDate() - 7);
+              return recordDate >= weekAgo;
+            }).length}</p>
           </div>
           <div className="bg-gray-50 p-4 rounded">
-            <p className="text-sm text-gray-600">专注时长</p>
-            <p className="text-2xl font-bold">2 小时</p>
+            <p className="text-sm text-gray-600">总记录</p>
+            <p className="text-2xl font-bold">{records.length}</p>
           </div>
           <div className="bg-gray-50 p-4 rounded">
             <p className="text-sm text-gray-600">情绪平均值</p>
-            <p className="text-2xl font-bold">+5</p>
+            <p className="text-2xl font-bold">{calculateAverageMood()}</p>
           </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="col-span-1 lg:col-span-2">
+            <h3 className="font-medium mb-3">过去7天记录趋势</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData.dailyRecords}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" fill="#4CAF50" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div>
+            <h3 className="font-medium mb-3">情绪趋势</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData.moodTrend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis domain={[0, 2]} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="mood" stroke="#2196F3" activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="mt-6">
+          <h3 className="font-medium mb-3">活动分布</h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <PieChart>
+              <Pie
+                data={chartData.activityDistribution}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={150}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {chartData.activityDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={['#4CAF50', '#2196F3', '#FFC107', '#9C27B0', '#F44336'][index % 5]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
       <div className="card mb-6">

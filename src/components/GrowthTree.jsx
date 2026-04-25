@@ -1,34 +1,154 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import ReactFlow, { 
+  addEdge, 
+  Background, 
+  Controls, 
+  MiniMap
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 
 const GrowthTree = () => {
+  const [nodes, setNodes] = useState([]);
+  const [edges, setEdges] = useState([]);
+  const [treeData, setTreeData] = useState(null);
+
+  // 从localStorage加载成长树数据
+  useEffect(() => {
+    const savedTree = localStorage.getItem('growthos-tree');
+    if (savedTree) {
+      setTreeData(JSON.parse(savedTree));
+      updateReactFlowData(JSON.parse(savedTree));
+    } else {
+      // 初始化默认成长树
+      const defaultTree = {
+        id: '1',
+        name: '成长树',
+        children: [
+          {
+            id: '2',
+            name: '技能树',
+            type: 'skill',
+            children: [
+              { id: '3', name: '编程', type: 'skill' },
+              { id: '4', name: '写作', type: 'skill' },
+              { id: '5', name: '外语', type: 'skill' }
+            ]
+          },
+          {
+            id: '6',
+            name: '认知树',
+            type: 'cognition',
+            children: [
+              { id: '7', name: '阅读', type: 'cognition' },
+              { id: '8', name: '课程', type: 'cognition' },
+              { id: '9', name: '观影', type: 'cognition' }
+            ]
+          },
+          {
+            id: '10',
+            name: '习惯树',
+            type: 'habit',
+            children: [
+              { id: '11', name: '运动', type: 'habit' },
+              { id: '12', name: '早起', type: 'habit' },
+              { id: '13', name: '冥想', type: 'habit' }
+            ]
+          },
+          {
+            id: '14',
+            name: '生活树',
+            type: 'life',
+            children: [
+              { id: '15', name: '家庭', type: 'life' },
+              { id: '16', name: '社交', type: 'life' },
+              { id: '17', name: '旅行', type: 'life' }
+            ]
+          }
+        ]
+      };
+      setTreeData(defaultTree);
+      updateReactFlowData(defaultTree);
+      localStorage.setItem('growthos-tree', JSON.stringify(defaultTree));
+    }
+  }, []);
+
+  // 将树数据转换为reactflow的节点和边
+  const updateReactFlowData = (tree) => {
+    const newNodes = [];
+    const newEdges = [];
+    
+    // 递归遍历树，创建节点和边
+    const traverseTree = (node, x = 500, y = 100, level = 0) => {
+      // 创建节点
+      newNodes.push({
+        id: node.id,
+        data: { label: node.name },
+        position: { x, y },
+        style: {
+          backgroundColor: getNodeColor(node.type),
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '10px'
+        }
+      });
+      
+      // 如果有子节点，创建边并递归
+      if (node.children && node.children.length > 0) {
+        const childXStart = x - (node.children.length - 1) * 150 / 2;
+        node.children.forEach((child, index) => {
+          const childX = childXStart + index * 150;
+          const childY = y + 150;
+          
+          // 创建边
+          newEdges.push({
+            id: `edge-${node.id}-${child.id}`,
+            source: node.id,
+            target: child.id,
+            type: 'smoothstep',
+            animated: true
+          });
+          
+          // 递归处理子节点
+          traverseTree(child, childX, childY, level + 1);
+        });
+      }
+    };
+    
+    traverseTree(tree);
+    setNodes(newNodes);
+    setEdges(newEdges);
+  };
+
+  // 根据节点类型返回不同的颜色
+  const getNodeColor = (type) => {
+    switch (type) {
+      case 'skill':
+        return '#4CAF50'; // 绿色
+      case 'cognition':
+        return '#2196F3'; // 蓝色
+      case 'habit':
+        return '#FFC107'; // 黄色
+      case 'life':
+        return '#9C27B0'; // 紫色
+      default:
+        return '#757575'; // 灰色
+    }
+  };
   return (
     <div>
       <h1 className="page-title">成长树</h1>
       <div className="card">
         <h2 className="text-xl font-semibold mb-4">树管理</h2>
-        <div className="h-96 bg-gray-100 rounded flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-500">成长树可视化管理区域</p>
-            <p className="text-sm text-gray-400 mt-2">拖拽节点来调整树结构</p>
-            <div className="mt-4 space-y-2 text-left">
-              <div className="flex items-center">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                <span>技能树（编程、写作、外语...）</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                <span>认知树（阅读、课程、观影...）</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-                <span>习惯树（运动、早起、冥想...）</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-                <span>生活树（家庭、社交、旅行...）</span>
-              </div>
-            </div>
-          </div>
+        <div className="h-96 bg-gray-100 rounded">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onConnect={(params) => setEdges((eds) => addEdge(params, eds))}
+          >
+            <Background variant="dots" gap={12} size={1} />
+            <Controls />
+            <MiniMap />
+          </ReactFlow>
         </div>
         <div className="mt-6 flex space-x-4">
           <button className="btn btn-primary">
@@ -112,7 +232,7 @@ const GrowthTree = () => {
         </div>
         <div className="mt-6">
           <h3 className="font-medium mb-4">AI 园丁模式</h3>
-          <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="suggestion-card primary">
             <h4 className="font-medium mb-2">智能归类建议</h4>
             <p className="mb-4">检测到你有多个关于「编程」的记录，是否自动创建一个「编程语言」分类，并将它们归纳进去？</p>
             <div className="flex space-x-4">
@@ -124,7 +244,7 @@ const GrowthTree = () => {
               </button>
             </div>
           </div>
-          <div className="mt-4 bg-yellow-50 p-4 rounded-lg">
+          <div className="suggestion-card warning">
             <h4 className="font-medium mb-2">子分类建议</h4>
             <p className="mb-4">你的「技能树」太茂盛了，检测到其中「设计」、「插画」、「Figma」关联度高，是否创建一个「设计能力」子分类？</p>
             <div className="flex space-x-4">
@@ -142,33 +262,33 @@ const GrowthTree = () => {
         <h2 className="text-xl font-semibold mb-4">节点详情</h2>
         <div className="space-y-4">
           <div>
-            <label className="block mb-2">节点名称</label>
-            <input type="text" className="w-full p-2 border rounded" value="React 技能" />
+            <label className="form-label">节点名称</label>
+            <input type="text" className="form-input" value="React 技能" />
           </div>
           <div>
-            <label className="block mb-2">掌握度</label>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div className="bg-primary h-2.5 rounded-full" style={{ width: '75%' }}></div>
+            <label className="form-label">掌握度</label>
+            <div className="progress-container">
+              <div className="progress-bar" style={{ width: '75%' }}></div>
             </div>
             <p className="text-right mt-1">75%</p>
           </div>
           <div>
-            <label className="block mb-2">状态</label>
-            <select className="w-full p-2 border rounded">
+            <label className="form-label">状态</label>
+            <select className="form-input">
               <option>未开始</option>
               <option selected>进行中</option>
               <option>深入</option>
             </select>
           </div>
           <div>
-            <label className="block mb-2">开始日期</label>
-            <input type="date" className="w-full p-2 border rounded" value="2024-01-01" />
+            <label className="form-label">开始日期</label>
+            <input type="date" className="form-input" value="2024-01-01" />
           </div>
           <div>
-            <label className="block mb-2">最近更新</label>
-            <input type="date" className="w-full p-2 border rounded" value="2024-01-15" />
+            <label className="form-label">最近更新</label>
+            <input type="date" className="form-input" value="2024-01-15" />
           </div>
-          <button className="w-full bg-primary text-white p-2 rounded hover:bg-green-600">
+          <button className="btn btn-primary w-full">
             保存更改
           </button>
         </div>

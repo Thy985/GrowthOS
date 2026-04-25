@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useGrowth } from '../contexts/GrowthContext';
 
 const Dashboard = () => {
   const [formData, setFormData] = useState({
@@ -7,6 +8,10 @@ const Dashboard = () => {
     mood: '很好',
     reflection: ''
   });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const { addRecord, getStats, isLoading, error } = useGrowth();
   const feedbackRef = useRef(null);
   const treeRef = useRef(null);
 
@@ -16,31 +21,95 @@ const Dashboard = () => {
       ...prev,
       [name]: value
     }));
+    // 清除错误
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  // 表单验证
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.activity.trim()) {
+      newErrors.activity = '请输入做了什么';
+    }
+    if (!formData.learning.trim()) {
+      newErrors.learning = '请输入学了什么';
+    }
+    return newErrors;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // 显示反馈动画
-    if (feedbackRef.current) {
-      feedbackRef.current.style.opacity = '1';
+    
+    // 验证表单
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // 创建新记录
+      const newRecord = {
+        ...formData
+      };
+      
+      // 保存记录
+      addRecord(newRecord);
+      
+      // 显示成功消息
+      setSuccessMessage('记录保存成功！');
       setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+      
+      // 显示反馈动画
+      if (feedbackRef.current) {
+        // 重置动画
         feedbackRef.current.style.opacity = '0';
-      }, 1000);
+        feedbackRef.current.style.animation = 'none';
+        // 触发重排
+        void feedbackRef.current.offsetWidth;
+        // 重新开始动画
+        feedbackRef.current.style.animation = 'popIn 0.3s ease';
+        feedbackRef.current.style.opacity = '1';
+        setTimeout(() => {
+          feedbackRef.current.style.opacity = '0';
+          feedbackRef.current.style.animation = 'none';
+        }, 1000);
+      }
+      
+      // 模拟树的抖动效果
+      if (treeRef.current) {
+        // 重置动画
+        treeRef.current.style.animation = 'none';
+        // 触发重排
+        void treeRef.current.offsetWidth;
+        // 重新开始动画
+        treeRef.current.style.animation = 'tree-shake 0.5s ease-in-out';
+        setTimeout(() => {
+          treeRef.current.style.animation = 'none';
+        }, 500);
+      }
+      
+      // 重置表单
+      setFormData({
+        activity: '',
+        learning: '',
+        mood: '很好',
+        reflection: ''
+      });
+    } catch (err) {
+      console.error('保存记录失败:', err);
+    } finally {
+      setIsSubmitting(false);
     }
-    // 模拟树的抖动效果
-    if (treeRef.current) {
-      treeRef.current.style.animation = 'tree-shake 0.5s ease-in-out';
-      setTimeout(() => {
-        treeRef.current.style.animation = '';
-      }, 500);
-    }
-    // 重置表单
-    setFormData({
-      activity: '',
-      learning: '',
-      mood: '很好',
-      reflection: ''
-    });
   };
 
   return (
@@ -74,28 +143,46 @@ const Dashboard = () => {
         </div>
         <div className="card">
           <h2 className="text-xl font-semibold mb-4">日常记录</h2>
+          {successMessage && (
+            <div className="success-message">
+              {successMessage}
+            </div>
+          )}
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label className="form-label">做了什么</label>
               <input 
                 type="text" 
                 name="activity"
-                className="input" 
+                className={`input ${errors.activity ? 'border-error' : ''}`} 
                 placeholder="今天做了什么... 支持 #标签" 
                 value={formData.activity}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
+              {errors.activity && (
+                <div className="form-error">{errors.activity}</div>
+              )}
             </div>
             <div className="form-group">
               <label className="form-label">学了什么</label>
               <input 
                 type="text" 
                 name="learning"
-                className="input" 
+                className={`input ${errors.learning ? 'border-error' : ''}`} 
                 placeholder="今天学了什么... 支持 #标签" 
                 value={formData.learning}
                 onChange={handleChange}
+                disabled={isSubmitting}
               />
+              {errors.learning && (
+                <div className="form-error">{errors.learning}</div>
+              )}
             </div>
             <div className="form-group">
               <label className="form-label">状态如何</label>
@@ -104,6 +191,7 @@ const Dashboard = () => {
                 className="input"
                 value={formData.mood}
                 onChange={handleChange}
+                disabled={isSubmitting}
               >
                 <option>很好</option>
                 <option>一般</option>
@@ -119,10 +207,23 @@ const Dashboard = () => {
                 placeholder="今天的反思..."
                 value={formData.reflection}
                 onChange={handleChange}
+                disabled={isSubmitting}
               ></textarea>
             </div>
-            <button type="submit" className="btn btn-primary w-full" id="submit-btn">
-              提交
+            <button 
+              type="submit" 
+              className="btn btn-primary w-full" 
+              id="submit-btn"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center justify-center">
+                  <div className="loading mr-2"></div>
+                  提交中...
+                </div>
+              ) : (
+                '提交'
+              )}
             </button>
           </form>
           <div ref={feedbackRef} className="feedback-animation">
@@ -137,17 +238,18 @@ const Dashboard = () => {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-600">本周记录</p>
-              <p className="text-2xl font-bold">5</p>
+              <p className="text-2xl font-bold">{getStats().weeklyRecords}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">总记录</p>
-              <p className="text-2xl font-bold">28</p>
+              <p className="text-2xl font-bold">{getStats().totalRecords}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">成长进度</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div className="bg-primary h-2.5 rounded-full" style={{ width: '65%' }}></div>
+              <div className="progress-container">
+                <div className="progress-bar" style={{ width: `${getStats().growthProgress}%` }}></div>
               </div>
+              <p className="text-right mt-1">{getStats().growthProgress}%</p>
             </div>
           </div>
         </div>
