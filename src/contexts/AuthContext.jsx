@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import secureStorage from '../utils/secureStorage';
 
 // 创建Context
 const AuthContext = createContext();
@@ -19,13 +20,13 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 从localStorage加载用户信息
+  // 从安全存储加载用户信息
   useEffect(() => {
     const loadUser = () => {
       try {
-        const savedUser = localStorage.getItem('growthos-user');
+        const savedUser = secureStorage.getItem('growthos-user');
         if (savedUser) {
-          setUser(JSON.parse(savedUser));
+          setUser(savedUser);
         }
       } catch (err) {
         setError('加载用户信息失败');
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }) => {
         token: 'mock-token-' + Date.now()
       };
       setUser(userData);
-      localStorage.setItem('growthos-user', JSON.stringify(userData));
+      secureStorage.setItem('growthos-user', userData);
       return true;
     }
     return false;
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }) => {
         token: 'mock-token-' + Date.now()
       };
       setUser(userData);
-      localStorage.setItem('growthos-user', JSON.stringify(userData));
+      secureStorage.setItem('growthos-user', userData);
       return true;
     }
     return false;
@@ -77,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   // 登出
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('growthos-user');
+    secureStorage.removeItem('growthos-user');
   };
 
   // 提供给子组件的值
