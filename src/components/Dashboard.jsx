@@ -45,15 +45,15 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">仪表盘</h1>
+      <h1 className="page-title">仪表盘</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="card">
           <h2 className="text-xl font-semibold mb-4">成长树预览</h2>
           <div className="h-64 bg-gray-100 rounded flex items-center justify-center" ref={treeRef}>
             <div className="text-center">
               <p className="text-gray-500">成长树可视化区域</p>
               <p className="text-sm text-gray-400 mt-2">使用 #标签 记录日常活动，系统会自动创建对应节点</p>
-              <button className="mt-4 bg-primary text-white px-4 py-2 rounded hover:bg-green-600">
+              <button className="mt-4 btn btn-primary">
                 查看完整成长树
               </button>
             </div>
@@ -72,36 +72,36 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="card">
           <h2 className="text-xl font-semibold mb-4">日常记录</h2>
           <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block mb-2">做了什么</label>
+            <div className="form-group">
+              <label className="form-label">做了什么</label>
               <input 
                 type="text" 
                 name="activity"
-                className="w-full p-2 border rounded" 
+                className="input" 
                 placeholder="今天做了什么... 支持 #标签" 
                 value={formData.activity}
                 onChange={handleChange}
               />
             </div>
-            <div className="mb-4">
-              <label className="block mb-2">学了什么</label>
+            <div className="form-group">
+              <label className="form-label">学了什么</label>
               <input 
                 type="text" 
                 name="learning"
-                className="w-full p-2 border rounded" 
+                className="input" 
                 placeholder="今天学了什么... 支持 #标签" 
                 value={formData.learning}
                 onChange={handleChange}
               />
             </div>
-            <div className="mb-4">
-              <label className="block mb-2">状态如何</label>
+            <div className="form-group">
+              <label className="form-label">状态如何</label>
               <select 
                 name="mood"
-                className="w-full p-2 border rounded"
+                className="input"
                 value={formData.mood}
                 onChange={handleChange}
               >
@@ -110,29 +110,29 @@ const Dashboard = () => {
                 <option>不太好</option>
               </select>
             </div>
-            <div className="mb-4">
-              <label className="block mb-2">反思</label>
+            <div className="form-group">
+              <label className="form-label">反思</label>
               <textarea 
                 name="reflection"
-                className="w-full p-2 border rounded" 
+                className="input" 
                 rows="3" 
                 placeholder="今天的反思..."
                 value={formData.reflection}
                 onChange={handleChange}
               ></textarea>
             </div>
-            <button type="submit" className="w-full bg-primary text-white p-2 rounded hover:bg-green-600" id="submit-btn">
+            <button type="submit" className="btn btn-primary w-full" id="submit-btn">
               提交
             </button>
           </form>
-          <div id="feedback-animation" className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-4 py-2 rounded-full text-lg font-bold opacity-0 transition-opacity duration-500 pointer-events-none">
+          <div ref={feedbackRef} className="feedback-animation">
             +1 经验值
           </div>
           <div className="mt-4 text-sm text-gray-600">
             <p>提示：使用 #标签 可以自动创建或关联成长树节点，例如 #Python #阅读</p>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="card">
           <h2 className="text-xl font-semibold mb-4">快速统计</h2>
           <div className="space-y-4">
             <div>

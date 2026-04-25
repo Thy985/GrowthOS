@@ -11,7 +11,7 @@ function Navbar() {
   return (
     <nav className="nav">
       <div className="nav-container">
-        <div className="nav-logo">GrowthOS</div>
+        <Link to="/" className="nav-logo">GrowthOS</Link>
         <div className="nav-links">
           <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
             仪表盘

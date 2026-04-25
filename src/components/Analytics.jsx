@@ -3,8 +3,8 @@ import React from 'react';
 const Analytics = () => {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">分析</h1>
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+      <h1 className="page-title">分析</h1>
+      <div className="card mb-6">
         <h2 className="text-xl font-semibold mb-4">数据统计</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gray-50 p-4 rounded">
@@ -21,7 +21,7 @@ const Analytics = () => {
           </div>
         </div>
       </div>
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+      <div className="card mb-6">
         <h2 className="text-xl font-semibold mb-4">AI分析-层级一（数据清洗与结构化）</h2>
         <div className="bg-gray-50 p-4 rounded">
           <p className="mb-2">自动标签化：#技能学习、#前端、#困难</p>
@@ -29,7 +29,7 @@ const Analytics = () => {
           <p>关联节点：React 技能树</p>
         </div>
       </div>
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+      <div className="card mb-6">
         <h2 className="text-xl font-semibold mb-4">AI分析-层级二（洞察与发现）</h2>
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded">
@@ -46,7 +46,7 @@ const Analytics = () => {
           </div>
         </div>
       </div>
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+      <div className="card mb-6">
         <h2 className="text-xl font-semibold mb-4">AI分析-层级三（行动建议）</h2>
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded">
@@ -59,7 +59,7 @@ const Analytics = () => {
           </div>
         </div>
       </div>
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="card">
         <h2 className="text-xl font-semibold mb-4">成长报告</h2>
         <div className="bg-gray-50 p-4 rounded">
           <p className="mb-2">本周成长报告（2024-01-01 至 2024-01-07）</p>
