@@ -11,6 +11,13 @@ const GrowthTree = () => {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [treeData, setTreeData] = useState(null);
+  const [nodeDetails, setNodeDetails] = useState({
+    name: 'React 技能',
+    mastery: 75,
+    status: '进行中',
+    startDate: '2024-01-01',
+    lastUpdate: '2024-01-15'
+  });
 
   // 从localStorage加载成长树数据
   useEffect(() => {
@@ -133,6 +140,15 @@ const GrowthTree = () => {
       default:
         return '#757575'; // 灰色
     }
+  };
+
+  // 处理节点详情变化
+  const handleNodeDetailChange = (e) => {
+    const { name, value } = e.target;
+    setNodeDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
   return (
     <div>
@@ -263,30 +279,53 @@ const GrowthTree = () => {
         <div className="space-y-4">
           <div>
             <label className="form-label">节点名称</label>
-            <input type="text" className="form-input" value="React 技能" />
+            <input 
+              type="text" 
+              className="form-input" 
+              name="name"
+              value={nodeDetails.name} 
+              onChange={handleNodeDetailChange}
+            />
           </div>
           <div>
             <label className="form-label">掌握度</label>
             <div className="progress-container">
-              <div className="progress-bar" style={{ width: '75%' }}></div>
+              <div className="progress-bar" style={{ width: `${nodeDetails.mastery}%` }}></div>
             </div>
-            <p className="text-right mt-1">75%</p>
+            <p className="text-right mt-1">{nodeDetails.mastery}%</p>
           </div>
           <div>
             <label className="form-label">状态</label>
-            <select className="form-input">
-              <option>未开始</option>
-              <option selected>进行中</option>
-              <option>深入</option>
+            <select 
+              className="form-input"
+              name="status"
+              value={nodeDetails.status}
+              onChange={handleNodeDetailChange}
+            >
+              <option value="未开始">未开始</option>
+              <option value="进行中">进行中</option>
+              <option value="深入">深入</option>
             </select>
           </div>
           <div>
             <label className="form-label">开始日期</label>
-            <input type="date" className="form-input" value="2024-01-01" />
+            <input 
+              type="date" 
+              className="form-input" 
+              name="startDate"
+              value={nodeDetails.startDate} 
+              onChange={handleNodeDetailChange}
+            />
           </div>
           <div>
             <label className="form-label">最近更新</label>
-            <input type="date" className="form-input" value="2024-01-15" />
+            <input 
+              type="date" 
+              className="form-input" 
+              name="lastUpdate"
+              value={nodeDetails.lastUpdate} 
+              onChange={handleNodeDetailChange}
+            />
           </div>
           <button className="btn btn-primary w-full">
             保存更改
