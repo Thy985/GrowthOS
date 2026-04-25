@@ -1,62 +1,62 @@
-## 1. Architecture Design
+## 1. 架构设计
 ```mermaid
 flowchart TD
-    A[Frontend] --> B[Supabase Auth]
-    A --> C[Supabase Database]
-    A --> D[Supabase Storage]
-    A --> E[AI Services]
+    A[前端] --> B[Supabase 认证]
+    A --> C[Supabase 数据库]
+    A --> D[Supabase 存储]
+    A --> E[AI 服务]
     
-    subgraph Frontend
-        F[React App]
-        G[Components]
-        H[State Management]
-        I[Visualization]
+    subgraph 前端
+        F[React 应用]
+        G[组件]
+        H[状态管理]
+        I[可视化]
     end
     
-    subgraph Data Layer
+    subgraph 数据层
         C
         D
     end
     
-    subgraph External Services
+    subgraph 外部服务
         E
     end
 ```
 
-## 2. Technology Description
-- Frontend: React@18 + Tailwind CSS@3 + Vite
-- Initialization Tool: Vite
-- Backend: Supabase (for auth, database, and storage)
-- Database: Supabase (PostgreSQL)
-- UI Libraries: React Flow (for tree visualization), Recharts (for analytics charts)
-- Authentication: Supabase Auth
-- Storage: Supabase Storage (for user data and media)
+## 2. 技术描述
+- 前端：React@18 + Tailwind CSS@3 + Vite
+- 初始化工具：Vite
+- 后端：Supabase（用于认证、数据库和存储）
+- 数据库：Supabase（PostgreSQL）
+- UI 库：React Flow（用于树可视化）、Recharts（用于分析图表）
+- 认证：Supabase Auth
+- 存储：Supabase Storage（用于用户数据和媒体）
 
-## 3. Route Definitions
-| Route | Purpose |
+## 3. 路由定义
+| 路由 | 用途 |
 |-------|---------|
-| / | Dashboard with growth tree preview and daily record |
-| /growth-tree | Detailed growth tree management |
-| /analytics | AI analysis and insights |
-| /auth | Authentication (login/register) |
+| / | 仪表盘，包含成长树预览和日常记录 |
+| /growth-tree | 详细的成长树管理 |
+| /analytics | AI 分析和洞察 |
+| /auth | 认证（登录/注册） |
 
-## 4. API Definitions
-### Supabase Client SDK
-- Authentication: `supabase.auth.signUp()`, `supabase.auth.signIn()`, `supabase.auth.signOut()`
-- Database: `supabase.from('table').select()`, `supabase.from('table').insert()`, `supabase.from('table').update()`, `supabase.from('table').delete()`
-- Storage: `supabase.storage.from('bucket').upload()`, `supabase.storage.from('bucket').download()`
+## 4. API 定义
+### Supabase 客户端 SDK
+- 认证：`supabase.auth.signUp()`、`supabase.auth.signIn()`、`supabase.auth.signOut()`
+- 数据库：`supabase.from('table').select()`、`supabase.from('table').insert()`、`supabase.from('table').update()`、`supabase.from('table').delete()`
+- 存储：`supabase.storage.from('bucket').upload()`、`supabase.storage.from('bucket').download()`
 
-## 5. Data Model
-### 5.1 Data Model Definition
+## 5. 数据模型
+### 5.1 数据模型定义
 ```mermaid
 erDiagram
-    USERS ||--o{ GROWTH_TREES : has
-    GROWTH_TREES ||--o{ TREE_NODES : contains
-    USERS ||--o{ DAILY_RECORDS : creates
-    TREE_NODES ||--o{ NODE_RECORDS :关联
-    DAILY_RECORDS ||--o{ RECORD_ITEMS :包含
-    USERS ||--o{ PERSONALITY_DATA : has
-    USERS ||--o{ ANALYTICS_REPORTS : receives
+    USERS ||--o{ GROWTH_TREES : 拥有
+    GROWTH_TREES ||--o{ TREE_NODES : 包含
+    USERS ||--o{ DAILY_RECORDS : 创建
+    TREE_NODES ||--o{ NODE_RECORDS : 关联
+    DAILY_RECORDS ||--o{ RECORD_ITEMS : 包含
+    USERS ||--o{ PERSONALITY_DATA : 拥有
+    USERS ||--o{ ANALYTICS_REPORTS : 接收
 
     USERS {
         id UUID PK
@@ -127,9 +127,9 @@ erDiagram
     }
 ```
 
-### 5.2 Data Definition Language
+### 5.2 数据定义语言
 ```sql
--- Create users table
+-- 创建用户表
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create growth_trees table
+-- 创建成长树表
 CREATE TABLE growth_trees (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id),
@@ -146,7 +146,7 @@ CREATE TABLE growth_trees (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create tree_nodes table
+-- 创建树节点表
 CREATE TABLE tree_nodes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tree_id UUID REFERENCES growth_trees(id),
@@ -159,7 +159,7 @@ CREATE TABLE tree_nodes (
   last_updated TIMESTAMP DEFAULT NOW()
 );
 
--- Create daily_records table
+-- 创建日常记录表
 CREATE TABLE daily_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id),
@@ -169,7 +169,7 @@ CREATE TABLE daily_records (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create record_items table
+-- 创建记录项目表
 CREATE TABLE record_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   record_id UUID REFERENCES daily_records(id),
@@ -177,7 +177,7 @@ CREATE TABLE record_items (
   content TEXT NOT NULL
 );
 
--- Create node_records table
+-- 创建节点记录表
 CREATE TABLE node_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   node_id UUID REFERENCES tree_nodes(id),
@@ -186,7 +186,7 @@ CREATE TABLE node_records (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create personality_data table
+-- 创建性格数据表
 CREATE TABLE personality_data (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id),
@@ -195,7 +195,7 @@ CREATE TABLE personality_data (
   recorded_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create analytics_reports table
+-- 创建分析报告表
 CREATE TABLE analytics_reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id),
@@ -205,7 +205,7 @@ CREATE TABLE analytics_reports (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create indexes
+-- 创建索引
 CREATE INDEX idx_tree_nodes_tree_id ON tree_nodes(tree_id);
 CREATE INDEX idx_tree_nodes_parent_id ON tree_nodes(parent_id);
 CREATE INDEX idx_daily_records_user_id_date ON daily_records(user_id, date);
@@ -214,7 +214,7 @@ CREATE INDEX idx_node_records_node_id ON node_records(node_id);
 CREATE INDEX idx_personality_data_user_id_dimension ON personality_data(user_id, dimension);
 CREATE INDEX idx_analytics_reports_user_id_type ON analytics_reports(user_id, report_type);
 
--- Set up RLS (Row Level Security)
+-- 设置 RLS（行级安全）
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE growth_trees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tree_nodes ENABLE ROW LEVEL SECURITY;
@@ -224,20 +224,20 @@ ALTER TABLE node_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE personality_data ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_reports ENABLE ROW LEVEL SECURITY;
 
--- Create policies
-CREATE POLICY "Users can view own data" ON users
+-- 创建策略
+CREATE POLICY "用户可以查看自己的数据" ON users
   FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Users can create own growth trees" ON growth_trees
+CREATE POLICY "用户可以创建自己的成长树" ON growth_trees
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can view own growth trees" ON growth_trees
+CREATE POLICY "用户可以查看自己的成长树" ON growth_trees
   FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own growth trees" ON growth_trees
+CREATE POLICY "用户可以更新自己的成长树" ON growth_trees
   FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own growth trees" ON growth_trees
+CREATE POLICY "用户可以删除自己的成长树" ON growth_trees
   FOR DELETE USING (auth.uid() = user_id);
 
--- Similar policies for other tables...
+-- 其他表的类似策略...
