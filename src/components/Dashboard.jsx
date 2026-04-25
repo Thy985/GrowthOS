@@ -1,13 +1,55 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 
 const Dashboard = () => {
+  const [formData, setFormData] = useState({
+    activity: '',
+    learning: '',
+    mood: '很好',
+    reflection: ''
+  });
+  const feedbackRef = useRef(null);
+  const treeRef = useRef(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // 显示反馈动画
+    if (feedbackRef.current) {
+      feedbackRef.current.style.opacity = '1';
+      setTimeout(() => {
+        feedbackRef.current.style.opacity = '0';
+      }, 1000);
+    }
+    // 模拟树的抖动效果
+    if (treeRef.current) {
+      treeRef.current.style.animation = 'tree-shake 0.5s ease-in-out';
+      setTimeout(() => {
+        treeRef.current.style.animation = '';
+      }, 500);
+    }
+    // 重置表单
+    setFormData({
+      activity: '',
+      learning: '',
+      mood: '很好',
+      reflection: ''
+    });
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">仪表盘</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">成长树预览</h2>
-          <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
+          <div className="h-64 bg-gray-100 rounded flex items-center justify-center" ref={treeRef}>
             <div className="text-center">
               <p className="text-gray-500">成长树可视化区域</p>
               <p className="text-sm text-gray-400 mt-2">使用 #标签 记录日常活动，系统会自动创建对应节点</p>
@@ -32,18 +74,37 @@ const Dashboard = () => {
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">日常记录</h2>
-          <form>
+          <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block mb-2">做了什么</label>
-              <input type="text" className="w-full p-2 border rounded" placeholder="今天做了什么... 支持 #标签" />
+              <input 
+                type="text" 
+                name="activity"
+                className="w-full p-2 border rounded" 
+                placeholder="今天做了什么... 支持 #标签" 
+                value={formData.activity}
+                onChange={handleChange}
+              />
             </div>
             <div className="mb-4">
               <label className="block mb-2">学了什么</label>
-              <input type="text" className="w-full p-2 border rounded" placeholder="今天学了什么... 支持 #标签" />
+              <input 
+                type="text" 
+                name="learning"
+                className="w-full p-2 border rounded" 
+                placeholder="今天学了什么... 支持 #标签" 
+                value={formData.learning}
+                onChange={handleChange}
+              />
             </div>
             <div className="mb-4">
               <label className="block mb-2">状态如何</label>
-              <select className="w-full p-2 border rounded">
+              <select 
+                name="mood"
+                className="w-full p-2 border rounded"
+                value={formData.mood}
+                onChange={handleChange}
+              >
                 <option>很好</option>
                 <option>一般</option>
                 <option>不太好</option>
@@ -51,12 +112,22 @@ const Dashboard = () => {
             </div>
             <div className="mb-4">
               <label className="block mb-2">反思</label>
-              <textarea className="w-full p-2 border rounded" rows="3" placeholder="今天的反思..."></textarea>
+              <textarea 
+                name="reflection"
+                className="w-full p-2 border rounded" 
+                rows="3" 
+                placeholder="今天的反思..."
+                value={formData.reflection}
+                onChange={handleChange}
+              ></textarea>
             </div>
-            <button type="submit" className="w-full bg-primary text-white p-2 rounded hover:bg-green-600">
+            <button type="submit" className="w-full bg-primary text-white p-2 rounded hover:bg-green-600" id="submit-btn">
               提交
             </button>
           </form>
+          <div id="feedback-animation" className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-4 py-2 rounded-full text-lg font-bold opacity-0 transition-opacity duration-500 pointer-events-none">
+            +1 经验值
+          </div>
           <div className="mt-4 text-sm text-gray-600">
             <p>提示：使用 #标签 可以自动创建或关联成长树节点，例如 #Python #阅读</p>
           </div>

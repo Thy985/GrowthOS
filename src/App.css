@@ -59,6 +59,19 @@ body {
   padding: 2rem;
 }
 
+/* 动画效果 */
+@keyframes tree-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .nav-links {
