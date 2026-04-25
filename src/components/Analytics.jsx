@@ -2,7 +2,7 @@ import React from 'react';
 
 const Analytics = () => {
   return (
-    <div className="p-6">
+    <div>
       <h1 className="text-3xl font-bold mb-6">分析</h1>
       <div className="bg-white p-6 rounded-lg shadow mb-6">
         <h2 className="text-xl font-semibold mb-4">数据统计</h2>
@@ -34,7 +34,7 @@ const Analytics = () => {
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded">
             <h3 className="font-medium mb-2">归因分析</h3>
-            <p>检测到当你前一天睡眠不足（<6h）且摄入咖啡因时，今日专注度平均下降 40%。</p>
+            <p>检测到当你前一天睡眠不足（小于6h）且摄入咖啡因时，今日专注度平均下降 40%。</p>
           </div>
           <div className="bg-gray-50 p-4 rounded">
             <h3 className="font-medium mb-2">隐性模式识别</h3>
