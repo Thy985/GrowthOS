@@ -83,3 +83,4 @@ class SecureStorage {
 // 导出单例
 const secureStorage = new SecureStorage();
 export default secureStorage;
+export { secureStorage };
