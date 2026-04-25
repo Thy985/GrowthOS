@@ -66,6 +66,48 @@ const GrowthTree = () => {
                 </button>
               </div>
             </div>
+            <div className="flex items-center justify-between p-2 bg-gray-200 rounded opacity-70">
+              <span>#React</span>
+              <div className="flex space-x-2">
+                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                  确认
+                </button>
+                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                  删除
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-2 bg-gray-200 rounded opacity-50">
+              <span>#跑步</span>
+              <div className="flex space-x-2">
+                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                  确认
+                </button>
+                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                  删除
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-2 bg-gray-200 rounded opacity-30">
+              <span>#王者荣耀</span>
+              <div className="flex space-x-2">
+                <button className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+                  确认
+                </button>
+                <button className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                  删除
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-2 bg-gray-100 rounded">
+              <span>...</span>
+              <button className="text-xs bg-primary text-white px-2 py-1 rounded hover:bg-green-600">
+                查看更多
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 text-sm text-gray-600">
+            <p>提示：未分类的节点如果 7 天内未被确认，会逐渐枯萎并最终被归档</p>
           </div>
         </div>
         <div className="mt-6">
