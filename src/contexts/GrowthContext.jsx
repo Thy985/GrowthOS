@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import secureStorage from '../utils/secureStorage';
 
 // 创建Context
 const GrowthContext = createContext();
@@ -20,21 +21,21 @@ export const GrowthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // 从localStorage加载数据
+  // 从安全存储加载数据
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
         // 加载记录
-        const savedRecords = localStorage.getItem('growthos-records');
+        const savedRecords = secureStorage.getItem('growthos-records');
         if (savedRecords) {
-          setRecords(JSON.parse(savedRecords));
+          setRecords(savedRecords);
         }
 
         // 加载成长树
-        const savedTree = localStorage.getItem('growthos-tree');
+        const savedTree = secureStorage.getItem('growthos-tree');
         if (savedTree) {
-          setTreeData(JSON.parse(savedTree));
+          setTreeData(savedTree);
         } else {
           // 初始化默认成长树
           const defaultTree = {
@@ -84,7 +85,7 @@ export const GrowthProvider = ({ children }) => {
             ]
           };
           setTreeData(defaultTree);
-          localStorage.setItem('growthos-tree', JSON.stringify(defaultTree));
+          secureStorage.setItem('growthos-tree', defaultTree);
         }
       } catch (err) {
         setError('加载数据失败');
@@ -108,7 +109,7 @@ export const GrowthProvider = ({ children }) => {
     
     const updatedRecords = [newRecord, ...records];
     setRecords(updatedRecords);
-    localStorage.setItem('growthos-records', JSON.stringify(updatedRecords));
+    secureStorage.setItem('growthos-records', updatedRecords);
     
     // 自动处理标签，创建影子节点
     handleTags(newRecord.tags);
@@ -222,7 +223,7 @@ export const GrowthProvider = ({ children }) => {
   // 更新成长树
   const updateTree = (newTreeData) => {
     setTreeData(newTreeData);
-    localStorage.setItem('growthos-tree', JSON.stringify(newTreeData));
+    secureStorage.setItem('growthos-tree', newTreeData);
   };
 
   // 添加树节点
@@ -298,17 +299,65 @@ export const GrowthProvider = ({ children }) => {
     try {
       if (data.records) {
         setRecords(data.records);
-        localStorage.setItem('growthos-records', JSON.stringify(data.records));
+        secureStorage.setItem('growthos-records', data.records);
       }
       if (data.treeData) {
         setTreeData(data.treeData);
-        localStorage.setItem('growthos-tree', JSON.stringify(data.treeData));
+        secureStorage.setItem('growthos-tree', data.treeData);
       }
       return true;
     } catch (err) {
       console.error('导入数据失败:', err);
       return false;
     }
+  };
+
+  // 搜索记录
+  const searchRecords = (searchTerm) => {
+    if (!searchTerm) return records;
+    
+    const term = searchTerm.toLowerCase();
+    return records.filter(record => {
+      return (
+        record.activity?.toLowerCase().includes(term) ||
+        record.learning?.toLowerCase().includes(term) ||
+        record.reflection?.toLowerCase().includes(term) ||
+        record.tags?.some(tag => tag.toLowerCase().includes(term))
+      );
+    });
+  };
+
+  // 按时间范围过滤记录
+  const filterRecordsByDateRange = (startDate, endDate) => {
+    return records.filter(record => {
+      const recordDate = new Date(record.createdAt);
+      return recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+    });
+  };
+
+  // 按情绪过滤记录
+  const filterRecordsByMood = (moods) => {
+    if (!moods || moods.length === 0) return records;
+    return records.filter(record => moods.includes(record.mood));
+  };
+
+  // 按标签过滤记录
+  const filterRecordsByTags = (tags) => {
+    if (!tags || tags.length === 0) return records;
+    return records.filter(record => {
+      return record.tags?.some(tag => tags.includes(tag));
+    });
+  };
+
+  // 获取所有标签
+  const getAllTags = () => {
+    const allTags = new Set();
+    records.forEach(record => {
+      if (record.tags) {
+        record.tags.forEach(tag => allTags.add(tag));
+      }
+    });
+    return Array.from(allTags);
   };
 
   // 提供给子组件的值
@@ -323,7 +372,12 @@ export const GrowthProvider = ({ children }) => {
     getStats,
     getAverageMood,
     exportData,
-    importData
+    importData,
+    searchRecords,
+    filterRecordsByDateRange,
+    filterRecordsByMood,
+    filterRecordsByTags,
+    getAllTags
   };
 
   return (

@@ -7,6 +7,13 @@ import {
   PieChart, 
   Pie, 
   Cell, 
+  AreaChart, 
+  Area,
+  RadarChart, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  PolarRadiusAxis, 
+  Radar,
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -15,6 +22,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { useGrowth } from '../contexts/GrowthContext';
+import { Card, Button } from '../components/common';
 
 // 自定义工具提示组件
 const CustomTooltip = ({ active, payload, label }) => {
@@ -56,9 +64,13 @@ const Analytics = () => {
   const [chartData, setChartData] = useState({
     dailyRecords: [],
     moodTrend: [],
-    activityDistribution: []
+    activityDistribution: [],
+    weeklyTrend: [],
+    skillsRadar: [],
+    categoryBreakdown: []
   });
   const [importStatus, setImportStatus] = useState({ success: false, message: '' });
+  const [activeChart, setActiveChart] = useState('daily');
   const { records, getStats, getAverageMood, exportData, importData } = useGrowth();
 
   // 处理图表数据
@@ -161,12 +173,190 @@ const Analytics = () => {
       name,
       value
     })).slice(0, 5); // 只取前5个
+
+    // 计算每周趋势
+    const weeklyData = [];
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - i * 7);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      const weekRecords = records.filter(record => {
+        const recordDate = new Date(record.createdAt);
+        return recordDate >= weekStart && recordDate <= weekEnd;
+      });
+      
+      const weekMood = weekRecords.reduce((sum, record) => {
+        let moodValue = 0;
+        switch (record.mood) {
+          case '很好':
+            moodValue = 2;
+            break;
+          case '一般':
+            moodValue = 1;
+            break;
+          case '不太好':
+            moodValue = 0;
+            break;
+        }
+        return sum + moodValue;
+      }, 0);
+      
+      weeklyData.push({
+        week: `第${4 - i}周`,
+        records: weekRecords.length,
+        avgMood: weekRecords.length > 0 ? weekMood / weekRecords.length : 0
+      });
+    }
+
+    // 技能雷达图数据
+    const skillsData = [
+      { subject: '编程', A: Math.min(records.filter(r => r.tags?.includes('编程')).length + 3, 10), fullMark: 10 },
+      { subject: '学习', A: Math.min(records.filter(r => r.tags?.includes('学习')).length + 2, 10), fullMark: 10 },
+      { subject: '阅读', A: Math.min(records.filter(r => r.tags?.includes('阅读')).length + 2, 10), fullMark: 10 },
+      { subject: '运动', A: Math.min(records.filter(r => r.tags?.includes('运动')).length + 1, 10), fullMark: 10 },
+      { subject: '社交', A: Math.min(records.filter(r => r.tags?.includes('社交')).length + 1, 10), fullMark: 10 },
+      { subject: '冥想', A: Math.min(records.filter(r => r.tags?.includes('冥想')).length + 1, 10), fullMark: 10 }
+    ];
+
+    // 分类分布
+    const categories = ['技能', '认知', '习惯', '生活'];
+    const categoryData = categories.map(category => {
+      const categoryRecords = records.filter(record => {
+        const tags = record.tags || [];
+        return tags.some(tag => 
+          (category === '技能' && ['编程', '学习', '技能'].includes(tag)) ||
+          (category === '认知' && ['阅读', '课程', '观影'].includes(tag)) ||
+          (category === '习惯' && ['运动', '早起', '冥想'].includes(tag)) ||
+          (category === '生活' && ['家庭', '社交', '旅行'].includes(tag))
+        );
+      });
+      return {
+        name: category,
+        value: categoryRecords.length
+      };
+    });
     
     setChartData({
       dailyRecords: dailyData,
       moodTrend: moodData,
-      activityDistribution: activityData
+      activityDistribution: activityData,
+      weeklyTrend: weeklyData,
+      skillsRadar: skillsData,
+      categoryBreakdown: categoryData
     });
+  };
+
+  // 渲染不同的图表
+  const renderChart = () => {
+    switch (activeChart) {
+      case 'daily':
+        return (
+          <div className="col-span-1 lg:col-span-2">
+            <h3 className="font-medium mb-3">过去7天记录趋势</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData.dailyRecords} animationDuration={1500}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar 
+                  dataKey="count" 
+                  fill={chartColors.primary} 
+                  name="记录数"
+                  radius={[4, 4, 0, 0]}
+                  animationEasing="ease-in-out"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      
+      case 'weekly':
+        return (
+          <div className="col-span-1 lg:col-span-2">
+            <h3 className="font-medium mb-3">每周趋势</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={chartData.weeklyTrend} animationDuration={1500}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="week" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="records" 
+                  stackId="1"
+                  stroke={chartColors.primary} 
+                  fill={chartColors.primary}
+                  fillOpacity={0.3}
+                  name="记录数"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="avgMood" 
+                  stackId="2"
+                  stroke={chartColors.secondary} 
+                  fill={chartColors.secondary}
+                  fillOpacity={0.3}
+                  name="平均情绪"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      
+      case 'skills':
+        return (
+          <div className="col-span-1 lg:col-span-2">
+            <h3 className="font-medium mb-3">技能雷达图</h3>
+            <ResponsiveContainer width="100%" height={350}>
+              <RadarChart data={chartData.skillsRadar} animationDuration={1500}>
+                <PolarGrid stroke="#f0f0f0" />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
+                <PolarRadiusAxis angle={90} domain={[0, 10]} />
+                <Radar 
+                  name="技能得分" 
+                  dataKey="A" 
+                  stroke={chartColors.primary} 
+                  fill={chartColors.primary} 
+                  fillOpacity={0.4} 
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      
+      case 'categories':
+        return (
+          <div className="col-span-1 lg:col-span-2">
+            <h3 className="font-medium mb-3">分类分布</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData.categoryBreakdown} animationDuration={1500} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 12 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar 
+                  dataKey="value" 
+                  fill={chartColors.secondary} 
+                  name="记录数"
+                  radius={[0, 4, 4, 0]}
+                  animationEasing="ease-in-out"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
   };
 
   return (
@@ -202,8 +392,7 @@ const Analytics = () => {
           {importStatus.message}
         </div>
       )}
-      <div className="card mb-6">
-        <h2 className="text-xl font-semibold mb-4">数据统计</h2>
+      <Card title="数据统计" className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-gray-50 p-4 rounded">
             <p className="text-sm text-gray-600">本周记录</p>
@@ -218,26 +407,41 @@ const Analytics = () => {
             <p className="text-2xl font-bold">{getAverageMood()}</p>
           </div>
         </div>
+        
+        {/* 图表切换按钮 */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Button 
+            variant={activeChart === 'daily' ? 'primary' : 'outline'}
+            size="small"
+            onClick={() => setActiveChart('daily')}
+          >
+            日趋势
+          </Button>
+          <Button 
+            variant={activeChart === 'weekly' ? 'primary' : 'outline'}
+            size="small"
+            onClick={() => setActiveChart('weekly')}
+          >
+            周趋势
+          </Button>
+          <Button 
+            variant={activeChart === 'skills' ? 'primary' : 'outline'}
+            size="small"
+            onClick={() => setActiveChart('skills')}
+          >
+            技能雷达
+          </Button>
+          <Button 
+            variant={activeChart === 'categories' ? 'primary' : 'outline'}
+            size="small"
+            onClick={() => setActiveChart('categories')}
+          >
+            分类分布
+          </Button>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="col-span-1 lg:col-span-2">
-            <h3 className="font-medium mb-3">过去7天记录趋势</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData.dailyRecords} animationDuration={1500}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar 
-                  dataKey="count" 
-                  fill={chartColors.primary} 
-                  name="记录数"
-                  radius={[4, 4, 0, 0]}
-                  animationEasing="ease-in-out"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {renderChart()}
           <div>
             <h3 className="font-medium mb-3">情绪趋势</h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -313,17 +517,15 @@ const Analytics = () => {
             </PieChart>
           </ResponsiveContainer>
         </div>
-      </div>
-      <div className="card mb-6">
-        <h2 className="text-xl font-semibold mb-4">AI分析-层级一（数据清洗与结构化）</h2>
+      </Card>
+      <Card title="AI分析-层级一（数据清洗与结构化）" className="mb-6">
         <div className="bg-gray-50 p-4 rounded">
           <p className="mb-2">自动标签化：#技能学习、#前端、#困难</p>
           <p className="mb-2">情绪打分：+3</p>
           <p>关联节点：React 技能树</p>
         </div>
-      </div>
-      <div className="card mb-6">
-        <h2 className="text-xl font-semibold mb-4">AI分析-层级二（洞察与发现）</h2>
+      </Card>
+      <Card title="AI分析-层级二（洞察与发现）" className="mb-6">
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded">
             <h3 className="font-medium mb-2">归因分析</h3>
@@ -338,9 +540,8 @@ const Analytics = () => {
             <p>本月你 80% 的记录都与'帮助他人'有关，你的核心价值观正从'成就导向'向'利他导向'偏移。</p>
           </div>
         </div>
-      </div>
-      <div className="card mb-6">
-        <h2 className="text-xl font-semibold mb-4">AI分析-层级三（行动建议）</h2>
+      </Card>
+      <Card title="AI分析-层级三（行动建议）" className="mb-6">
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded">
             <h3 className="font-medium mb-2">动态策略调整</h3>
@@ -351,15 +552,14 @@ const Analytics = () => {
             <p>你的'编程'技能树已经很久没生长了，要不要回顾一下上个月的笔记？</p>
           </div>
         </div>
-      </div>
-      <div className="card">
-        <h2 className="text-xl font-semibold mb-4">成长报告</h2>
+      </Card>
+      <Card title="成长报告">
         <div className="bg-gray-50 p-4 rounded">
           <p className="mb-2">本周成长报告（2024-01-01 至 2024-01-07）</p>
           <p>你本周共记录了 3 条活动，主要集中在前端技能学习和项目开发。你的情绪状态整体良好，平均情绪值为 +5。</p>
           <p className="mt-2">AI 建议：继续保持当前的学习节奏，建议增加一些体育锻炼来提高专注力。</p>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
