@@ -51,9 +51,31 @@ export interface GrowthState {
   error: string | null;
 }
 
+// 目标类型
+export interface Goal {
+  id: string;
+  title: string;
+  description: string;
+  targetValue: number;
+  currentValue: number;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'completed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 目标状态类型
+export interface GoalState {
+  goals: Goal[];
+  isLoading: boolean;
+  error: string | null;
+}
+
 // 根状态类型
 export interface RootState {
   auth: AuthState;
   growth: GrowthState;
   theme: ThemeState;
+  goal: GoalState;
 }
