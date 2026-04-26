@@ -25,8 +25,9 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { useSelector, useDispatch } from 'react-redux';
-import { exportData, importData } from '../../store/slices/growthSlice.ts';
-import ErrorBoundary from '../../components/ErrorBoundary.jsx';
+import { exportData, importData } from '../../store/slices/growthSlice';
+import ErrorBoundary from '../../components/ErrorBoundary';
+import { GrowthState, GoalState } from '../../common/types';
 
 // 自定义工具提示组件
 const CustomTooltip = ({ active, payload, label }) => {
@@ -76,7 +77,7 @@ const Analytics = () => {
   const [activeChart, setActiveChart] = useState('daily');
   const [timeRange, setTimeRange] = useState('7d'); // 7d, 30d, 90d
   const dispatch = useDispatch();
-  const { records } = useSelector(state => state.growth);
+  const { records } = useSelector((state: { growth: GrowthState, goal: GoalState }) => state.growth);
 
   // 计算统计数据
   const stats = useMemo(() => {
@@ -146,7 +147,7 @@ const Analytics = () => {
   };
 
   // 处理图表数据
-  const processChartData = (records, timeRange) => {
+  const processChartData = (records: any[], timeRange: string) => {
     // 计算记录数
     const now = new Date();
     const dailyData = [];

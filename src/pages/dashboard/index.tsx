@@ -1,21 +1,33 @@
 import React, { useState, useRef, useCallback, memo, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addRecord } from '../../store/slices/growthSlice.ts';
+import { RootState } from '../../common/types/index.ts';
+
+interface FormData {
+  activity: string;
+  learning: string;
+  mood: '很好' | '一般' | '不太好';
+  reflection: string;
+}
+
+interface Errors {
+  [key: string]: string;
+}
 
 const Dashboard = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     activity: '',
     learning: '',
     mood: '很好',
     reflection: ''
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Errors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const dispatch = useDispatch();
-  const { records, error } = useSelector(state => state.growth);
-  const feedbackRef = useRef(null);
-  const treeRef = useRef(null);
+  const { records, error } = useSelector((state: RootState) => state.growth);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const treeRef = useRef<HTMLDivElement>(null);
 
   // 计算统计数据
   const stats = useMemo(() => {
@@ -40,7 +52,7 @@ const Dashboard = () => {
     };
   }, [records]);
 
-  const handleChange = useCallback((e) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -56,8 +68,8 @@ const Dashboard = () => {
   }, [errors]);
 
   // 表单验证
-  const validateForm = useCallback(() => {
-    const newErrors = {};
+  const validateForm = useCallback((): Errors => {
+    const newErrors: Errors = {};
     if (!formData.activity.trim()) {
       newErrors.activity = '请输入做了什么';
     }
@@ -67,7 +79,7 @@ const Dashboard = () => {
     return newErrors;
   }, [formData]);
 
-  const handleSubmit = useCallback((e) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     
     // 验证表单
@@ -81,7 +93,7 @@ const Dashboard = () => {
     
     try {
       // 提取标签
-      const extractTags = (text) => {
+      const extractTags = (text: string): string[] => {
         const tagRegex = /#([^\s]+)/g;
         const matches = text.match(tagRegex);
         return matches ? matches.map(tag => tag.substring(1)) : [];
@@ -113,8 +125,8 @@ const Dashboard = () => {
         feedbackRef.current.style.animation = 'popIn 0.3s ease';
         feedbackRef.current.style.opacity = '1';
         setTimeout(() => {
-          feedbackRef.current.style.opacity = '0';
-          feedbackRef.current.style.animation = 'none';
+          feedbackRef.current!.style.opacity = '0';
+          feedbackRef.current!.style.animation = 'none';
         }, 1000);
       }
       
@@ -127,7 +139,7 @@ const Dashboard = () => {
         // 重新开始动画
         treeRef.current.style.animation = 'tree-shake 0.5s ease-in-out';
         setTimeout(() => {
-          treeRef.current.style.animation = 'none';
+          treeRef.current!.style.animation = 'none';
         }, 500);
       }
       
@@ -236,7 +248,7 @@ const Dashboard = () => {
               <textarea 
                 name="reflection"
                 className="input" 
-                rows="3" 
+                rows={3} 
                 placeholder="今天的反思..."
                 value={formData.reflection}
                 onChange={handleChange}

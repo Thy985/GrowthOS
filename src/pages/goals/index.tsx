@@ -1,17 +1,18 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice.ts';
-import ErrorBoundary from '../../components/ErrorBoundary.jsx';
-import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../common/utils/goalUtils.ts';
+import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice';
+import ErrorBoundary from '../../components/ErrorBoundary';
+import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../common/utils/goalUtils';
+import { Goal, GoalState } from '../../common/types';
 
 const Goals = () => {
   const dispatch = useDispatch();
-  const { goals, isLoading, error } = useSelector(state => state.goal);
+  const { goals, isLoading, error } = useSelector((state: { goal: GoalState }) => state.goal);
   
   // 表单状态
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [currentGoal, setCurrentGoal] = useState(null);
+  const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -21,7 +22,7 @@ const Goals = () => {
   });
   
   // 错误状态
-  const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   
   // 加载目标数据
   useEffect(() => {
@@ -38,7 +39,7 @@ const Goals = () => {
   }, [error, dispatch]);
   
   // 处理表单输入变化
-  const handleChange = useCallback((e) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -54,12 +55,12 @@ const Goals = () => {
   }, [formErrors]);
   
   // 表单验证
-  const validateForm = useCallback(() => {
+  const validateForm = useCallback((): { [key: string]: string } => {
     return validateGoalForm(formData);
   }, [formData]);
   
   // 处理添加目标
-  const handleAddGoal = useCallback((e) => {
+  const handleAddGoal = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     
     const errors = validateForm();
@@ -88,7 +89,7 @@ const Goals = () => {
   }, [formData, validateForm, dispatch]);
   
   // 处理编辑目标
-  const handleEditGoal = useCallback((goal) => {
+  const handleEditGoal = useCallback((goal: Goal) => {
     setCurrentGoal(goal);
     setFormData({
       title: goal.title,
@@ -101,7 +102,7 @@ const Goals = () => {
   }, []);
   
   // 处理更新目标
-  const handleUpdateGoal = useCallback((e) => {
+  const handleUpdateGoal = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     
     const errors = validateForm();
@@ -134,14 +135,14 @@ const Goals = () => {
   }, [formData, validateForm, currentGoal, dispatch]);
   
   // 处理删除目标
-  const handleDeleteGoal = useCallback((goalId) => {
+  const handleDeleteGoal = useCallback((goalId: string) => {
     if (window.confirm('确定要删除这个目标吗？')) {
       dispatch(deleteGoal(goalId));
     }
   }, [dispatch]);
   
   // 处理增加目标进度
-  const handleIncrementProgress = useCallback((goalId) => {
+  const handleIncrementProgress = useCallback((goalId: string) => {
     const value = prompt('请输入要增加的进度值：');
     if (value && !isNaN(value) && Number(value) > 0) {
       dispatch(incrementGoalProgress({ goalId, value: Number(value) }));

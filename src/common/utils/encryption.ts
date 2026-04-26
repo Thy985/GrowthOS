@@ -12,10 +12,13 @@ class EncryptionUtil {
     let encryptionKey = 'GrowthOS-Secure-Key-2024';
     let encryptionIV = 'GrowthOS-IV-2024';
     
-    // 使用 process.env 来获取环境变量，这样在测试环境中也能正常工作
+    // 尝试从 process.env 获取环境变量（Node.js 环境，如测试）
     if (typeof process !== 'undefined' && process.env) {
       encryptionKey = process.env.VITE_ENCRYPTION_KEY || encryptionKey;
       encryptionIV = process.env.VITE_ENCRYPTION_IV || encryptionIV;
+    } else {
+      // 浏览器环境中，使用默认值
+      // 注意：在生产环境中，应该使用环境变量来设置加密密钥
     }
     
     this.key = CryptoJS.enc.Utf8.parse(encryptionKey);

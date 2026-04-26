@@ -248,7 +248,7 @@ export const exportData = createAsyncThunk('growth/exportData', async (options: 
 });
 
 // 导入数据
-export const importData = createAsyncThunk('growth/importData', async (data: Partial<GrowthState>) => {
+export const importData = createAsyncThunk('growth/importData', async (data: Partial<GrowthState> & { goals?: any[] }) => {
   try {
     if (data.records && Array.isArray(data.records)) {
       secureStorage.setItem('growth-records', data.records);
@@ -258,6 +258,9 @@ export const importData = createAsyncThunk('growth/importData', async (data: Par
     }
     if (data.trees && Array.isArray(data.trees)) {
       secureStorage.setItem('growth-trees', data.trees);
+    }
+    if (data.goals && Array.isArray(data.goals)) {
+      secureStorage.setItem('growth-goals', data.goals);
     }
     return data;
   } catch (error) {

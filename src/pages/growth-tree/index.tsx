@@ -1,18 +1,19 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { ReactFlow, Controls, Background, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType } from 'reactflow';
+import { ReactFlow, Controls, Background, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType, Node, Edge, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
-import ErrorBoundary from '../../components/ErrorBoundary.jsx';
-import { secureStorage } from '../../common/utils/secureStorage.ts';
-import logger from '../../common/utils/logger.ts';
+import ErrorBoundary from '../../components/ErrorBoundary';
+import { secureStorage } from '../../common/utils/secureStorage';
+import logger from '../../common/utils/logger';
+import { GrowthState } from '../../common/types';
 
 const GrowthTree = () => {
-  const { records, tags } = useSelector(state => state.growth);
+  const { records, tags } = useSelector((state: { growth: GrowthState }) => state.growth);
   
   // 从tags和records生成树节点
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [showAddNodeModal, setShowAddNodeModal] = useState(false);
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [nodeFormData, setNodeFormData] = useState({ label: '', description: '' });
@@ -79,17 +80,17 @@ const GrowthTree = () => {
   }, [nodes, edges]);
   
   // 处理节点点击
-  const handleNodeClick = useCallback((event, node) => {
+  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
   }, []);
   
   // 处理边的添加
-  const handleConnect = useCallback((params) => {
+  const handleConnect = useCallback((params: Connection) => {
     setEdges((eds) => addEdge(params, eds));
   }, []);
   
   // 处理表单输入变化
-  const handleNodeInputChange = (e) => {
+  const handleNodeInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNodeFormData(prev => ({
       ...prev,

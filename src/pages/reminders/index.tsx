@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice.ts';
-import ErrorBoundary from '../../components/ErrorBoundary.jsx';
+import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice';
+import ErrorBoundary from '../../components/ErrorBoundary';
+import { Reminder, ReminderState } from '../../common/types';
 
 const Reminders = () => {
   const dispatch = useDispatch();
-  const { reminders, isLoading, error } = useSelector(state => state.reminder);
+  const { reminders, isLoading, error } = useSelector((state: { reminder: ReminderState }) => state.reminder);
   
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingReminder, setEditingReminder] = useState(null);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -22,7 +23,7 @@ const Reminders = () => {
   }, [dispatch]);
 
   // 处理表单输入变化
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -54,7 +55,7 @@ const Reminders = () => {
   }, [dispatch, formData, editingReminder]);
 
   // 处理编辑提醒
-  const handleEditReminder = (reminder) => {
+  const handleEditReminder = (reminder: Reminder) => {
     setEditingReminder(reminder);
     setFormData({
       title: reminder.title,
@@ -66,14 +67,14 @@ const Reminders = () => {
   };
 
   // 处理删除提醒
-  const handleDeleteReminder = (reminderId) => {
+  const handleDeleteReminder = (reminderId: string) => {
     if (window.confirm('确定要删除这个提醒吗？')) {
       dispatch(deleteReminder(reminderId));
     }
   };
 
   // 处理标记提醒为已完成
-  const handleCompleteReminder = (reminderId) => {
+  const handleCompleteReminder = (reminderId: string) => {
     dispatch(completeReminder(reminderId));
   };
 

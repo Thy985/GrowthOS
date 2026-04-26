@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, register } from '../../store/slices/authSlice.ts';
+import { login, register } from '../../store/slices/authSlice';
+import { AuthState } from '../../common/types';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const dispatch = useDispatch();
-  const { isLoading, error } = useSelector(state => state.auth);
+  const { isLoading, error } = useSelector((state: { auth: AuthState }) => state.auth);
 
   // 表单验证
-  const validateForm = () => {
-    const newErrors = {};
+  const validateForm = (): { [key: string]: string } => {
+    const newErrors: { [key: string]: string } = {};
     
     if (!username.trim()) {
       newErrors.username = '请输入用户名';
@@ -38,7 +39,7 @@ const Auth = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // 验证表单

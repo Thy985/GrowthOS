@@ -10,24 +10,25 @@ import { toggleTheme } from './store/slices/themeSlice.ts';
 import { loadGoals } from './store/slices/goalSlice.ts';
 import { loadReminders } from './store/slices/reminderSlice.ts';
 import useKeyboardShortcuts from './common/hooks/useKeyboardShortcuts.ts';
-import ErrorBoundary from './components/ErrorBoundary.jsx';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
+import { RootState } from './common/types/index.ts';
 
 // 使用React.lazy实现代码分割
-const Dashboard = lazy(() => import('./pages/dashboard/index.jsx'));
-const GrowthTree = lazy(() => import('./pages/growth-tree/index.jsx'));
-const Analytics = lazy(() => import('./pages/analytics/index.jsx'));
-const RecordList = lazy(() => import('./pages/records/index.jsx'));
-const Goals = lazy(() => import('./pages/goals/index.jsx'));
-const Reminders = lazy(() => import('./pages/reminders/index.jsx'));
-const Tutorial = lazy(() => import('./components/Tutorial.jsx'));
-const Auth = lazy(() => import('./pages/auth/index.jsx'));
-const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp.jsx'));
+const Dashboard = lazy(() => import('./pages/dashboard/index.tsx'));
+const GrowthTree = lazy(() => import('./pages/growth-tree/index.tsx'));
+const Analytics = lazy(() => import('./pages/analytics/index.tsx'));
+const RecordList = lazy(() => import('./pages/records/index.tsx'));
+const Goals = lazy(() => import('./pages/goals/index.tsx'));
+const Reminders = lazy(() => import('./pages/reminders/index.tsx'));
+const Tutorial = lazy(() => import('./components/Tutorial.tsx'));
+const Auth = lazy(() => import('./pages/auth/index.tsx'));
+const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp.tsx'));
 
 function Navbar() {
   const location = useLocation();
   const dispatch = useDispatch();
-  const { user, isAuthenticated } = useSelector(state => state.auth);
-  const { isDarkMode } = useSelector(state => state.theme);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
   
@@ -83,7 +84,7 @@ function Navbar() {
             className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
             aria-label="切换主题"
           ></button>
-          {isAuthenticated && (
+          {isAuthenticated && user && (
             <div className="nav-user">
               <span className="nav-username">{user.username}</span>
               <button 
@@ -135,7 +136,7 @@ function Navbar() {
               aria-label="切换主题"
             ></button>
           </div>
-          {isAuthenticated && (
+          {isAuthenticated && user && (
             <div className="nav-mobile-user">
               <span className="nav-username">{user.username}</span>
               <button 
@@ -155,8 +156,12 @@ function Navbar() {
   );
 }
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading } = useSelector(state => state.auth);
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
   
   if (isLoading) {
     return <div className="loading">加载中...</div>;
@@ -184,7 +189,7 @@ function App() {
 }
 
 function AppContent() {
-  const { isAuthenticated } = useSelector(state => state.auth);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);

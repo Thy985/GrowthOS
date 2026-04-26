@@ -1,17 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { formatDate, getMoodColor, highlightSearchTerm, filterRecords } from '../../common/utils/recordUtils.tsx';
+import { RootState } from '../../common/types/index.ts';
 
 const RecordList = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMoods, setSelectedMoods] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   
-  const { records, tags } = useSelector(state => state.growth);
+  const { records, tags } = useSelector((state: RootState) => state.growth);
   
   const allTags = tags;
-  const allMoods = ['很好', '一般', '不太好'];
+  const allMoods = ['很好', '一般', '不太好'] as const;
+  type Mood = typeof allMoods[number];
   
   // 处理搜索和过滤
   const filteredRecords = useMemo(() => {
@@ -19,30 +21,30 @@ const RecordList = () => {
   }, [records, searchTerm, selectedMoods, selectedTags, dateRange]);
   
   // 处理情绪选择
-  const toggleMood = (mood) => {
+  const toggleMood = useCallback((mood: string) => {
     setSelectedMoods(prev => 
       prev.includes(mood) 
         ? prev.filter(m => m !== mood)
         : [...prev, mood]
     );
-  };
+  }, []);
   
   // 处理标签选择
-  const toggleTag = (tag) => {
+  const toggleTag = useCallback((tag: string) => {
     setSelectedTags(prev => 
       prev.includes(tag) 
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
-  };
+  }, []);
   
   // 清除所有过滤
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchTerm('');
     setSelectedMoods([]);
     setSelectedTags([]);
     setDateRange({ start: '', end: '' });
-  };
+  }, []);
   
   return (
     <div className="space-y-6">
@@ -162,21 +164,39 @@ const RecordList = () => {
               {record.activity && (
                 <div className="mb-3">
                   <h4 className="text-sm font-medium text-gray-700 mb-1">做了什么</h4>
-                  <p className="text-gray-600">{highlightSearchTerm(record.activity, searchTerm)}</p>
+                  <p className="text-gray-600">
+                    {searchTerm ? (
+                      highlightSearchTerm(record.activity, searchTerm)
+                    ) : (
+                      record.activity
+                    )}
+                  </p>
                 </div>
               )}
               
               {record.learning && (
                 <div className="mb-3">
                   <h4 className="text-sm font-medium text-gray-700 mb-1">学了什么</h4>
-                  <p className="text-gray-600">{highlightSearchTerm(record.learning, searchTerm)}</p>
+                  <p className="text-gray-600">
+                    {searchTerm ? (
+                      highlightSearchTerm(record.learning, searchTerm)
+                    ) : (
+                      record.learning
+                    )}
+                  </p>
                 </div>
               )}
               
               {record.reflection && (
                 <div className="mb-3">
                   <h4 className="text-sm font-medium text-gray-700 mb-1">反思</h4>
-                  <p className="text-gray-600">{highlightSearchTerm(record.reflection, searchTerm)}</p>
+                  <p className="text-gray-600">
+                    {searchTerm ? (
+                      highlightSearchTerm(record.reflection, searchTerm)
+                    ) : (
+                      record.reflection
+                    )}
+                  </p>
                 </div>
               )}
               
@@ -199,4 +219,4 @@ const RecordList = () => {
   );
 };
 
-export default RecordList;
+export default React.memo(RecordList);
