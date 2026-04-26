@@ -1,11 +1,14 @@
 import React, { useState, lazy, Suspense, useCallback, useMemo, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import './App.css';
 import store from './store';
 import { loadData } from './store/slices/growthSlice';
 import { checkAuth, logout } from './store/slices/authSlice';
 import { toggleTheme } from './store/slices/themeSlice';
+import { loadGoals } from './store/slices/goalSlice';
+import { loadReminders } from './store/slices/reminderSlice';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -14,6 +17,8 @@ const Dashboard = lazy(() => import('./pages/dashboard'));
 const GrowthTree = lazy(() => import('./pages/growth-tree'));
 const Analytics = lazy(() => import('./pages/analytics'));
 const RecordList = lazy(() => import('./pages/records'));
+const Goals = lazy(() => import('./pages/goals'));
+const Reminders = lazy(() => import('./pages/reminders'));
 const Tutorial = lazy(() => import('./components/Tutorial'));
 const Auth = lazy(() => import('./pages/auth'));
 const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'));
@@ -24,6 +29,7 @@ function Navbar() {
   const { user, isAuthenticated } = useSelector(state => state.auth);
   const { isDarkMode } = useSelector(state => state.theme);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
   
   // 打开快捷键帮助的回调
   const handleOpenShortcuts = () => {
@@ -47,16 +53,22 @@ function Navbar() {
         <Link to="/" className="nav-logo">GrowthOS</Link>
         <div className="nav-links">
           <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-            仪表盘
+            {t('common.dashboard')}
           </Link>
           <Link to="/records" className={`nav-link ${location.pathname === '/records' ? 'active' : ''}`}>
-            记录
+            {t('common.records')}
+          </Link>
+          <Link to="/goals" className={`nav-link ${location.pathname === '/goals' ? 'active' : ''}`}>
+            {t('common.goals')}
+          </Link>
+          <Link to="/reminders" className={`nav-link ${location.pathname === '/reminders' ? 'active' : ''}`}>
+            {t('common.reminders')}
           </Link>
           <Link to="/growth-tree" className={`nav-link ${location.pathname === '/growth-tree' ? 'active' : ''}`}>
-            成长树
+            {t('common.growthTree')}
           </Link>
           <Link to="/analytics" className={`nav-link ${location.pathname === '/analytics' ? 'active' : ''}`}>
-            分析
+            {t('common.analytics')}
           </Link>
           <button 
             onClick={handleOpenShortcuts}
@@ -78,7 +90,7 @@ function Navbar() {
                 onClick={handleLogout} 
                 className="nav-logout"
               >
-                登出
+                {t('common.logout')}
               </button>
             </div>
           )}
@@ -98,16 +110,22 @@ function Navbar() {
       {isMobileMenuOpen && (
         <div className="nav-mobile-menu">
           <Link to="/" className={`nav-mobile-link ${location.pathname === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            仪表盘
+            {t('common.dashboard')}
           </Link>
           <Link to="/records" className={`nav-mobile-link ${location.pathname === '/records' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            记录
+            {t('common.records')}
+          </Link>
+          <Link to="/goals" className={`nav-mobile-link ${location.pathname === '/goals' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+            {t('common.goals')}
+          </Link>
+          <Link to="/reminders" className={`nav-mobile-link ${location.pathname === '/reminders' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+            {t('common.reminders')}
           </Link>
           <Link to="/growth-tree" className={`nav-mobile-link ${location.pathname === '/growth-tree' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            成长树
+            {t('common.growthTree')}
           </Link>
           <Link to="/analytics" className={`nav-mobile-link ${location.pathname === '/analytics' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            分析
+            {t('common.analytics')}
           </Link>
           <div className="nav-mobile-theme-toggle">
             <span>主题</span>
@@ -178,6 +196,10 @@ function AppContent() {
     dispatch(checkAuth());
     // 加载数据
     dispatch(loadData());
+    // 加载目标数据
+    dispatch(loadGoals());
+    // 加载提醒数据
+    dispatch(loadReminders());
   }, [dispatch]);
 
   // 监听自定义事件
@@ -240,12 +262,14 @@ function AppContent() {
               onClose={() => setShowShortcutsHelp(false)} 
             />
             <Routes>
-              <Route path="/" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/records" element={<ProtectedRoute><ErrorBoundary><RecordList /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/growth-tree" element={<ProtectedRoute><ErrorBoundary><GrowthTree /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><ErrorBoundary><Analytics /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
-            </Routes>
+            <Route path="/" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
+            <Route path="/records" element={<ProtectedRoute><ErrorBoundary><RecordList /></ErrorBoundary></ProtectedRoute>} />
+            <Route path="/goals" element={<ProtectedRoute><ErrorBoundary><Goals /></ErrorBoundary></ProtectedRoute>} />
+            <Route path="/reminders" element={<ProtectedRoute><ErrorBoundary><Reminders /></ErrorBoundary></ProtectedRoute>} />
+            <Route path="/growth-tree" element={<ProtectedRoute><ErrorBoundary><GrowthTree /></ErrorBoundary></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><ErrorBoundary><Analytics /></ErrorBoundary></ProtectedRoute>} />
+            <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
+          </Routes>
           </Suspense>
         </ErrorBoundary>
       </div>
