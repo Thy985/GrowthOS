@@ -1,24 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { secureStorage } from '../../utils/secureStorage';
+import { Reminder, ReminderState } from '../../types';
 import logger from '../../utils/logger';
-
-export interface Reminder {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  goalId?: string;
-  isCompleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface ReminderState {
-  reminders: Reminder[];
-  isLoading: boolean;
-  error: string | null;
-}
 
 // 初始状态
 const initialState: ReminderState = {

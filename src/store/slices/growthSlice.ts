@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { secureStorage } from '../../utils/secureStorage';
-import { GrowthState, Record, Tag, Tree } from '../../types';
+import { GrowthState, Record, Tag, Tree, GoalState } from '../../types';
 import logger from '../../utils/logger';
 
 // 初始状态
@@ -57,53 +57,64 @@ export const addRecord = createAsyncThunk('growth/addRecord', async (record: Omi
   }
 });
 
+// 选择器
+
 // 搜索记录
-export const searchRecords = (state: GrowthState, action: PayloadAction<{ searchTerm: string }>) => {
-  const { searchTerm } = action.payload;
-  return state.records.filter(record => {
+export const searchRecords = createSelector(
+  [(state: GrowthState) => state.records, (state: GrowthState, searchTerm: string) => searchTerm],
+  (records, searchTerm) => {
     const searchLower = searchTerm.toLowerCase();
-    return (
-      (record.activity && record.activity.toLowerCase().includes(searchLower)) ||
-      (record.learning && record.learning.toLowerCase().includes(searchLower)) ||
-      (record.reflection && record.reflection.toLowerCase().includes(searchLower)) ||
-      (record.tags && record.tags.some(tag => tag.toLowerCase().includes(searchLower)))
-    );
-  });
-};
+    return records.filter(record => {
+      return (
+        (record.activity && record.activity.toLowerCase().includes(searchLower)) ||
+        (record.learning && record.learning.toLowerCase().includes(searchLower)) ||
+        (record.reflection && record.reflection.toLowerCase().includes(searchLower)) ||
+        (record.tags && record.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+      );
+    });
+  }
+);
 
 // 按日期范围过滤记录
-export const filterRecordsByDateRange = (state: GrowthState, action: PayloadAction<{ startDate: Date; endDate: Date }>) => {
-  const { startDate, endDate } = action.payload;
-  return state.records.filter(record => {
-    const recordDate = new Date(record.createdAt);
-    return recordDate >= startDate && recordDate <= endDate;
-  });
-};
+export const filterRecordsByDateRange = createSelector(
+  [(state: GrowthState) => state.records, (state: GrowthState, startDate: Date) => startDate, (state: GrowthState, startDate: Date, endDate: Date) => endDate],
+  (records, startDate, endDate) => {
+    return records.filter(record => {
+      const recordDate = new Date(record.createdAt);
+      return recordDate >= startDate && recordDate <= endDate;
+    });
+  }
+);
 
 // 按情绪过滤记录
-export const filterRecordsByMood = (state: GrowthState, action: PayloadAction<{ mood: '很好' | '一般' | '不太好' }>) => {
-  const { mood } = action.payload;
-  return state.records.filter(record => record.mood === mood);
-};
+export const filterRecordsByMood = createSelector(
+  [(state: GrowthState) => state.records, (state: GrowthState, mood: '很好' | '一般' | '不太好') => mood],
+  (records, mood) => {
+    return records.filter(record => record.mood === mood);
+  }
+);
 
 // 按标签过滤记录
-export const filterRecordsByTags = (state: GrowthState, action: PayloadAction<{ tags: Tag[] }>) => {
-  const { tags } = action.payload;
-  return state.records.filter(record => {
-    if (!record.tags || record.tags.length === 0) return false;
-    return tags.some(tag => record.tags.includes(tag));
-  });
-};
+export const filterRecordsByTags = createSelector(
+  [(state: GrowthState) => state.records, (state: GrowthState, tags: Tag[]) => tags],
+  (records, tags) => {
+    return records.filter(record => {
+      if (!record.tags || record.tags.length === 0) return false;
+      return tags.some(tag => record.tags.includes(tag));
+    });
+  }
+);
 
 // 获取所有标签
-export const getAllTags = (state: GrowthState) => {
-  return state.tags;
-};
+export const getAllTags = createSelector(
+  (state: GrowthState) => state.tags,
+  (tags) => tags
+);
 
 // 导出数据
 export const exportData = createAsyncThunk('growth/exportData', async (options: { format: 'json' | 'csv' | 'markdown', dataTypes: string[], startDate?: Date, endDate?: Date }, { getState }) => {
   try {
-    const state = getState() as { growth: GrowthState; goal: { goals: any[] } };
+    const state = getState() as { growth: GrowthState; goal: GoalState };
     let { records, tags, trees } = state.growth;
     const { goals } = state.goal;
     

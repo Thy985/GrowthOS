@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../utils/goalUtils';
 
 const Goals = () => {
   const dispatch = useDispatch();
@@ -54,23 +55,7 @@ const Goals = () => {
   
   // 表单验证
   const validateForm = useCallback(() => {
-    const errors = {};
-    if (!formData.title.trim()) {
-      errors.title = '请输入目标标题';
-    }
-    if (!formData.targetValue || isNaN(formData.targetValue) || Number(formData.targetValue) <= 0) {
-      errors.targetValue = '请输入有效的目标值';
-    }
-    if (!formData.startDate) {
-      errors.startDate = '请选择开始日期';
-    }
-    if (!formData.endDate) {
-      errors.endDate = '请选择结束日期';
-    }
-    if (formData.startDate && formData.endDate && new Date(formData.startDate) > new Date(formData.endDate)) {
-      errors.endDate = '结束日期不能早于开始日期';
-    }
-    return errors;
+    return validateGoalForm(formData);
   }, [formData]);
   
   // 处理添加目标
@@ -162,11 +147,6 @@ const Goals = () => {
       dispatch(incrementGoalProgress({ goalId, value: Number(value) }));
     }
   }, [dispatch]);
-  
-  // 计算进度百分比
-  const calculateProgress = (current, target) => {
-    return Math.min(Math.round((current / target) * 100), 100);
-  };
   
   return (
     <ErrorBoundary>
@@ -388,8 +368,7 @@ const Goals = () => {
                   <div className="goal-header">
                     <h3 className="font-semibold">{goal.title}</h3>
                     <span className={`status-badge ${goal.status}`}>
-                      {goal.status === 'active' ? '进行中' : 
-                       goal.status === 'completed' ? '已完成' : '已取消'}
+                      {getGoalStatusText(goal.status)}
                     </span>
                   </div>
                   <p className="goal-description text-gray-600 mb-4">{goal.description}</p>
@@ -406,8 +385,8 @@ const Goals = () => {
                     </div>
                   </div>
                   <div className="goal-dates mt-4 text-sm text-gray-500">
-                    <p>开始日期：{new Date(goal.startDate).toLocaleDateString()}</p>
-                    <p>结束日期：{new Date(goal.endDate).toLocaleDateString()}</p>
+                    <p>开始日期：{formatDate(goal.startDate)}</p>
+                    <p>结束日期：{formatDate(goal.endDate)}</p>
                   </div>
                   <div className="goal-actions mt-4 flex space-x-2">
                     {goal.status === 'active' && (
