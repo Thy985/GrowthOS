@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, us
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import './App.css';
-import store from './store';
+import store from './store/index';
 import { loadData } from './store/slices/growthSlice';
 import { checkAuth, logout } from './store/slices/authSlice';
 import { toggleTheme } from './store/slices/themeSlice';
@@ -194,13 +194,24 @@ function AppContent() {
   useEffect(() => {
     // 检查认证状态
     dispatch(checkAuth());
-    // 加载数据
-    dispatch(loadData());
-    // 加载目标数据
-    dispatch(loadGoals());
-    // 加载提醒数据
-    dispatch(loadReminders());
   }, [dispatch]);
+  
+  // 延迟加载非关键数据
+  useEffect(() => {
+    if (isAuthenticated) {
+      // 延迟加载数据，让应用先渲染
+      const timer = setTimeout(() => {
+        // 加载数据
+        dispatch(loadData());
+        // 加载目标数据
+        dispatch(loadGoals());
+        // 加载提醒数据
+        dispatch(loadReminders());
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [dispatch, isAuthenticated]);
 
   // 监听自定义事件
   useEffect(() => {

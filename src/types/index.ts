@@ -72,10 +72,31 @@ export interface GoalState {
   error: string | null;
 }
 
+// 提醒类型
+export interface Reminder {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  goalId?: string;
+  isCompleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 提醒状态类型
+export interface ReminderState {
+  reminders: Reminder[];
+  isLoading: boolean;
+  error: string | null;
+}
+
 // 根状态类型
 export interface RootState {
   auth: AuthState;
   growth: GrowthState;
   theme: ThemeState;
   goal: GoalState;
+  reminder: ReminderState;
 }
