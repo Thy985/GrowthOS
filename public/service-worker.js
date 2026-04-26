@@ -1,6 +1,9 @@
 // 缓存名称
 const CACHE_NAME = 'growthos-cache-v1';
 
+// 告诉 ESLint clients 是全局变量
+/* global clients */
+
 // 需要缓存的资源
 const STATIC_ASSETS = [
   '/',

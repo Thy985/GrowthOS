@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import secureStorage from '../utils/secureStorage';
+import secureStorage from '../common/utils/secureStorage.ts';
 
 const Tutorial = () => {
   const [showTutorial, setShowTutorial] = useState(false);

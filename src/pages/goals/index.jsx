@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice';
-import ErrorBoundary from '../../components/ErrorBoundary';
-import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../utils/goalUtils';
+import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice.ts';
+import ErrorBoundary from '../../components/ErrorBoundary.jsx';
+import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../common/utils/goalUtils.ts';
 
 const Goals = () => {
   const dispatch = useDispatch();

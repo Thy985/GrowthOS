@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import secureStorage from '../utils/secureStorage';
+import secureStorage from '../utils/secureStorage.ts';
 
 // 创建Context
 const GrowthContext = createContext();

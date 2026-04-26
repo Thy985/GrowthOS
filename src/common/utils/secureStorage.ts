@@ -1,12 +1,14 @@
 import encryptionUtil from './encryption';
 
 class SecureStorage {
+  private encryptionEnabled: boolean;
+
   constructor() {
     this.encryptionEnabled = true;
   }
 
   // 保存数据（加密）
-  setItem(key, value) {
+  setItem(key: string, value: any): boolean {
     try {
       if (this.encryptionEnabled) {
         const encryptedValue = encryptionUtil.encrypt(value);
@@ -28,7 +30,7 @@ class SecureStorage {
   }
 
   // 获取数据（解密）
-  getItem(key, defaultValue = null) {
+  getItem<T>(key: string, defaultValue: T | null = null): T | null {
     try {
       const storedValue = localStorage.getItem(key);
       if (storedValue === null) {
@@ -37,13 +39,13 @@ class SecureStorage {
 
       if (this.encryptionEnabled) {
         const decryptedValue = encryptionUtil.decrypt(storedValue);
-        return decryptedValue !== null ? decryptedValue : defaultValue;
+        return decryptedValue !== null ? decryptedValue as T : defaultValue;
       } else {
         // 如果不加密，直接解析
         try {
-          return JSON.parse(storedValue);
+          return JSON.parse(storedValue) as T;
         } catch {
-          return storedValue;
+          return storedValue as unknown as T;
         }
       }
     } catch (error) {
@@ -53,7 +55,7 @@ class SecureStorage {
   }
 
   // 删除数据
-  removeItem(key) {
+  removeItem(key: string): boolean {
     try {
       localStorage.removeItem(key);
       return true;
@@ -64,7 +66,7 @@ class SecureStorage {
   }
 
   // 清空所有数据
-  clear() {
+  clear(): boolean {
     try {
       localStorage.clear();
       return true;
@@ -75,7 +77,7 @@ class SecureStorage {
   }
 
   // 启用/禁用加密
-  setEncryptionEnabled(enabled) {
+  setEncryptionEnabled(enabled: boolean): void {
     this.encryptionEnabled = enabled;
   }
 }

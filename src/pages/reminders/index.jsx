@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
+import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice.ts';
+import ErrorBoundary from '../../components/ErrorBoundary.jsx';
 
 const Reminders = () => {
   const dispatch = useDispatch();

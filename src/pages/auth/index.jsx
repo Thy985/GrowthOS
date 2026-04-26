@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, register } from '../store/slices/authSlice';
+import { login, register } from '../../store/slices/authSlice.ts';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);

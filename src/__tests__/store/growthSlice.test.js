@@ -1,11 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import growthReducer, { 
-  loadData, 
   addRecord, 
   searchRecords, 
   filterRecordsByMood,
   filterRecordsByTags 
-} from '../../store/slices/growthSlice';
+} from '../../store/slices/growthSlice.ts';
 
 // 模拟的测试数据
 const mockRecords = [
@@ -80,8 +79,7 @@ describe('growthSlice', () => {
   
   test('should handle searchRecords', () => {
     const searchTerm = 'React';
-    const action = { payload: { searchTerm } };
-    const result = searchRecords(store.getState().growth, action);
+    const result = searchRecords(store.getState().growth, searchTerm);
     
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('1');
@@ -90,8 +88,7 @@ describe('growthSlice', () => {
   
   test('should handle filterRecordsByMood', () => {
     const mood = '很好';
-    const action = { payload: { mood } };
-    const result = filterRecordsByMood(store.getState().growth, action);
+    const result = filterRecordsByMood(store.getState().growth, mood);
     
     expect(result).toHaveLength(2);
     expect(result.every(record => record.mood === '很好')).toBe(true);
@@ -99,8 +96,7 @@ describe('growthSlice', () => {
   
   test('should handle filterRecordsByTags', () => {
     const tags = ['React'];
-    const action = { payload: { tags } };
-    const result = filterRecordsByTags(store.getState().growth, action);
+    const result = filterRecordsByTags(store.getState().growth, tags);
     
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('1');

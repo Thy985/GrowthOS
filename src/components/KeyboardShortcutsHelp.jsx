@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from './common';
+import { Badge } from './common/index.ts';
 
 const KeyboardShortcutsHelp = ({ isOpen, onClose }) => {
   if (!isOpen) return null;

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, memo, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addRecord } from '../../store/slices/growthSlice';
+import { addRecord } from '../../store/slices/growthSlice.ts';
 
 const Dashboard = () => {
   const [formData, setFormData] = useState({
@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const dispatch = useDispatch();
-  const { records, isLoading, error } = useSelector(state => state.growth);
+  const { records, error } = useSelector(state => state.growth);
   const feedbackRef = useRef(null);
   const treeRef = useRef(null);
 

@@ -1,27 +1,27 @@
-import React, { useState, lazy, Suspense, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import './App.css';
-import store from './store/index';
-import { loadData } from './store/slices/growthSlice';
-import { checkAuth, logout } from './store/slices/authSlice';
-import { toggleTheme } from './store/slices/themeSlice';
-import { loadGoals } from './store/slices/goalSlice';
-import { loadReminders } from './store/slices/reminderSlice';
-import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
-import ErrorBoundary from './components/ErrorBoundary';
+import store from './store/index.ts';
+import { loadData } from './store/slices/growthSlice.ts';
+import { checkAuth, logout } from './store/slices/authSlice.ts';
+import { toggleTheme } from './store/slices/themeSlice.ts';
+import { loadGoals } from './store/slices/goalSlice.ts';
+import { loadReminders } from './store/slices/reminderSlice.ts';
+import useKeyboardShortcuts from './common/hooks/useKeyboardShortcuts.ts';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // 使用React.lazy实现代码分割
-const Dashboard = lazy(() => import('./pages/dashboard'));
-const GrowthTree = lazy(() => import('./pages/growth-tree'));
-const Analytics = lazy(() => import('./pages/analytics'));
-const RecordList = lazy(() => import('./pages/records'));
-const Goals = lazy(() => import('./pages/goals'));
-const Reminders = lazy(() => import('./pages/reminders'));
-const Tutorial = lazy(() => import('./components/Tutorial'));
-const Auth = lazy(() => import('./pages/auth'));
-const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'));
+const Dashboard = lazy(() => import('./pages/dashboard/index.jsx'));
+const GrowthTree = lazy(() => import('./pages/growth-tree/index.jsx'));
+const Analytics = lazy(() => import('./pages/analytics/index.jsx'));
+const RecordList = lazy(() => import('./pages/records/index.jsx'));
+const Goals = lazy(() => import('./pages/goals/index.jsx'));
+const Reminders = lazy(() => import('./pages/reminders/index.jsx'));
+const Tutorial = lazy(() => import('./components/Tutorial.jsx'));
+const Auth = lazy(() => import('./pages/auth/index.jsx'));
+const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp.jsx'));
 
 function Navbar() {
   const location = useLocation();

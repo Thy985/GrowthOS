@@ -1,5 +1,5 @@
 import React from 'react';
-import logger from '../utils/logger';
+import logger from '../common/utils/logger.ts';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {

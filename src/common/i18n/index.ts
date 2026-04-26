@@ -4,7 +4,7 @@ import zhCN from './zh-CN.json';
 import enUS from './en-US.json';
 
 // 检测用户的浏览器语言
-const detectUserLanguage = () => {
+const detectUserLanguage = (): string => {
   const userLanguage = navigator.language || navigator.userLanguage;
   if (userLanguage.startsWith('zh')) {
     return 'zh-CN';

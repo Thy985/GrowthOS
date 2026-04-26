@@ -4,14 +4,26 @@
 import CryptoJS from 'crypto-js';
 
 class EncryptionUtil {
+  private key: CryptoJS.lib.WordArray;
+  private iv: CryptoJS.lib.WordArray;
+
   constructor() {
-    // 使用固定的密钥（实际应用中应该从环境变量或安全的地方获取）
-    this.key = CryptoJS.enc.Utf8.parse('GrowthOS-Secure-Key-2024');
-    this.iv = CryptoJS.enc.Utf8.parse('GrowthOS-IV-2024'); // 初始化向量
+    // 从环境变量获取密钥和初始化向量
+    let encryptionKey = 'GrowthOS-Secure-Key-2024';
+    let encryptionIV = 'GrowthOS-IV-2024';
+    
+    // 使用 process.env 来获取环境变量，这样在测试环境中也能正常工作
+    if (typeof process !== 'undefined' && process.env) {
+      encryptionKey = process.env.VITE_ENCRYPTION_KEY || encryptionKey;
+      encryptionIV = process.env.VITE_ENCRYPTION_IV || encryptionIV;
+    }
+    
+    this.key = CryptoJS.enc.Utf8.parse(encryptionKey);
+    this.iv = CryptoJS.enc.Utf8.parse(encryptionIV); // 初始化向量
   }
 
   // 使用AES-256-CBC加密
-  encrypt(text) {
+  encrypt(text: string | object): string | null {
     try {
       if (!text) return '';
       
@@ -33,7 +45,7 @@ class EncryptionUtil {
   }
 
   // 解密
-  decrypt(encryptedText) {
+  decrypt(encryptedText: string): string | object | null {
     try {
       if (!encryptedText) return null;
       

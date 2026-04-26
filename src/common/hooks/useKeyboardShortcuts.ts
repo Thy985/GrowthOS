@@ -1,10 +1,19 @@
 import React, { useEffect } from 'react';
 
-const useKeyboardShortcuts = (shortcuts) => {
+interface Shortcut {
+  key: string;
+  ctrl?: boolean;
+  shift?: boolean;
+  alt?: boolean;
+  meta?: boolean;
+  callback: () => void;
+}
+
+const useKeyboardShortcuts = (shortcuts: Shortcut[]) => {
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       // 忽略输入框中的键盘事件
-      const tagName = event.target.tagName;
+      const tagName = event.target instanceof Element ? event.target.tagName : '';
       const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName);
       if (isTyping) return;
 

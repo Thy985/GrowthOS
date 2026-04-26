@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { formatDate, getMoodColor, highlightSearchTerm, filterRecords } from '../../utils/recordUtils';
+import { formatDate, getMoodColor, highlightSearchTerm, filterRecords } from '../../common/utils/recordUtils.tsx';
 
 const RecordList = () => {
   const [searchTerm, setSearchTerm] = useState('');

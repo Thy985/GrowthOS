@@ -6,7 +6,7 @@ module.exports = {
   transform: {
     '^.+\.(js|jsx|ts|tsx)$': 'babel-jest'
   },
-  setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   transformIgnorePatterns: [
     'node_modules/(?!(@reduxjs/toolkit|react-redux))'
   ]

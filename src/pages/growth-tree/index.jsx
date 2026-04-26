@@ -1,14 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import ReactFlow, { Controls, Background, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType } from 'reactflow';
+import { useSelector } from 'react-redux';
+import { ReactFlow, Controls, Background, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType } from 'reactflow';
 import 'reactflow/dist/style.css';
-import ErrorBoundary from '../../components/ErrorBoundary';
-import { secureStorage } from '../../utils/secureStorage';
-import logger from '../../utils/logger';
+import ErrorBoundary from '../../components/ErrorBoundary.jsx';
+import { secureStorage } from '../../common/utils/secureStorage.ts';
+import logger from '../../common/utils/logger.ts';
 
 const GrowthTree = () => {
-  const dispatch = useDispatch();
-  const { trees, records, tags } = useSelector(state => state.growth);
+  const { records, tags } = useSelector(state => state.growth);
   
   // 从tags和records生成树节点
   const [nodes, setNodes, onNodesChange] = useNodesState([]);

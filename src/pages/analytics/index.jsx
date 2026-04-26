@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -17,7 +17,6 @@ import {
   ScatterChart, 
   Scatter, 
   ZAxis, 
-  Heatmap, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -26,8 +25,8 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { useSelector, useDispatch } from 'react-redux';
-import { exportData, importData } from '../../store/slices/growthSlice';
-import ErrorBoundary from '../../components/ErrorBoundary';
+import { exportData, importData } from '../../store/slices/growthSlice.ts';
+import ErrorBoundary from '../../components/ErrorBoundary.jsx';
 
 // 自定义工具提示组件
 const CustomTooltip = ({ active, payload, label }) => {
@@ -181,8 +180,8 @@ const Analytics = () => {
     }
     
     // 计算情绪趋势
-    const moodData = [];
-    records.slice(0, 10).reverse().forEach((record, index) => {
+  const moodData = [];
+  records.slice(0, 10).reverse().forEach((record) => {
       let moodValue = 0;
       switch (record.mood) {
         case '很好':

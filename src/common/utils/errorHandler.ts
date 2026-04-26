@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { ComponentType, ErrorInfo, ReactNode } from 'react';
 import logger from './logger';
 
 // 错误处理工具
 const errorHandler = {
   // 处理API错误
-  handleApiError: (error, fallbackMessage = '网络请求失败，请稍后重试') => {
+  handleApiError: (error: any, fallbackMessage: string = '网络请求失败，请稍后重试'): string => {
     logger.logApiError(error.config?.url || 'unknown', error);
     
     if (error.response) {
@@ -34,7 +34,7 @@ const errorHandler = {
   },
   
   // 处理表单错误
-  handleFormError: (errors, fallbackMessage = '表单数据有误') => {
+  handleFormError: (errors: any, fallbackMessage: string = '表单数据有误'): string => {
     if (typeof errors === 'string') {
       return errors;
     }
@@ -49,7 +49,7 @@ const errorHandler = {
   },
   
   // 处理通用错误
-  handleError: (error, fallbackMessage = '操作失败，请稍后重试') => {
+  handleError: (error: any, fallbackMessage: string = '操作失败，请稍后重试'): string => {
     if (error instanceof Error) {
       logger.error('Error', error);
       return error.message || fallbackMessage;
@@ -63,7 +63,7 @@ const errorHandler = {
   },
   
   // 处理异步操作错误
-  async handleAsyncError(asyncFn, fallbackValue = null) {
+  async handleAsyncError<T>(asyncFn: () => Promise<T>, fallbackValue: T | null = null): Promise<T | null> {
     try {
       return await asyncFn();
     } catch (error) {
@@ -73,24 +73,24 @@ const errorHandler = {
   },
   
   // 生成错误边界组件
-  createErrorBoundary(Component, fallbackComponent) {
-    return class ErrorBoundary extends React.Component {
-      constructor(props) {
+  createErrorBoundary<P extends object>(Component: ComponentType<P>, fallbackComponent: ComponentType<{ error: Error }>): ComponentType<P> {
+    return class ErrorBoundary extends React.Component<P, { hasError: boolean; error: Error | null }> {
+      constructor(props: P) {
         super(props);
         this.state = { hasError: false, error: null };
       }
       
-      static getDerivedStateFromError(error) {
+      static getDerivedStateFromError(error: Error) {
         return { hasError: true, error };
       }
       
-      componentDidCatch(error, errorInfo) {
+      componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         logger.error('Error Boundary', error, errorInfo);
       }
       
       render() {
         if (this.state.hasError) {
-          return React.createElement(fallbackComponent, { error: this.state.error });
+          return React.createElement(fallbackComponent, { error: this.state.error as Error });
         }
         return React.createElement(Component, this.props);
       }
