@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { secureStorage } from '../../utils/secureStorage';
+import { goalService } from '../../common/services/dataService';
 import { Goal, GoalState } from '../../types';
 import logger from '../../utils/logger';
 
@@ -14,7 +14,7 @@ const initialState: GoalState = {
 export const loadGoals = createAsyncThunk('goal/loadGoals', async () => {
   try {
     logger.info('加载目标数据');
-    const goals = secureStorage.getItem('growth-goals') || [];
+    const goals = await goalService.getGoals();
     logger.info('目标数据加载完成', { goalsCount: goals.length });
     return goals;
   } catch (error) {
@@ -27,22 +27,23 @@ export const loadGoals = createAsyncThunk('goal/loadGoals', async () => {
 export const addGoal = createAsyncThunk('goal/addGoal', async (goal: Omit<Goal, 'id' | 'currentValue' | 'status' | 'createdAt' | 'updatedAt'>) => {
   try {
     logger.info('添加目标', { title: goal.title, targetValue: goal.targetValue });
-    const goals = secureStorage.getItem('growth-goals') || [];
     
-    const newGoal: Goal = {
-      ...goal,
-      id: Date.now().toString(),
-      currentValue: 0,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    const updatedGoals = [...goals, newGoal];
-    secureStorage.setItem('growth-goals', updatedGoals);
+    const newGoal = await goalService.createGoal({
+      title: goal.title,
+      description: goal.description,
+      target_value: goal.targetValue,
+      start_date: goal.startDate,
+      end_date: goal.endDate
+    });
     
     logger.info('目标添加成功', { goalId: newGoal.id });
-    return newGoal;
+    return {
+      ...newGoal,
+      targetValue: newGoal.target_value,
+      currentValue: newGoal.current_value,
+      startDate: newGoal.start_date,
+      endDate: newGoal.end_date
+    };
   } catch (error) {
     logger.error('添加目标异常', error, { title: goal.title });
     throw error;
@@ -53,19 +54,25 @@ export const addGoal = createAsyncThunk('goal/addGoal', async (goal: Omit<Goal, 
 export const updateGoal = createAsyncThunk('goal/updateGoal', async (goal: Partial<Goal> & { id: string }) => {
   try {
     logger.info('更新目标', { goalId: goal.id });
-    const goals = secureStorage.getItem('growth-goals') || [];
     
-    const updatedGoals = goals.map(g => 
-      g.id === goal.id 
-        ? { ...g, ...goal, updatedAt: new Date().toISOString() }
-        : g
-    );
+    const updates = {
+      title: goal.title,
+      description: goal.description,
+      target_value: goal.targetValue,
+      current_value: goal.currentValue,
+      status: goal.status
+    };
     
-    secureStorage.setItem('growth-goals', updatedGoals);
+    const updatedGoal = await goalService.updateGoal(goal.id, updates);
     
-    const updatedGoal = updatedGoals.find(g => g.id === goal.id);
     logger.info('目标更新成功', { goalId: goal.id });
-    return updatedGoal;
+    return {
+      ...updatedGoal,
+      targetValue: updatedGoal.target_value,
+      currentValue: updatedGoal.current_value,
+      startDate: updatedGoal.start_date,
+      endDate: updatedGoal.end_date
+    };
   } catch (error) {
     logger.error('更新目标异常', error, { goalId: goal.id });
     throw error;
@@ -76,11 +83,7 @@ export const updateGoal = createAsyncThunk('goal/updateGoal', async (goal: Parti
 export const deleteGoal = createAsyncThunk('goal/deleteGoal', async (goalId: string) => {
   try {
     logger.info('删除目标', { goalId });
-    const goals = secureStorage.getItem('growth-goals') || [];
-    
-    const updatedGoals = goals.filter(g => g.id !== goalId);
-    secureStorage.setItem('growth-goals', updatedGoals);
-    
+    await goalService.deleteGoal(goalId);
     logger.info('目标删除成功', { goalId });
     return goalId;
   } catch (error) {
@@ -93,30 +96,35 @@ export const deleteGoal = createAsyncThunk('goal/deleteGoal', async (goalId: str
 export const incrementGoalProgress = createAsyncThunk('goal/incrementGoalProgress', async ({ goalId, value }: { goalId: string; value: number }) => {
   try {
     logger.info('增加目标进度', { goalId, value });
-    const goals = secureStorage.getItem('growth-goals') || [];
     
-    const updatedGoals = goals.map(g => {
-      if (g.id === goalId) {
-        const newCurrentValue = g.currentValue + value;
-        let newStatus = g.status;
-        if (newCurrentValue >= g.targetValue) {
-          newStatus = 'completed';
-        }
-        return {
-          ...g,
-          currentValue: newCurrentValue,
-          status: newStatus,
-          updatedAt: new Date().toISOString()
-        };
-      }
-      return g;
+    // 先获取目标当前状态
+    const goals = await goalService.getGoals();
+    const goal = goals.find(g => g.id === goalId);
+    
+    if (!goal) {
+      throw new Error('目标不存在');
+    }
+    
+    const newCurrentValue = goal.current_value + value;
+    let newStatus = goal.status;
+    if (newCurrentValue >= goal.target_value) {
+      newStatus = 'completed';
+    }
+    
+    // 更新目标
+    const updatedGoal = await goalService.updateGoal(goalId, {
+      current_value: newCurrentValue,
+      status: newStatus
     });
     
-    secureStorage.setItem('growth-goals', updatedGoals);
-    
-    const updatedGoal = updatedGoals.find(g => g.id === goalId);
-    logger.info('目标进度更新成功', { goalId, newValue: updatedGoal?.currentValue });
-    return updatedGoal;
+    logger.info('目标进度更新成功', { goalId, newValue: updatedGoal.current_value });
+    return {
+      ...updatedGoal,
+      targetValue: updatedGoal.target_value,
+      currentValue: updatedGoal.current_value,
+      startDate: updatedGoal.start_date,
+      endDate: updatedGoal.end_date
+    };
   } catch (error) {
     logger.error('更新目标进度异常', error, { goalId, value });
     throw error;

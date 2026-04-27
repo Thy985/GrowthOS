@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { secureStorage } from '../../utils/secureStorage';
+import { recordService, recordItemService, growthTreeService, treeNodeService } from '../../common/services/dataService';
 import { GrowthState, Record, Tag, Tree, GoalState } from '../../types';
 import logger from '../../utils/logger';
 
@@ -16,12 +16,35 @@ const initialState: GrowthState = {
 export const loadData = createAsyncThunk('growth/loadData', async () => {
   try {
     logger.info('加载成长数据');
-    const records = secureStorage.getItem('growth-records') || [];
-    const tags = secureStorage.getItem('growth-tags') || [];
-    const trees = secureStorage.getItem('growth-trees') || [];
     
-    logger.info('成长数据加载完成', { recordsCount: records.length, tagsCount: tags.length, treesCount: trees.length });
-    return { records, tags, trees };
+    // 从 Supabase 加载记录
+    const records = await recordService.getRecords();
+    
+    // 从记录中提取标签
+    const tagsSet = new Set<Tag>();
+    records.forEach(record => {
+      if (record.tags && record.tags.length > 0) {
+        record.tags.forEach(tag => tagsSet.add(tag));
+      }
+    });
+    const tags = Array.from(tagsSet);
+    
+    // 从 Supabase 加载成长树
+    const trees = await growthTreeService.getTrees();
+    
+    // 加载每个树的节点
+    const treesWithNodes = await Promise.all(
+      trees.map(async (tree) => {
+        const nodes = await treeNodeService.getNodes(tree.id);
+        return {
+          ...tree,
+          children: nodes
+        };
+      })
+    );
+    
+    logger.info('成长数据加载完成', { recordsCount: records.length, tagsCount: tags.length, treesCount: treesWithNodes.length });
+    return { records, tags, trees: treesWithNodes };
   } catch (error) {
     logger.error('加载成长数据异常', error);
     throw error;
@@ -32,25 +55,51 @@ export const loadData = createAsyncThunk('growth/loadData', async () => {
 export const addRecord = createAsyncThunk('growth/addRecord', async (record: Omit<Record, 'id' | 'createdAt'>) => {
   try {
     logger.info('添加成长记录', { activity: record.activity, learning: record.learning, tags: record.tags });
-    const records = secureStorage.getItem('growth-records') || [];
-    const newRecord: Record = {
-      ...record,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
-    const updatedRecords = [newRecord, ...records];
-    secureStorage.setItem('growth-records', updatedRecords);
     
-    // 更新标签
-    const tags = secureStorage.getItem('growth-tags') || [];
-    if (record.tags && record.tags.length > 0) {
-      const newTags = [...new Set([...tags, ...record.tags])];
-      secureStorage.setItem('growth-tags', newTags);
+    // 创建记录
+    const newRecord = await recordService.createRecord({
+      date: record.date || new Date().toISOString().split('T')[0],
+      mood: record.mood,
+      reflection: record.reflection
+    });
+    
+    // 创建记录项目
+    if (record.activity) {
+      await recordItemService.createItem({
+        record_id: newRecord.id,
+        type: 'activity',
+        content: record.activity
+      });
     }
     
-    const updatedTags = [...new Set([...tags, ...(record.tags || [])])];
+    if (record.learning) {
+      await recordItemService.createItem({
+        record_id: newRecord.id,
+        type: 'learning',
+        content: record.learning
+      });
+    }
+    
+    // 从所有记录中提取标签
+    const allRecords = await recordService.getRecords();
+    const tagsSet = new Set<Tag>();
+    allRecords.forEach(r => {
+      if (r.tags && r.tags.length > 0) {
+        r.tags.forEach(tag => tagsSet.add(tag));
+      }
+    });
+    const updatedTags = Array.from(tagsSet);
+    
     logger.info('成长记录添加成功', { recordId: newRecord.id, tagsCount: updatedTags.length });
-    return { record: newRecord, tags: updatedTags };
+    return { 
+      record: {
+        ...newRecord,
+        activity: record.activity,
+        learning: record.learning,
+        tags: record.tags
+      }, 
+      tags: updatedTags 
+    };
   } catch (error) {
     logger.error('添加成长记录异常', error, { activity: record.activity, learning: record.learning });
     throw error;

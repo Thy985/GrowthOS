@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { secureStorage } from '../../utils/secureStorage';
+import { reminderService } from '../../common/services/dataService';
 import { Reminder, ReminderState } from '../../types';
 import logger from '../../utils/logger';
 
@@ -14,9 +14,12 @@ const initialState: ReminderState = {
 export const loadReminders = createAsyncThunk('reminder/loadReminders', async () => {
   try {
     logger.info('加载提醒数据');
-    const reminders = secureStorage.getItem('growth-reminders') || [];
+    const reminders = await reminderService.getReminders();
     logger.info('提醒数据加载完成', { remindersCount: reminders.length });
-    return reminders;
+    return reminders.map(reminder => ({
+      ...reminder,
+      isCompleted: reminder.is_completed
+    }));
   } catch (error) {
     logger.error('加载提醒数据异常', error);
     throw error;
@@ -27,16 +30,13 @@ export const loadReminders = createAsyncThunk('reminder/loadReminders', async ()
 export const addReminder = createAsyncThunk('reminder/addReminder', async (reminder: Omit<Reminder, 'id' | 'isCompleted' | 'createdAt' | 'updatedAt'>) => {
   try {
     logger.info('添加提醒', { title: reminder.title, date: reminder.date, time: reminder.time });
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const newReminder: Reminder = {
-      ...reminder,
-      id: Date.now().toString(),
-      isCompleted: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    const updatedReminders = [newReminder, ...reminders];
-    secureStorage.setItem('growth-reminders', updatedReminders);
+    
+    const newReminder = await reminderService.createReminder({
+      title: reminder.title,
+      description: reminder.description,
+      date: reminder.date,
+      time: reminder.time
+    });
     
     // 设置浏览器通知
     if ('Notification' in window) {
@@ -59,7 +59,10 @@ export const addReminder = createAsyncThunk('reminder/addReminder', async (remin
     }
     
     logger.info('提醒添加成功', { reminderId: newReminder.id });
-    return newReminder;
+    return {
+      ...newReminder,
+      isCompleted: newReminder.is_completed
+    };
   } catch (error) {
     logger.error('添加提醒异常', error, { title: reminder.title, date: reminder.date, time: reminder.time });
     throw error;
@@ -70,13 +73,20 @@ export const addReminder = createAsyncThunk('reminder/addReminder', async (remin
 export const updateReminder = createAsyncThunk('reminder/updateReminder', async (reminder: Reminder) => {
   try {
     logger.info('更新提醒', { reminderId: reminder.id, title: reminder.title });
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const updatedReminders = reminders.map(r => 
-      r.id === reminder.id ? { ...reminder, updatedAt: new Date().toISOString() } : r
-    );
-    secureStorage.setItem('growth-reminders', updatedReminders);
+    
+    const updatedReminder = await reminderService.updateReminder(reminder.id, {
+      title: reminder.title,
+      description: reminder.description,
+      date: reminder.date,
+      time: reminder.time,
+      is_completed: reminder.isCompleted
+    });
+    
     logger.info('提醒更新成功', { reminderId: reminder.id });
-    return reminder;
+    return {
+      ...updatedReminder,
+      isCompleted: updatedReminder.is_completed
+    };
   } catch (error) {
     logger.error('更新提醒异常', error, { reminderId: reminder.id });
     throw error;
@@ -87,9 +97,7 @@ export const updateReminder = createAsyncThunk('reminder/updateReminder', async 
 export const deleteReminder = createAsyncThunk('reminder/deleteReminder', async (reminderId: string) => {
   try {
     logger.info('删除提醒', { reminderId });
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const updatedReminders = reminders.filter(r => r.id !== reminderId);
-    secureStorage.setItem('growth-reminders', updatedReminders);
+    await reminderService.deleteReminder(reminderId);
     logger.info('提醒删除成功', { reminderId });
     return reminderId;
   } catch (error) {
@@ -102,11 +110,9 @@ export const deleteReminder = createAsyncThunk('reminder/deleteReminder', async 
 export const completeReminder = createAsyncThunk('reminder/completeReminder', async (reminderId: string) => {
   try {
     logger.info('标记提醒为已完成', { reminderId });
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const updatedReminders = reminders.map(r => 
-      r.id === reminderId ? { ...r, isCompleted: true, updatedAt: new Date().toISOString() } : r
-    );
-    secureStorage.setItem('growth-reminders', updatedReminders);
+    await reminderService.updateReminder(reminderId, {
+      is_completed: true
+    });
     logger.info('提醒标记成功', { reminderId });
     return reminderId;
   } catch (error) {
