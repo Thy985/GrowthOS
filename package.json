@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
+    "@supabase/supabase-js": "^2.104.1",
+    "@types/uuid": "^10.0.0",
     "crypto-js": "^4.2.0",
     "i18next": "^26.0.8",
     "react": "^18.2.0",
@@ -20,7 +22,8 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.22.0",
     "reactflow": "^11.8.3",
-    "recharts": "^2.10.4"
+    "recharts": "^2.10.4",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

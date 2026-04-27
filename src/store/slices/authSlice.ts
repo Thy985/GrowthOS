@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { secureStorage } from '../../utils/secureStorage';
+import { authService } from '../../common/services/authService';
 import { AuthState } from '../../types';
 import logger from '../../utils/logger';
 
@@ -7,7 +7,7 @@ import logger from '../../utils/logger';
 interface User {
   id: string;
   username: string;
-  password: string;
+  email: string;
 }
 
 // 初始状态
@@ -19,59 +19,37 @@ const initialState: AuthState = {
 };
 
 // 登录的异步thunk
-export const login = createAsyncThunk('auth/login', async ({ username, password }: { username: string; password: string }) => {
+export const login = createAsyncThunk('auth/login', async ({ email, password }: { email: string; password: string }) => {
   try {
-    logger.info('用户登录', { username });
-    // 简单的登录验证（实际应用中应该调用API）
-    const users = secureStorage.getItem('auth-users') || [];
-    const user = users.find((u: User) => u.username === username && u.password === password);
-    
-    if (!user) {
-      const error = new Error('用户名或密码错误');
-      logger.error('登录失败：用户名或密码错误', { username });
-      throw error;
-    }
-    
-    secureStorage.setItem('auth-user', user);
-    logger.info('登录成功', { username });
+    logger.info('用户登录', { email });
+    const data = await authService.signIn({ email, password });
+    const user = {
+      id: data.user?.id || '',
+      username: data.user?.user_metadata?.name || data.user?.email || '',
+      email: data.user?.email || ''
+    };
+    logger.info('登录成功', { email });
     return user;
-  } catch (error) {
-    logger.error('登录异常', error, { username });
+  } catch (error: any) {
+    logger.error('登录异常', error, { email });
     throw error;
   }
 });
 
 // 注册的异步thunk
-export const register = createAsyncThunk('auth/register', async ({ username, password, confirmPassword }: { username: string; password: string; confirmPassword: string }) => {
+export const register = createAsyncThunk('auth/register', async ({ name, email, password }: { name: string; email: string; password: string }) => {
   try {
-    logger.info('用户注册', { username });
-    if (password !== confirmPassword) {
-      const error = new Error('两次密码输入不一致');
-      logger.error('注册失败：两次密码输入不一致', { username });
-      throw error;
-    }
-    
-    const users = secureStorage.getItem('auth-users') || [];
-    if (users.some((u: User) => u.username === username)) {
-      const error = new Error('用户名已存在');
-      logger.error('注册失败：用户名已存在', { username });
-      throw error;
-    }
-    
-    const newUser: User = {
-      id: Date.now().toString(),
-      username,
-      password
+    logger.info('用户注册', { email });
+    const data = await authService.signUp({ name, email, password });
+    const user = {
+      id: data.user?.id || '',
+      username: data.user?.user_metadata?.name || data.user?.email || '',
+      email: data.user?.email || ''
     };
-    
-    const updatedUsers = [...users, newUser];
-    secureStorage.setItem('auth-users', updatedUsers);
-    secureStorage.setItem('auth-user', newUser);
-    
-    logger.info('注册成功', { username });
-    return newUser;
-  } catch (error) {
-    logger.error('注册异常', error, { username });
+    logger.info('注册成功', { email });
+    return user;
+  } catch (error: any) {
+    logger.error('注册异常', error, { email });
     throw error;
   }
 });
@@ -80,7 +58,7 @@ export const register = createAsyncThunk('auth/register', async ({ username, pas
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     logger.info('用户登出');
-    secureStorage.removeItem('auth-user');
+    await authService.signOut();
     logger.info('登出成功');
     return true;
   } catch (error) {
@@ -93,9 +71,18 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 export const checkAuth = createAsyncThunk('auth/checkAuth', async () => {
   try {
     logger.info('检查认证状态');
-    const user = secureStorage.getItem('auth-user');
-    logger.info('认证状态检查完成', { isAuthenticated: !!user });
-    return user;
+    const user = await authService.getCurrentUser();
+    if (user) {
+      const userData = {
+        id: user.id,
+        username: user.user_metadata?.name || user.email || '',
+        email: user.email || ''
+      };
+      logger.info('认证状态检查完成', { isAuthenticated: true, email: user.email });
+      return userData;
+    }
+    logger.info('认证状态检查完成', { isAuthenticated: false });
+    return null;
   } catch (error) {
     logger.error('认证状态检查异常', error);
     throw error;

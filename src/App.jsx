@@ -20,7 +20,8 @@ const RecordList = lazy(() => import('./pages/records'));
 const Goals = lazy(() => import('./pages/goals'));
 const Reminders = lazy(() => import('./pages/reminders'));
 const Tutorial = lazy(() => import('./components/Tutorial'));
-const Auth = lazy(() => import('./pages/auth'));
+const Login = lazy(() => import('./pages/auth/Login'));
+const Register = lazy(() => import('./pages/auth/Register'));
 const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'));
 
 function Navbar() {
@@ -52,47 +53,63 @@ function Navbar() {
       <div className="nav-container">
         <Link to="/" className="nav-logo">GrowthOS</Link>
         <div className="nav-links">
-          <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-            {t('common.dashboard')}
-          </Link>
-          <Link to="/records" className={`nav-link ${location.pathname === '/records' ? 'active' : ''}`}>
-            {t('common.records')}
-          </Link>
-          <Link to="/goals" className={`nav-link ${location.pathname === '/goals' ? 'active' : ''}`}>
-            {t('common.goals')}
-          </Link>
-          <Link to="/reminders" className={`nav-link ${location.pathname === '/reminders' ? 'active' : ''}`}>
-            {t('common.reminders')}
-          </Link>
-          <Link to="/growth-tree" className={`nav-link ${location.pathname === '/growth-tree' ? 'active' : ''}`}>
-            {t('common.growthTree')}
-          </Link>
-          <Link to="/analytics" className={`nav-link ${location.pathname === '/analytics' ? 'active' : ''}`}>
-            {t('common.analytics')}
-          </Link>
-          <button 
-            onClick={handleOpenShortcuts}
-            className="nav-shortcuts-hint"
-            aria-label="快捷键帮助"
-            title="查看快捷键 (按?)"
-          >
-            ⌨️
-          </button>
-          <button 
-            onClick={handleToggleTheme} 
-            className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
-            aria-label="切换主题"
-          ></button>
-          {isAuthenticated && (
-            <div className="nav-user">
-              <span className="nav-username">{user.username}</span>
+          {isAuthenticated ? (
+            <>
+              <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
+                {t('common.dashboard')}
+              </Link>
+              <Link to="/records" className={`nav-link ${location.pathname === '/records' ? 'active' : ''}`}>
+                {t('common.records')}
+              </Link>
+              <Link to="/goals" className={`nav-link ${location.pathname === '/goals' ? 'active' : ''}`}>
+                {t('common.goals')}
+              </Link>
+              <Link to="/reminders" className={`nav-link ${location.pathname === '/reminders' ? 'active' : ''}`}>
+                {t('common.reminders')}
+              </Link>
+              <Link to="/growth-tree" className={`nav-link ${location.pathname === '/growth-tree' ? 'active' : ''}`}>
+                {t('common.growthTree')}
+              </Link>
+              <Link to="/analytics" className={`nav-link ${location.pathname === '/analytics' ? 'active' : ''}`}>
+                {t('common.analytics')}
+              </Link>
               <button 
-                onClick={handleLogout} 
-                className="nav-logout"
+                onClick={handleOpenShortcuts}
+                className="nav-shortcuts-hint"
+                aria-label="快捷键帮助"
+                title="查看快捷键 (按?)"
               >
-                {t('common.logout')}
+                ⌨️
               </button>
-            </div>
+              <button 
+                onClick={handleToggleTheme} 
+                className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
+                aria-label="切换主题"
+              ></button>
+              <div className="nav-user">
+                <span className="nav-username">{user.username}</span>
+                <button 
+                  onClick={handleLogout} 
+                  className="nav-logout"
+                >
+                  {t('common.logout')}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`}>
+                登录
+              </Link>
+              <Link to="/register" className={`nav-link ${location.pathname === '/register' ? 'active' : ''}`}>
+                注册
+              </Link>
+              <button 
+                onClick={handleToggleTheme} 
+                className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
+                aria-label="切换主题"
+              ></button>
+            </>
           )}
         </div>
         <button 
@@ -108,49 +125,68 @@ function Navbar() {
         </button>
       </div>
       {isMobileMenuOpen && (
-        <div className="nav-mobile-menu">
-          <Link to="/" className={`nav-mobile-link ${location.pathname === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            {t('common.dashboard')}
-          </Link>
-          <Link to="/records" className={`nav-mobile-link ${location.pathname === '/records' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            {t('common.records')}
-          </Link>
-          <Link to="/goals" className={`nav-mobile-link ${location.pathname === '/goals' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            {t('common.goals')}
-          </Link>
-          <Link to="/reminders" className={`nav-mobile-link ${location.pathname === '/reminders' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            {t('common.reminders')}
-          </Link>
-          <Link to="/growth-tree" className={`nav-mobile-link ${location.pathname === '/growth-tree' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            {t('common.growthTree')}
-          </Link>
-          <Link to="/analytics" className={`nav-mobile-link ${location.pathname === '/analytics' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-            {t('common.analytics')}
-          </Link>
-          <div className="nav-mobile-theme-toggle">
-            <span>主题</span>
-            <button 
-              onClick={handleToggleTheme} 
-              className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
-              aria-label="切换主题"
-            ></button>
+          <div className="nav-mobile-menu">
+            {isAuthenticated ? (
+              <>
+                <Link to="/" className={`nav-mobile-link ${location.pathname === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  {t('common.dashboard')}
+                </Link>
+                <Link to="/records" className={`nav-mobile-link ${location.pathname === '/records' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  {t('common.records')}
+                </Link>
+                <Link to="/goals" className={`nav-mobile-link ${location.pathname === '/goals' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  {t('common.goals')}
+                </Link>
+                <Link to="/reminders" className={`nav-mobile-link ${location.pathname === '/reminders' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  {t('common.reminders')}
+                </Link>
+                <Link to="/growth-tree" className={`nav-mobile-link ${location.pathname === '/growth-tree' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  {t('common.growthTree')}
+                </Link>
+                <Link to="/analytics" className={`nav-mobile-link ${location.pathname === '/analytics' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  {t('common.analytics')}
+                </Link>
+                <div className="nav-mobile-theme-toggle">
+                  <span>主题</span>
+                  <button 
+                    onClick={handleToggleTheme} 
+                    className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
+                    aria-label="切换主题"
+                  ></button>
+                </div>
+                <div className="nav-mobile-user">
+                  <span className="nav-username">{user.username}</span>
+                  <button 
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }} 
+                    className="nav-logout"
+                  >
+                    登出
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className={`nav-mobile-link ${location.pathname === '/login' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  登录
+                </Link>
+                <Link to="/register" className={`nav-mobile-link ${location.pathname === '/register' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  注册
+                </Link>
+                <div className="nav-mobile-theme-toggle">
+                  <span>主题</span>
+                  <button 
+                    onClick={handleToggleTheme} 
+                    className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
+                    aria-label="切换主题"
+                  ></button>
+                </div>
+              </>
+            )}
           </div>
-          {isAuthenticated && (
-            <div className="nav-mobile-user">
-              <span className="nav-username">{user.username}</span>
-              <button 
-                onClick={() => {
-                  handleLogout();
-                  setIsMobileMenuOpen(false);
-                }} 
-                className="nav-logout"
-              >
-                登出
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+        )}
     </nav>
   );
 }
@@ -273,14 +309,17 @@ function AppContent() {
               onClose={() => setShowShortcutsHelp(false)} 
             />
             <Routes>
-            <Route path="/" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/records" element={<ProtectedRoute><ErrorBoundary><RecordList /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/goals" element={<ProtectedRoute><ErrorBoundary><Goals /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/reminders" element={<ProtectedRoute><ErrorBoundary><Reminders /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/growth-tree" element={<ProtectedRoute><ErrorBoundary><GrowthTree /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><ErrorBoundary><Analytics /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
-          </Routes>
+              <Route path="/" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/records" element={<ProtectedRoute><ErrorBoundary><RecordList /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/goals" element={<ProtectedRoute><ErrorBoundary><Goals /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/reminders" element={<ProtectedRoute><ErrorBoundary><Reminders /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/growth-tree" element={<ProtectedRoute><ErrorBoundary><GrowthTree /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><ErrorBoundary><Analytics /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/login" element={<ErrorBoundary><Login /></ErrorBoundary>} />
+              <Route path="/register" element={<ErrorBoundary><Register /></ErrorBoundary>} />
+              <Route path="/auth" element={<Navigate to="/login" />} />
+              <Route path="*" element={<Navigate to="/login" />} />
+            </Routes>
           </Suspense>
         </ErrorBoundary>
       </div>
