@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { authService } from '../../common/services/authService';
+import authServiceV2 from '../../common/services/authServiceV2';
 import { AuthState } from '../../types';
 import logger from '../../utils/logger';
 
 // 用户类型
 interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
 }
@@ -22,14 +22,14 @@ const initialState: AuthState = {
 export const login = createAsyncThunk('auth/login', async ({ email, password }: { email: string; password: string }) => {
   try {
     logger.info('用户登录', { email });
-    const data = await authService.signIn({ email, password });
-    const user = {
-      id: data.user?.id || '',
-      username: data.user?.user_metadata?.name || data.user?.email || '',
-      email: data.user?.email || ''
+    const { user } = await authServiceV2.login(email, password);
+    const userData = {
+      id: user.id,
+      username: user.name || user.email,
+      email: user.email
     };
     logger.info('登录成功', { email });
-    return user;
+    return userData;
   } catch (error: any) {
     logger.error('登录异常', error, { email });
     throw error;
@@ -40,14 +40,14 @@ export const login = createAsyncThunk('auth/login', async ({ email, password }: 
 export const register = createAsyncThunk('auth/register', async ({ name, email, password }: { name: string; email: string; password: string }) => {
   try {
     logger.info('用户注册', { email });
-    const data = await authService.signUp({ name, email, password });
-    const user = {
-      id: data.user?.id || '',
-      username: data.user?.user_metadata?.name || data.user?.email || '',
-      email: data.user?.email || ''
+    const { user } = await authServiceV2.register(email, password, name);
+    const userData = {
+      id: user.id,
+      username: user.name || user.email,
+      email: user.email
     };
     logger.info('注册成功', { email });
-    return user;
+    return userData;
   } catch (error: any) {
     logger.error('注册异常', error, { email });
     throw error;
@@ -58,7 +58,7 @@ export const register = createAsyncThunk('auth/register', async ({ name, email, 
 export const logout = createAsyncThunk('auth/logout', async () => {
   try {
     logger.info('用户登出');
-    await authService.signOut();
+    await authServiceV2.logout();
     logger.info('登出成功');
     return true;
   } catch (error) {
@@ -71,12 +71,12 @@ export const logout = createAsyncThunk('auth/logout', async () => {
 export const checkAuth = createAsyncThunk('auth/checkAuth', async () => {
   try {
     logger.info('检查认证状态');
-    const user = await authService.getCurrentUser();
+    const user = await authServiceV2.getCurrentUserInfo();
     if (user) {
       const userData = {
         id: user.id,
-        username: user.user_metadata?.name || user.email || '',
-        email: user.email || ''
+        username: user.name || user.email,
+        email: user.email
       };
       logger.info('认证状态检查完成', { isAuthenticated: true, email: user.email });
       return userData;
