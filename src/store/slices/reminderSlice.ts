@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { reminderService } from '../../common/services/dataService';
+import reminderServiceV2 from '../../common/services/reminderServiceV2';
 import { Reminder, ReminderState } from '../../types';
 import logger from '../../utils/logger';
 
@@ -14,11 +14,17 @@ const initialState: ReminderState = {
 export const loadReminders = createAsyncThunk('reminder/loadReminders', async () => {
   try {
     logger.info('加载提醒数据');
-    const reminders = await reminderService.getReminders();
+    const reminders = await reminderServiceV2.getReminders();
     logger.info('提醒数据加载完成', { remindersCount: reminders.length });
     return reminders.map(reminder => ({
-      ...reminder,
-      isCompleted: reminder.is_completed
+      id: reminder.id.toString(),
+      title: reminder.title,
+      description: reminder.description,
+      date: reminder.date,
+      time: reminder.time,
+      isCompleted: reminder.is_completed,
+      createdAt: reminder.created_at,
+      updatedAt: reminder.updated_at
     }));
   } catch (error) {
     logger.error('加载提醒数据异常', error);
@@ -31,7 +37,7 @@ export const addReminder = createAsyncThunk('reminder/addReminder', async (remin
   try {
     logger.info('添加提醒', { title: reminder.title, date: reminder.date, time: reminder.time });
     
-    const newReminder = await reminderService.createReminder({
+    const newReminder = await reminderServiceV2.createReminder({
       title: reminder.title,
       description: reminder.description,
       date: reminder.date,
@@ -60,8 +66,14 @@ export const addReminder = createAsyncThunk('reminder/addReminder', async (remin
     
     logger.info('提醒添加成功', { reminderId: newReminder.id });
     return {
-      ...newReminder,
-      isCompleted: newReminder.is_completed
+      id: newReminder.id.toString(),
+      title: newReminder.title,
+      description: newReminder.description,
+      date: newReminder.date,
+      time: newReminder.time,
+      isCompleted: newReminder.is_completed,
+      createdAt: newReminder.created_at,
+      updatedAt: newReminder.updated_at
     };
   } catch (error) {
     logger.error('添加提醒异常', error, { title: reminder.title, date: reminder.date, time: reminder.time });
@@ -74,7 +86,7 @@ export const updateReminder = createAsyncThunk('reminder/updateReminder', async 
   try {
     logger.info('更新提醒', { reminderId: reminder.id, title: reminder.title });
     
-    const updatedReminder = await reminderService.updateReminder(reminder.id, {
+    const updatedReminder = await reminderServiceV2.updateReminder(parseInt(reminder.id), {
       title: reminder.title,
       description: reminder.description,
       date: reminder.date,
@@ -84,8 +96,14 @@ export const updateReminder = createAsyncThunk('reminder/updateReminder', async 
     
     logger.info('提醒更新成功', { reminderId: reminder.id });
     return {
-      ...updatedReminder,
-      isCompleted: updatedReminder.is_completed
+      id: updatedReminder.id.toString(),
+      title: updatedReminder.title,
+      description: updatedReminder.description,
+      date: updatedReminder.date,
+      time: updatedReminder.time,
+      isCompleted: updatedReminder.is_completed,
+      createdAt: updatedReminder.created_at,
+      updatedAt: updatedReminder.updated_at
     };
   } catch (error) {
     logger.error('更新提醒异常', error, { reminderId: reminder.id });
@@ -97,7 +115,7 @@ export const updateReminder = createAsyncThunk('reminder/updateReminder', async 
 export const deleteReminder = createAsyncThunk('reminder/deleteReminder', async (reminderId: string) => {
   try {
     logger.info('删除提醒', { reminderId });
-    await reminderService.deleteReminder(reminderId);
+    await reminderServiceV2.deleteReminder(parseInt(reminderId));
     logger.info('提醒删除成功', { reminderId });
     return reminderId;
   } catch (error) {
@@ -110,7 +128,7 @@ export const deleteReminder = createAsyncThunk('reminder/deleteReminder', async 
 export const completeReminder = createAsyncThunk('reminder/completeReminder', async (reminderId: string) => {
   try {
     logger.info('标记提醒为已完成', { reminderId });
-    await reminderService.updateReminder(reminderId, {
+    await reminderServiceV2.updateReminder(parseInt(reminderId), {
       is_completed: true
     });
     logger.info('提醒标记成功', { reminderId });
