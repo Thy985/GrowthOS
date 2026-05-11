@@ -1,98 +1,130 @@
 import { Capacitor } from '@capacitor/core';
 import { secureStorage } from '../../utils/secureStorage';
+import { STORAGE_KEYS } from '../../constants';
+import type { Goal, CreateGoalDTO, UpdateGoalDTO } from '../../types';
 
 const isNative = Capacitor.isNativePlatform();
 
-interface Goal {
-  id: number;
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+function getGoalFromStorage(): Goal[] {
+  try {
+    const data = secureStorage.getItem(STORAGE_KEYS.GOALS);
+    return data || [];
+  } catch (error) {
+    console.error('Error reading goals from storage:', error);
+    return [];
+  }
+}
+
+function saveGoalsToStorage(goals: Goal[]): void {
+  try {
+    secureStorage.setItem(STORAGE_KEYS.GOALS, goals);
+  } catch (error) {
+    console.error('Error saving goals to storage:', error);
+    throw new Error('保存目标失败');
+  }
+}
+
+export async function getGoals(): Promise<Goal[]> {
+  if (isNative) {
+    throw new Error('Native SQLite not implemented yet');
+  }
+  return getGoalFromStorage();
+}
+
+export async function getGoalById(id: string): Promise<Goal | null> {
+  const goals = getGoalFromStorage();
+  return goals.find(g => g.id === id) || null;
+}
+
+export async function createGoal(data: {
   title: string;
   description?: string;
   target_value: number;
-  current_value: number;
   start_date: string;
   end_date: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
+}): Promise<Goal> {
+  const goals = getGoalFromStorage();
+  
+  const newGoal: Goal = {
+    id: generateId(),
+    title: data.title,
+    description: data.description || '',
+    targetValue: data.target_value,
+    currentValue: 0,
+    startDate: data.start_date,
+    endDate: data.end_date,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  goals.push(newGoal);
+  saveGoalsToStorage(goals);
+  
+  return newGoal;
 }
 
-// 加载目标
-export async function getGoals(): Promise<Goal[]> {
-  if (isNative) {
-    // TODO: 实现原生 SQLite 查询
-    throw new Error('Native SQLite getGoals not implemented yet');
-  } else {
-    // Web 模式
-    const goals = secureStorage.getItem('growth-goals') || [];
-    return goals.sort((a: any, b: any) => new Date(b.created_at) - new Date(a.created_at));
+export async function updateGoal(id: string, updates: UpdateGoalDTO): Promise<Goal> {
+  const goals = getGoalFromStorage();
+  const index = goals.findIndex(g => g.id === id);
+  
+  if (index === -1) {
+    throw new Error('目标不存在');
   }
+  
+  const updatedGoal: Goal = {
+    ...goals[index],
+    ...updates,
+    id: goals[index].id,
+    createdAt: goals[index].createdAt,
+    updatedAt: new Date().toISOString()
+  };
+  
+  goals[index] = updatedGoal;
+  saveGoalsToStorage(goals);
+  
+  return updatedGoal;
 }
 
-// 创建目标
-export async function createGoal(goal: Omit<Goal, 'id' | 'current_value' | 'status' | 'created_at' | 'updated_at'>): Promise<Goal> {
-  if (isNative) {
-    // TODO: 实现原生 SQLite 插入
-    throw new Error('Native SQLite createGoal not implemented yet');
-  } else {
-    // Web 模式
-    const goals = secureStorage.getItem('growth-goals') || [];
-    const newGoal: Goal = {
-      ...goal,
-      id: Date.now(),
-      current_value: 0,
-      status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    goals.push(newGoal);
-    secureStorage.setItem('growth-goals', goals);
-    
-    return newGoal;
+export async function deleteGoal(id: string): Promise<void> {
+  const goals = getGoalFromStorage();
+  const filteredGoals = goals.filter(g => g.id !== id);
+  
+  if (filteredGoals.length === goals.length) {
+    throw new Error('目标不存在');
   }
+  
+  saveGoalsToStorage(filteredGoals);
 }
 
-// 更新目标
-export async function updateGoal(id: number, updates: Partial<Omit<Goal, 'id' | 'created_at'>>): Promise<Goal> {
-  if (isNative) {
-    // TODO: 实现原生 SQLite 更新
-    throw new Error('Native SQLite updateGoal not implemented yet');
-  } else {
-    // Web 模式
-    const goals = secureStorage.getItem('growth-goals') || [];
-    const index = goals.findIndex((g: any) => g.id === id);
-    
-    if (index === -1) {
-      throw new Error('Goal not found');
-    }
-    
-    goals[index] = {
-      ...goals[index],
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-    
-    secureStorage.setItem('growth-goals', goals);
-    return goals[index];
+export async function incrementGoalProgress(id: string, value: number): Promise<Goal> {
+  const goals = getGoalFromStorage();
+  const goal = goals.find(g => g.id === id);
+  
+  if (!goal) {
+    throw new Error('目标不存在');
   }
+  
+  const newCurrentValue = goal.currentValue + value;
+  const newStatus = newCurrentValue >= goal.targetValue ? 'completed' : goal.status;
+  
+  return updateGoal(id, {
+    currentValue: newCurrentValue,
+    status: newStatus
+  });
 }
 
-// 删除目标
-export async function deleteGoal(id: number): Promise<void> {
-  if (isNative) {
-    // TODO: 实现原生 SQLite 删除
-    throw new Error('Native SQLite deleteGoal not implemented yet');
-  } else {
-    // Web 模式
-    const goals = secureStorage.getItem('growth-goals') || [];
-    const updatedGoals = goals.filter((g: any) => g.id !== id);
-    secureStorage.setItem('growth-goals', updatedGoals);
-  }
-}
-
-export default {
+const goalServiceV2 = {
   getGoals,
+  getGoalById,
   createGoal,
   updateGoal,
-  deleteGoal
+  deleteGoal,
+  incrementGoalProgress
 };
+
+export default goalServiceV2;

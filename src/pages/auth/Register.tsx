@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../common/services/authService';
-import { migrationService } from '../../common/services/migrationService';
+import authServiceV2 from '../../common/services/authServiceV2';
 
 const Register: React.FC = () => {
   const [name, setName] = useState('');
@@ -17,7 +16,6 @@ const Register: React.FC = () => {
     setLoading(true);
     setError('');
 
-    // 验证密码
     if (password !== confirmPassword) {
       setError('两次输入的密码不一致');
       setLoading(false);
@@ -25,19 +23,11 @@ const Register: React.FC = () => {
     }
 
     try {
-      // 注册
-      await authService.signUp({ name, email, password });
-      
-      // 检查是否需要迁移数据
-      const migrated = await migrationService.checkMigrationStatus();
-      if (!migrated) {
-        await migrationService.migrateData();
-      }
-
-      // 注册成功，跳转到首页
+      await authServiceV2.register(email, password, name);
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || '注册失败，请稍后重试');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '注册失败，请稍后重试';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -114,7 +104,7 @@ const Register: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="密码"
+                placeholder="密码（至少6个字符）"
               />
             </div>
             <div>

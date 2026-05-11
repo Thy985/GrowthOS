@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../common/services/authService';
-import { migrationService } from '../../common/services/migrationService';
+import authServiceV2 from '../../common/services/authServiceV2';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,19 +15,11 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      // 登录
-      await authService.signIn({ email, password });
-      
-      // 检查是否需要迁移数据
-      const migrated = await migrationService.checkMigrationStatus();
-      if (!migrated) {
-        await migrationService.migrateData();
-      }
-
-      // 登录成功，跳转到首页
+      await authServiceV2.login(email, password);
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || '登录失败，请检查邮箱和密码');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '登录失败，请检查邮箱和密码';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
