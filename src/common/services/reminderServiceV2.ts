@@ -1,105 +1,128 @@
 import { Capacitor } from '@capacitor/core';
 import { secureStorage } from '../../utils/secureStorage';
+import { STORAGE_KEYS } from '../../constants';
+import type { Reminder, CreateReminderDTO, UpdateReminderDTO } from '../../types';
 
 const isNative = Capacitor.isNativePlatform();
 
-interface Reminder {
-  id: number;
-  title: string;
-  description?: string;
-  date: string;
-  time: string;
-  is_completed: boolean;
-  created_at: string;
-  updated_at: string;
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// 加载提醒
+function getReminderFromStorage(): Reminder[] {
+  try {
+    const data = secureStorage.getItem(STORAGE_KEYS.REMINDERS);
+    return data || [];
+  } catch (error) {
+    console.error('Error reading reminders from storage:', error);
+    return [];
+  }
+}
+
+function saveRemindersToStorage(reminders: Reminder[]): void {
+  try {
+    secureStorage.setItem(STORAGE_KEYS.REMINDERS, reminders);
+  } catch (error) {
+    console.error('Error saving reminders to storage:', error);
+    throw new Error('保存提醒失败');
+  }
+}
+
 export async function getReminders(): Promise<Reminder[]> {
   if (isNative) {
-    // TODO: 实现原生 SQLite 查询
-    throw new Error('Native SQLite getReminders not implemented yet');
-  } else {
-    // Web 模式
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    return reminders.sort((a: any, b: any) => {
-      const dateTimeA = new Date(`${a.date}T${a.time}`).getTime();
-      const dateTimeB = new Date(`${b.date}T${b.time}`).getTime();
-      return dateTimeA - dateTimeB;
+    throw new Error('Native SQLite not implemented yet');
+  }
+  return getReminderFromStorage();
+}
+
+export async function getReminderById(id: string): Promise<Reminder | null> {
+  const reminders = getReminderFromStorage();
+  return reminders.find(r => r.id === id) || null;
+}
+
+export async function createReminder(data: CreateReminderDTO): Promise<Reminder> {
+  const reminders = getReminderFromStorage();
+  
+  const newReminder: Reminder = {
+    id: generateId(),
+    title: data.title,
+    description: data.description || '',
+    date: data.date,
+    time: data.time,
+    goalId: data.goalId,
+    isCompleted: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  reminders.push(newReminder);
+  saveRemindersToStorage(reminders);
+  
+  return newReminder;
+}
+
+export async function updateReminder(id: string, updates: UpdateReminderDTO): Promise<Reminder> {
+  const reminders = getReminderFromStorage();
+  const index = reminders.findIndex(r => r.id === id);
+  
+  if (index === -1) {
+    throw new Error('提醒不存在');
+  }
+  
+  const updatedReminder: Reminder = {
+    ...reminders[index],
+    ...updates,
+    id: reminders[index].id,
+    createdAt: reminders[index].createdAt,
+    updatedAt: new Date().toISOString()
+  };
+  
+  reminders[index] = updatedReminder;
+  saveRemindersToStorage(reminders);
+  
+  return updatedReminder;
+}
+
+export async function deleteReminder(id: string): Promise<void> {
+  const reminders = getReminderFromStorage();
+  const filteredReminders = reminders.filter(r => r.id !== id);
+  
+  if (filteredReminders.length === reminders.length) {
+    throw new Error('提醒不存在');
+  }
+  
+  saveRemindersToStorage(filteredReminders);
+}
+
+export async function completeReminder(id: string): Promise<Reminder> {
+  return updateReminder(id, { isCompleted: true });
+}
+
+export async function getUpcomingReminders(): Promise<Reminder[]> {
+  const reminders = getReminderFromStorage();
+  const now = new Date();
+  
+  return reminders
+    .filter(r => !r.isCompleted)
+    .filter(r => {
+      const reminderDate = new Date(`${r.date}T${r.time}`);
+      return reminderDate >= now;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.time}`);
+      const dateB = new Date(`${b.date}T${b.time}`);
+      return dateA.getTime() - dateB.getTime();
     });
-  }
 }
 
-// 创建提醒
-export async function createReminder(reminder: Omit<Reminder, 'id' | 'is_completed' | 'created_at' | 'updated_at'>): Promise<Reminder> {
-  if (isNative) {
-    // TODO: 实现原生 SQLite 插入
-    throw new Error('Native SQLite createReminder not implemented yet');
-  } else {
-    // Web 模式
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const newReminder: Reminder = {
-      ...reminder,
-      id: Date.now(),
-      is_completed: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    reminders.push(newReminder);
-    secureStorage.setItem('growth-reminders', reminders);
-    
-    return newReminder;
-  }
-}
-
-// 更新提醒
-export async function updateReminder(id: number, updates: Partial<Omit<Reminder, 'id' | 'created_at'>>): Promise<Reminder> {
-  if (isNative) {
-    // TODO: 实现原生 SQLite 更新
-    throw new Error('Native SQLite updateReminder not implemented yet');
-  } else {
-    // Web 模式
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const index = reminders.findIndex((r: any) => r.id === id);
-    
-    if (index === -1) {
-      throw new Error('Reminder not found');
-    }
-    
-    reminders[index] = {
-      ...reminders[index],
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-    
-    secureStorage.setItem('growth-reminders', reminders);
-    return reminders[index];
-  }
-}
-
-// 标记提醒为完成
-export async function completeReminder(id: number): Promise<Reminder> {
-  return updateReminder(id, { is_completed: true });
-}
-
-// 删除提醒
-export async function deleteReminder(id: number): Promise<void> {
-  if (isNative) {
-    // TODO: 实现原生 SQLite 删除
-    throw new Error('Native SQLite deleteReminder not implemented yet');
-  } else {
-    // Web 模式
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const updatedReminders = reminders.filter((r: any) => r.id !== id);
-    secureStorage.setItem('growth-reminders', updatedReminders);
-  }
-}
-
-export default {
+const reminderServiceV2 = {
   getReminders,
+  getReminderById,
   createReminder,
   updateReminder,
+  deleteReminder,
   completeReminder,
-  deleteReminder
+  getUpcomingReminders
 };
+
+export default reminderServiceV2;

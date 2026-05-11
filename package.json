@@ -1,7 +1,7 @@
 {
   "name": "growthos",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,10 +16,6 @@
     "@capacitor/cli": "^8.3.1",
     "@capacitor/core": "^8.3.1",
     "@reduxjs/toolkit": "^2.11.2",
-    "@supabase/supabase-js": "^2.104.1",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/uuid": "^10.0.0",
-    "bcryptjs": "^3.0.3",
     "crypto-js": "^4.2.0",
     "i18next": "^26.0.8",
     "react": "^18.2.0",
@@ -28,8 +24,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.22.0",
     "reactflow": "^11.8.3",
-    "recharts": "^2.10.4",
-    "uuid": "^14.0.0"
+    "recharts": "^2.10.4"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
