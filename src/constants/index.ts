@@ -2,6 +2,8 @@
 export const APP_NAME = 'GrowthOS';
 export const APP_VERSION = '1.0.0';
 
+import type { BadgeStats } from '../types';
+
 // 存储键名常量
 export const STORAGE_KEYS = {
   RECORDS: 'growth-records',
@@ -30,14 +32,14 @@ export type MoodValue = typeof MOOD_OPTIONS[number]['value'];
 
 // 徽章配置
 export const BADGES = [
-  { id: 'first_record', name: '初次记录', icon: '🌱', description: '完成第一条记录', condition: (stats) => stats.totalRecords >= 1 },
-  { id: 'ten_records', name: '十次成长', icon: '🌿', description: '完成10条记录', condition: (stats) => stats.totalRecords >= 10 },
-  { id: 'fifty_records', name: '稳步前进', icon: '🌳', description: '完成50条记录', condition: (stats) => stats.totalRecords >= 50 },
-  { id: 'hundred_records', name: '百日成长', icon: '🏆', description: '完成100条记录', condition: (stats) => stats.totalRecords >= 100 },
-  { id: 'streak_3', name: '连续3天', icon: '🔥', description: '连续记录3天', condition: (stats) => stats.streak >= 3 },
-  { id: 'streak_7', name: '一周坚持', icon: '⭐', description: '连续记录7天', condition: (stats) => stats.streak >= 7 },
-  { id: 'streak_30', name: '月度坚持', icon: '💎', description: '连续记录30天', condition: (stats) => stats.streak >= 30 },
-  { id: 'active_week', name: '活跃周', icon: '🚀', description: '本周记录数增长50%以上', condition: (stats) => stats.weeklyChangePercent >= 50 && stats.weeklyRecords >= 5 }
+  { id: 'first_record', name: '初次记录', icon: '🌱', description: '完成第一条记录', condition: (stats: BadgeStats) => stats.totalRecords >= 1 },
+  { id: 'ten_records', name: '十次成长', icon: '🌿', description: '完成10条记录', condition: (stats: BadgeStats) => stats.totalRecords >= 10 },
+  { id: 'fifty_records', name: '稳步前进', icon: '🌳', description: '完成50条记录', condition: (stats: BadgeStats) => stats.totalRecords >= 50 },
+  { id: 'hundred_records', name: '百日成长', icon: '🏆', description: '完成100条记录', condition: (stats: BadgeStats) => stats.totalRecords >= 100 },
+  { id: 'streak_3', name: '连续3天', icon: '🔥', description: '连续记录3天', condition: (stats: BadgeStats) => stats.streak >= 3 },
+  { id: 'streak_7', name: '一周坚持', icon: '⭐', description: '连续记录7天', condition: (stats: BadgeStats) => stats.streak >= 7 },
+  { id: 'streak_30', name: '月度坚持', icon: '💎', description: '连续记录30天', condition: (stats: BadgeStats) => stats.streak >= 30 },
+  { id: 'active_week', name: '活跃周', icon: '🚀', description: '本周记录数增长50%以上', condition: (stats: BadgeStats) => stats.weeklyChangePercent >= 50 && stats.weeklyRecords >= 5 }
 ] as const;
 
 // 徽章类型

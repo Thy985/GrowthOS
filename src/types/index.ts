@@ -193,7 +193,7 @@ export interface DashboardStats {
   growthProgress: number;
   weekChange: number;
   weekChangePercent: number;
-  moodStats: Record<Mood, number>;
+  moodStats: { [key in Mood]: number };
 }
 
 // 错误类型

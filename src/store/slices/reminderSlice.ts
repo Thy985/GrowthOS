@@ -16,7 +16,7 @@ export const loadReminders = createAsyncThunk('reminder/loadReminders', async ()
     logger.info('提醒数据加载完成', { remindersCount: reminders.length });
     return reminders;
   } catch (error) {
-    logger.error('加载提醒数据异常', error);
+    logger.error('加载提醒数据异常', error instanceof Error ? error : undefined);
     throw error;
   }
 });
@@ -55,7 +55,7 @@ export const addReminder = createAsyncThunk('reminder/addReminder', async (remin
     logger.info('提醒添加成功', { reminderId: newReminder.id });
     return newReminder;
   } catch (error) {
-    logger.error('添加提醒异常', error, { title: reminder.title, date: reminder.date, time: reminder.time });
+    logger.error('添加提醒异常', error instanceof Error ? error : undefined, { title: reminder.title, date: reminder.date, time: reminder.time });
     throw error;
   }
 });
@@ -77,7 +77,7 @@ export const updateReminder = createAsyncThunk('reminder/updateReminder', async 
     logger.info('提醒更新成功', { reminderId: reminder.id });
     return updatedReminder;
   } catch (error) {
-    logger.error('更新提醒异常', error, { reminderId: reminder.id });
+    logger.error('更新提醒异常', error instanceof Error ? error : undefined, { reminderId: reminder.id });
     throw error;
   }
 });
@@ -89,7 +89,7 @@ export const deleteReminder = createAsyncThunk('reminder/deleteReminder', async 
     logger.info('提醒删除成功', { reminderId });
     return reminderId;
   } catch (error) {
-    logger.error('删除提醒异常', error, { reminderId });
+    logger.error('删除提醒异常', error instanceof Error ? error : undefined, { reminderId });
     throw error;
   }
 });
@@ -101,7 +101,7 @@ export const completeReminder = createAsyncThunk('reminder/completeReminder', as
     logger.info('提醒标记成功', { reminderId });
     return updatedReminder;
   } catch (error) {
-    logger.error('标记提醒异常', error, { reminderId });
+    logger.error('标记提醒异常', error instanceof Error ? error : undefined, { reminderId });
     throw error;
   }
 });

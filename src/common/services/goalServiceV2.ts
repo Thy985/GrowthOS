@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { secureStorage } from '../../utils/secureStorage';
 import { STORAGE_KEYS } from '../../constants';
-import type { Goal, CreateGoalDTO, UpdateGoalDTO } from '../../types';
+import type { Goal, UpdateGoalDTO } from '../../types';
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -11,8 +11,8 @@ function generateId(): string {
 
 function getGoalFromStorage(): Goal[] {
   try {
-    const data = secureStorage.getItem(STORAGE_KEYS.GOALS);
-    return data || [];
+    const data = secureStorage.getItem<Goal[]>(STORAGE_KEYS.GOALS);
+    return data ?? [];
   } catch (error) {
     console.error('Error reading goals from storage:', error);
     return [];

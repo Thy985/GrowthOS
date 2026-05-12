@@ -11,8 +11,8 @@ function generateId(): string {
 
 function getReminderFromStorage(): Reminder[] {
   try {
-    const data = secureStorage.getItem(STORAGE_KEYS.REMINDERS);
-    return data || [];
+    const data = secureStorage.getItem<Reminder[]>(STORAGE_KEYS.REMINDERS);
+    return data ?? [];
   } catch (error) {
     console.error('Error reading reminders from storage:', error);
     return [];

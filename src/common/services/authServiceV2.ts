@@ -34,8 +34,8 @@ interface StoredUser {
 
 function loadUsersFromStorage(): StoredUser[] {
   try {
-    const data = secureStorage.getItem(STORAGE_KEYS.USERS);
-    return data || [];
+    const data = secureStorage.getItem<StoredUser[]>(STORAGE_KEYS.USERS);
+    return data ?? [];
   } catch {
     return [];
   }
@@ -130,7 +130,7 @@ export async function getCurrentUserInfo(): Promise<User | null> {
     return null;
   }
   
-  const storedUser = secureStorage.getItem(STORAGE_KEYS.USER);
+  const storedUser = secureStorage.getItem<User>(STORAGE_KEYS.USER);
   if (storedUser) {
     currentUser = storedUser;
   }

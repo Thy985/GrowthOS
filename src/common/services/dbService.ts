@@ -1,5 +1,4 @@
 import { Capacitor } from '@capacitor/core';
-import { secureStorage } from '../../utils/secureStorage';
 
 // 当前用户上下文
 let currentUserId: number | null = null;
@@ -11,7 +10,7 @@ const isNative = Capacitor.isNativePlatform();
 async function initDatabase() {
   if (isNative) {
     try {
-      const { CapacitorSQLite, SQLiteDBConnection } = await import('@capacitor-community/sqlite');
+      const { CapacitorSQLite } = await import('@capacitor-community/sqlite');
       const sqlite = CapacitorSQLite as any;
       
       // 创建数据库
