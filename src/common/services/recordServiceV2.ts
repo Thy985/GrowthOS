@@ -11,8 +11,8 @@ function generateId(): string {
 
 function getRecordFromStorage(): Record[] {
   try {
-    const data = secureStorage.getItem(STORAGE_KEYS.RECORDS);
-    return data || [];
+    const data = secureStorage.getItem<Record[]>(STORAGE_KEYS.RECORDS);
+    return data ?? [];
   } catch (error) {
     console.error('Error reading records from storage:', error);
     return [];

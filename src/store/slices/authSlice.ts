@@ -1,14 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import authServiceV2 from '../../common/services/authServiceV2';
-import { AuthState } from '../../types';
+import { AuthState, User } from '../../types';
 import logger from '../../utils/logger';
-
-// 用户类型
-interface User {
-  id: number;
-  username: string;
-  email: string;
-}
 
 // 初始状态
 const initialState: AuthState = {
@@ -23,15 +16,16 @@ export const login = createAsyncThunk('auth/login', async ({ email, password }: 
   try {
     logger.info('用户登录', { email });
     const { user } = await authServiceV2.login(email, password);
-    const userData = {
+    const userData: User = {
       id: user.id,
-      username: user.name || user.email,
-      email: user.email
+      name: user.name || user.email,
+      email: user.email,
+      createdAt: user.createdAt
     };
     logger.info('登录成功', { email });
     return userData;
-  } catch (error: any) {
-    logger.error('登录异常', error, { email });
+  } catch (error: unknown) {
+    logger.error('登录异常', error instanceof Error ? error : undefined, { email });
     throw error;
   }
 });
@@ -41,15 +35,16 @@ export const register = createAsyncThunk('auth/register', async ({ name, email, 
   try {
     logger.info('用户注册', { email });
     const { user } = await authServiceV2.register(email, password, name);
-    const userData = {
+    const userData: User = {
       id: user.id,
-      username: user.name || user.email,
-      email: user.email
+      name: user.name || user.email,
+      email: user.email,
+      createdAt: user.createdAt
     };
     logger.info('注册成功', { email });
     return userData;
-  } catch (error: any) {
-    logger.error('注册异常', error, { email });
+  } catch (error: unknown) {
+    logger.error('注册异常', error instanceof Error ? error : undefined, { email });
     throw error;
   }
 });
@@ -62,7 +57,7 @@ export const logout = createAsyncThunk('auth/logout', async () => {
     logger.info('登出成功');
     return true;
   } catch (error) {
-    logger.error('登出异常', error);
+    logger.error('登出异常', error instanceof Error ? error : undefined);
     throw error;
   }
 });
@@ -73,10 +68,11 @@ export const checkAuth = createAsyncThunk('auth/checkAuth', async () => {
     logger.info('检查认证状态');
     const user = await authServiceV2.getCurrentUserInfo();
     if (user) {
-      const userData = {
+      const userData: User = {
         id: user.id,
-        username: user.name || user.email,
-        email: user.email
+        name: user.name || user.email,
+        email: user.email,
+        createdAt: user.createdAt
       };
       logger.info('认证状态检查完成', { isAuthenticated: true, email: user.email });
       return userData;
@@ -84,7 +80,7 @@ export const checkAuth = createAsyncThunk('auth/checkAuth', async () => {
     logger.info('认证状态检查完成', { isAuthenticated: false });
     return null;
   } catch (error) {
-    logger.error('认证状态检查异常', error);
+    logger.error('认证状态检查异常', error instanceof Error ? error : undefined);
     throw error;
   }
 });
@@ -112,7 +108,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || '登录失败';
       })
       // 注册
       .addCase(register.pending, (state) => {
@@ -126,7 +122,7 @@ const authSlice = createSlice({
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || '注册失败';
       })
       // 登出
       .addCase(logout.pending, (state) => {
@@ -139,7 +135,7 @@ const authSlice = createSlice({
       })
       .addCase(logout.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || '登出失败';
       })
       // 检查认证状态
       .addCase(checkAuth.pending, (state) => {
@@ -152,7 +148,7 @@ const authSlice = createSlice({
       })
       .addCase(checkAuth.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || '检查认证状态失败';
       });
   }
 });

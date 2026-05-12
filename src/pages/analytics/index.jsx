@@ -17,7 +17,6 @@ import {
   ScatterChart, 
   Scatter, 
   ZAxis, 
-  Heatmap, 
   XAxis, 
   YAxis, 
   CartesianGrid, 

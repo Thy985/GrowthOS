@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import goalServiceV2 from '../../common/services/goalServiceV2';
 import { Goal, GoalState, CreateGoalDTO, UpdateGoalDTO } from '../../types';
 import logger from '../../utils/logger';
-import { STORAGE_KEYS } from '../../constants';
 
 const initialState: GoalState = {
   goals: [],
@@ -17,7 +16,7 @@ export const loadGoals = createAsyncThunk('goal/loadGoals', async () => {
     logger.info('目标数据加载完成', { goalsCount: goals.length });
     return goals;
   } catch (error) {
-    logger.error('加载目标数据异常', error);
+    logger.error('加载目标数据异常', error instanceof Error ? error : undefined);
     throw error;
   }
 });
@@ -37,7 +36,7 @@ export const addGoal = createAsyncThunk('goal/addGoal', async (goal: CreateGoalD
     logger.info('目标添加成功', { goalId: newGoal.id });
     return newGoal;
   } catch (error) {
-    logger.error('添加目标异常', error, { title: goal.title });
+    logger.error('添加目标异常', error instanceof Error ? error : undefined, { title: goal.title });
     throw error;
   }
 });
@@ -58,7 +57,7 @@ export const updateGoal = createAsyncThunk('goal/updateGoal', async (goal: Parti
     logger.info('目标更新成功', { goalId: goal.id });
     return updatedGoal;
   } catch (error) {
-    logger.error('更新目标异常', error, { goalId: goal.id });
+    logger.error('更新目标异常', error instanceof Error ? error : undefined, { goalId: goal.id });
     throw error;
   }
 });
@@ -70,7 +69,7 @@ export const deleteGoal = createAsyncThunk('goal/deleteGoal', async (goalId: str
     logger.info('目标删除成功', { goalId });
     return goalId;
   } catch (error) {
-    logger.error('删除目标异常', error, { goalId });
+    logger.error('删除目标异常', error instanceof Error ? error : undefined, { goalId });
     throw error;
   }
 });
@@ -102,7 +101,7 @@ export const incrementGoalProgress = createAsyncThunk(
       logger.info('目标进度更新成功', { goalId, newValue: updatedGoal.currentValue });
       return updatedGoal;
     } catch (error) {
-      logger.error('更新目标进度异常', error, { goalId, value });
+      logger.error('更新目标进度异常', error instanceof Error ? error : undefined, { goalId, value });
       throw error;
     }
   }

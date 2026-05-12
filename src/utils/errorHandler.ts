@@ -1,4 +1,5 @@
-import { AppError, ERROR_CODES } from '../constants';
+import { ERROR_CODES } from '../constants';
+import type { AppError } from '../types';
 
 export class ValidationError extends Error {
   constructor(message: string, public field?: string) {

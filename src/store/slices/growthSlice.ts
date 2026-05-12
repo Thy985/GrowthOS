@@ -23,7 +23,7 @@ export const loadData = createAsyncThunk('growth/loadData', async () => {
     logger.info('成长数据加载完成', { recordsCount: records.length, tagsCount: tags.length, treesCount: trees.length });
     return { records, tags, trees };
   } catch (error) {
-    logger.error('加载成长数据异常', error);
+    logger.error('加载成长数据异常', error instanceof Error ? error : undefined);
     throw error;
   }
 });
@@ -46,13 +46,13 @@ export const addRecord = createAsyncThunk('growth/addRecord', async (record: Cre
     logger.info('成长记录添加成功', { recordId: newRecord.id, tagsCount: updatedTags.length });
     return { record: newRecord, tags: updatedTags };
   } catch (error) {
-    logger.error('添加成长记录异常', error, { activity: record.activity, learning: record.learning });
+    logger.error('添加成长记录异常', error instanceof Error ? error : undefined, { activity: record.activity, learning: record.learning });
     throw error;
   }
 });
 
 export const searchRecords = createSelector(
-  [(state: GrowthState) => state.records, (state: GrowthState, searchTerm: string) => searchTerm],
+  [(state: GrowthState) => state.records, (_state: GrowthState, searchTerm: string) => searchTerm],
   (records, searchTerm) => {
     const searchLower = searchTerm.toLowerCase();
     return records.filter(record => {
@@ -67,14 +67,14 @@ export const searchRecords = createSelector(
 );
 
 export const filterRecordsByMood = createSelector(
-  [(state: GrowthState) => state.records, (state: GrowthState, mood: Record['mood']) => mood],
+  [(state: GrowthState) => state.records, (_state: GrowthState, mood: Record['mood']) => mood],
   (records, mood) => {
     return records.filter(record => record.mood === mood);
   }
 );
 
 export const filterRecordsByTags = createSelector(
-  [(state: GrowthState) => state.records, (state: GrowthState, tags: Tag[]) => tags],
+  [(state: GrowthState) => state.records, (_state: GrowthState, tags: Tag[]) => tags],
   (records, tags) => {
     return records.filter(record => {
       if (!record.tags || record.tags.length === 0) return false;
@@ -103,7 +103,6 @@ export const exportData = createAsyncThunk(
       
       let fileName = `growth-data-${new Date().toISOString().split('T')[0]}`;
       let blob: Blob;
-      let mimeType: string;
       
       switch (options.format) {
         case 'csv': {
@@ -137,7 +136,6 @@ export const exportData = createAsyncThunk(
           }
           
           blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-          mimeType = 'text/csv';
           fileName += '.csv';
           break;
         }
@@ -186,7 +184,6 @@ export const exportData = createAsyncThunk(
           }
           
           blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8;' });
-          mimeType = 'text/markdown';
           fileName += '.md';
           break;
         }
@@ -201,7 +198,6 @@ export const exportData = createAsyncThunk(
           };
           const jsonStr = JSON.stringify(data, null, 2);
           blob = new Blob([jsonStr], { type: 'application/json' });
-          mimeType = 'application/json';
           fileName += '.json';
           break;
         }
@@ -216,7 +212,7 @@ export const exportData = createAsyncThunk(
       
       return { success: true, message: '数据导出成功' };
     } catch (error) {
-      logger.error('导出数据异常', error);
+      logger.error('导出数据异常', error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -273,7 +269,7 @@ const growthSlice = createSlice({
       })
       .addCase(loadData.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || '加载数据失败';
       })
       .addCase(addRecord.pending, (state) => {
         state.isLoading = true;
@@ -286,7 +282,7 @@ const growthSlice = createSlice({
       })
       .addCase(addRecord.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || '添加记录失败';
       })
       .addCase(importData.pending, (state) => {
         state.isLoading = true;
@@ -300,7 +296,7 @@ const growthSlice = createSlice({
       })
       .addCase(importData.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message;
+        state.error = action.error.message || '导入数据失败';
       });
   }
 });
