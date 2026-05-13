@@ -2,40 +2,44 @@ import type { LLMConfig, ChatSession, ChatSessionWithMessages, ChatMessage } fro
 import { AI_STORAGE_KEYS } from '../../constants';
 import { secureStorage } from '../../utils/secureStorage';
 
-// 生成 ID 辅助函数
-const generateId = (): string => {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
+const DEVICE_ID_KEY = '_growthos_device_id';
 
-// === LLM 配置存储 ===
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+async function ensureInitialized(): Promise<void> {
+  await secureStorage.initialize();
+}
 
 export const saveLLMConfig = async (config: LLMConfig): Promise<void> => {
-  const configToSave = {
-    ...config,
-    apiKey: config.apiKey // 已由 secureStorage 自动加密
-  };
-  secureStorage.setItem(AI_STORAGE_KEYS.LLM_CONFIG, configToSave);
+  await ensureInitialized();
+  await secureStorage.setItem(AI_STORAGE_KEYS.LLM_CONFIG, config);
 };
 
 export const getLLMConfig = async (): Promise<LLMConfig | null> => {
+  await ensureInitialized();
   return secureStorage.getItem<LLMConfig>(AI_STORAGE_KEYS.LLM_CONFIG);
 };
 
 export const clearLLMConfig = async (): Promise<void> => {
+  await ensureInitialized();
   secureStorage.removeItem(AI_STORAGE_KEYS.LLM_CONFIG);
 };
 
-// === 会话存储 ===
-
-export const saveSessions = (sessions: ChatSession[]): void => {
-  secureStorage.setItem(AI_STORAGE_KEYS.CHAT_SESSIONS, sessions);
+export const saveSessions = async (sessions: ChatSession[]): Promise<void> => {
+  await ensureInitialized();
+  await secureStorage.setItem(AI_STORAGE_KEYS.CHAT_SESSIONS, sessions);
 };
 
-export const getSessions = (): ChatSession[] => {
+export const getSessions = async (): Promise<ChatSession[]> => {
+  await ensureInitialized();
   return secureStorage.getItem<ChatSession[]>(AI_STORAGE_KEYS.CHAT_SESSIONS) || [];
 };
 
-export const createSession = (title: string): ChatSession => {
+export const createSession = async (title: string): Promise<ChatSession> => {
+  await ensureInitialized();
+  
   const session: ChatSession = {
     id: generateId(),
     title,
@@ -44,18 +48,18 @@ export const createSession = (title: string): ChatSession => {
     messageCount: 0
   };
   
-  const sessions = getSessions();
+  const sessions = await getSessions();
   sessions.unshift(session);
-  saveSessions(sessions);
-  
-  // 初始化会话消息
-  saveSessionMessages(session.id, []);
+  await saveSessions(sessions);
+  await saveSessionMessages(session.id, []);
   
   return session;
 };
 
-export const updateSession = (sessionId: string, updates: Partial<ChatSession>): ChatSession | null => {
-  const sessions = getSessions();
+export const updateSession = async (sessionId: string, updates: Partial<ChatSession>): Promise<ChatSession | null> => {
+  await ensureInitialized();
+  
+  const sessions = await getSessions();
   const index = sessions.findIndex(s => s.id === sessionId);
   
   if (index === -1) return null;
@@ -66,34 +70,33 @@ export const updateSession = (sessionId: string, updates: Partial<ChatSession>):
     updatedAt: new Date().toISOString()
   };
   
-  saveSessions(sessions);
+  await saveSessions(sessions);
   return sessions[index];
 };
 
-export const deleteSession = (sessionId: string): void => {
-  const sessions = getSessions().filter(s => s.id !== sessionId);
-  saveSessions(sessions);
+export const deleteSession = async (sessionId: string): Promise<void> => {
+  await ensureInitialized();
   
-  // 删除对应的消息
+  const sessions = (await getSessions()).filter(s => s.id !== sessionId);
+  await saveSessions(sessions);
+  
   localStorage.removeItem(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`);
   localStorage.removeItem(`${AI_STORAGE_KEYS.ARCHIVED_MESSAGES}_${sessionId}`);
 };
 
-// === 消息存储 ===
-
 const SESSION_MESSAGES_LIMIT = 50;
 
-export const getSessionMessages = (sessionId: string): ChatSessionWithMessages => {
-  // 先获取会话元数据
-  const sessions = getSessions();
+export const getSessionMessages = async (sessionId: string): Promise<ChatSessionWithMessages> => {
+  await ensureInitialized();
+  
+  const sessions = await getSessions();
   const session = sessions.find(s => s.id === sessionId);
   
   if (!session) {
     throw new Error('Session not found');
   }
   
-  // 获取近期消息
-  const messages = secureStorage.getItem<ChatMessage[]>(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`) || [];
+  const messages = await secureStorage.getItem<ChatMessage[]>(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`) || [];
   
   return {
     ...session,
@@ -101,45 +104,41 @@ export const getSessionMessages = (sessionId: string): ChatSessionWithMessages =
   };
 };
 
-export const addMessage = (sessionId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>): ChatMessage => {
+export const addMessage = async (sessionId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>): Promise<ChatMessage> => {
+  await ensureInitialized();
+  
   const newMessage: ChatMessage = {
     ...message,
     id: generateId(),
     timestamp: new Date().toISOString()
   };
   
-  // 获取现有消息
   const key = `${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`;
-  let messages = secureStorage.getItem<ChatMessage[]>(key) || [];
+  let messages = await secureStorage.getItem<ChatMessage[]>(key) || [];
   
   messages.push(newMessage);
   
-  // 如果超过限制，归档旧消息
   if (messages.length > SESSION_MESSAGES_LIMIT) {
     const toArchive = messages.slice(0, messages.length - SESSION_MESSAGES_LIMIT);
     messages = messages.slice(messages.length - SESSION_MESSAGES_LIMIT);
     
-    // 追加到归档
     const archiveKey = `${AI_STORAGE_KEYS.ARCHIVED_MESSAGES}_${sessionId}`;
-    const archived = secureStorage.getItem<ChatMessage[]>(archiveKey) || [];
-    secureStorage.setItem(archiveKey, [...archived, ...toArchive]);
+    const archived = await secureStorage.getItem<ChatMessage[]>(archiveKey) || [];
+    await secureStorage.setItem(archiveKey, [...archived, ...toArchive]);
   }
   
-  secureStorage.setItem(key, messages);
-  
-  // 更新会话信息
-  updateSession(sessionId, { messageCount: messages.length });
+  await secureStorage.setItem(key, messages);
+  await updateSession(sessionId, { messageCount: messages.length });
   
   return newMessage;
 };
 
-export const clearSessionMessages = (sessionId: string): void => {
+export const clearSessionMessages = async (sessionId: string): Promise<void> => {
+  await ensureInitialized();
   secureStorage.removeItem(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`);
   secureStorage.removeItem(`${AI_STORAGE_KEYS.ARCHIVED_MESSAGES}_${sessionId}`);
-  updateSession(sessionId, { messageCount: 0 });
+  await updateSession(sessionId, { messageCount: 0 });
 };
-
-// === 设置存储 ===
 
 interface AISettings {
   autoSuggestions: boolean;
@@ -153,11 +152,13 @@ const DEFAULT_SETTINGS: AISettings = {
   showToolCalls: false
 };
 
-export const getAISettings = (): AISettings => {
+export const getAISettings = async (): Promise<AISettings> => {
+  await ensureInitialized();
   return secureStorage.getItem<AISettings>(AI_STORAGE_KEYS.SETTINGS) || DEFAULT_SETTINGS;
 };
 
-export const saveAISettings = (settings: Partial<AISettings>): void => {
-  const current = getAISettings();
-  secureStorage.setItem(AI_STORAGE_KEYS.SETTINGS, { ...current, ...settings });
+export const saveAISettings = async (settings: Partial<AISettings>): Promise<void> => {
+  await ensureInitialized();
+  const current = await getAISettings();
+  await secureStorage.setItem(AI_STORAGE_KEYS.SETTINGS, { ...current, ...settings });
 };

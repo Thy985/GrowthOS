@@ -13,6 +13,7 @@ import { loadAIConfig } from './store/slices/aiSlice';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ChatWidget } from './components/ai/ChatWidget';
+import { ToastProvider } from './components/Toast';
 
 // 使用React.lazy实现代码分割
 const Dashboard = lazy(() => import('./pages/dashboard'));
@@ -218,11 +219,13 @@ function App() {
   return (
     <ErrorBoundary>
       <Provider store={store}>
-        <Router>
-          <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
-            <AppContent />
-          </div>
-        </Router>
+        <ToastProvider>
+          <Router>
+            <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
+              <AppContent />
+            </div>
+          </Router>
+        </ToastProvider>
       </Provider>
     </ErrorBoundary>
   );
