@@ -264,7 +264,7 @@ export interface Tool {
 export interface ToolCallResult {
   toolName: string;
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 

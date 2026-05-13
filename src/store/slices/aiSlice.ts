@@ -3,6 +3,7 @@ import type { AIState, LLMConfig, ChatSession, ChatMessage } from '../../types';
 import { DEFAULT_LLM_CONFIGS } from '../../constants';
 import * as aiStorage from '../../common/services/aiStorageService';
 import { getAgent } from '../../common/services/agentOrchestrator';
+import { sanitizeUserInput, sanitizeAIOutput } from '../../utils/xssSanitizer';
 
 const initialState: AIState = {
   config: null,
@@ -13,17 +14,15 @@ const initialState: AIState = {
   error: null
 };
 
-// 异步 action：加载配置
 export const loadAIConfig = createAsyncThunk(
   'ai/loadConfig',
   async () => {
     const config = await aiStorage.getLLMConfig();
-    const sessions = aiStorage.getSessions();
+    const sessions = await aiStorage.getSessions();
     return { config, sessions };
   }
 );
 
-// 异步 action：保存配置
 export const saveAIConfig = createAsyncThunk(
   'ai/saveConfig',
   async (config: LLMConfig, { rejectWithValue }) => {
@@ -38,23 +37,20 @@ export const saveAIConfig = createAsyncThunk(
   }
 );
 
-// 异步 action：创建会话
 export const createSession = createAsyncThunk(
   'ai/createSession',
   async (title: string) => {
-    return aiStorage.createSession(title);
+    return await aiStorage.createSession(title);
   }
 );
 
-// 异步 action：加载会话消息
 export const loadSessionMessages = createAsyncThunk(
   'ai/loadSessionMessages',
   async (sessionId: string) => {
-    return aiStorage.getSessionMessages(sessionId);
+    return await aiStorage.getSessionMessages(sessionId);
   }
 );
 
-// 异步 action：发送消息
 export const sendMessage = createAsyncThunk(
   'ai/sendMessage',
   async (
@@ -62,26 +58,35 @@ export const sendMessage = createAsyncThunk(
     { rejectWithValue, dispatch }
   ) => {
     try {
+      const sanitizedContent = sanitizeUserInput(content);
+      if (!sanitizedContent) {
+        return rejectWithValue('消息内容无效');
+      }
+
       const agent = getAgent();
       
-      // 先添加用户消息
-      const userMessage = aiStorage.addMessage(sessionId, {
+      const userMessage = await aiStorage.addMessage(sessionId, {
         role: 'user',
-        content
+        content: sanitizedContent
       });
       
-      // 更新 UI
       dispatch(addLocalMessage(userMessage));
       
-      // 获取回复
       let fullResponse = '';
       
-      await agent.sendMessage(sessionId, content, (chunk) => {
+      await agent.sendMessage(sessionId, sanitizedContent, (chunk) => {
         fullResponse += chunk;
         dispatch(updateStreamingMessage(fullResponse));
       });
       
-      return { userMessage, assistantResponse: fullResponse };
+      const sanitizedResponse = sanitizeAIOutput(fullResponse);
+      
+      await aiStorage.addMessage(sessionId, {
+        role: 'assistant',
+        content: sanitizedResponse
+      });
+      
+      return { userMessage, assistantResponse: sanitizedResponse };
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : '发送失败');
     }
@@ -96,7 +101,6 @@ const aiSlice = createSlice({
       state.currentSession = action.payload;
     },
     addLocalMessage: (state, action: PayloadAction<ChatMessage>) => {
-      // 消息会在会话数据中处理，这里主要是即时反馈
     },
     updateStreamingMessage: (state, action: PayloadAction<string>) => {
       state.isStreaming = true;
@@ -110,7 +114,6 @@ const aiSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // 加载配置
       .addCase(loadAIConfig.pending, (state) => {
         state.isLoading = true;
       })
@@ -126,7 +129,6 @@ const aiSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // 保存配置
       .addCase(saveAIConfig.pending, (state) => {
         state.isLoading = true;
       })
@@ -138,7 +140,6 @@ const aiSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // 创建会话
       .addCase(createSession.pending, (state) => {
         state.isLoading = true;
       })
@@ -151,15 +152,12 @@ const aiSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // 发送消息
       .addCase(sendMessage.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(sendMessage.fulfilled, (state, action) => {
+      .addCase(sendMessage.fulfilled, (state) => {
         state.isLoading = false;
         state.isStreaming = false;
-        // 刷新会话列表
-        state.sessions = aiStorage.getSessions();
       })
       .addCase(sendMessage.rejected, (state, action) => {
         state.isLoading = false;

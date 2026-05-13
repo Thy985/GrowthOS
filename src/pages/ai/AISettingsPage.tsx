@@ -3,10 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch, LLMConfig, LLMProvider } from '../../types';
 import { loadAIConfig, saveAIConfig, clearError } from '../../store/slices/aiSlice';
 import { DEFAULT_LLM_CONFIGS, LLM_PROVIDERS } from '../../constants';
+import { ToastProvider, useToast } from '../../components/Toast';
 
-const AISettingsPage: React.FC = () => {
+const AISettingsContent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { config, isLoading, error } = useSelector((state: RootState) => state.ai);
+  const { showToast } = useToast();
   
   const [provider, setProvider] = useState<LLMProvider>('openai');
   const [apiKey, setApiKey] = useState('');
@@ -29,7 +31,6 @@ const AISettingsPage: React.FC = () => {
       setTemperature(config.temperature);
       setMaxTokens(config.maxTokens);
     } else {
-      // 加载默认配置
       const defaultConfig = DEFAULT_LLM_CONFIGS['openai'];
       setProvider('openai');
       setBaseUrl(defaultConfig.baseUrl || '');
@@ -52,7 +53,7 @@ const AISettingsPage: React.FC = () => {
     e.preventDefault();
     
     if (!apiKey.trim()) {
-      alert('请输入 API Key');
+      showToast('请输入 API Key', 'warning');
       return;
     }
     
@@ -65,16 +66,18 @@ const AISettingsPage: React.FC = () => {
       maxTokens
     };
     
-    await dispatch(saveAIConfig(newConfig));
-    alert('配置已保存！');
+    const result = await dispatch(saveAIConfig(newConfig));
+    if (saveAIConfig.fulfilled.match(result)) {
+      showToast('配置已保存！', 'success');
+    } else {
+      showToast('保存失败，请重试', 'error');
+    }
   };
 
   const handleClear = () => {
-    if (confirm('确定要清除配置吗？')) {
-      setApiKey('');
-      setBaseUrl('');
-      // 可以添加清除逻辑
-    }
+    setApiKey('');
+    setBaseUrl('');
+    showToast('配置已清除', 'info');
   };
 
   return (
@@ -94,7 +97,6 @@ const AISettingsPage: React.FC = () => {
       )}
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Provider 选择 */}
         <div>
           <label className="block text-sm font-medium mb-2">LLM 提供商</label>
           <div className="grid grid-cols-2 gap-3">
@@ -118,7 +120,6 @@ const AISettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* API Key */}
         <div>
           <label className="block text-sm font-medium mb-2">API Key</label>
           <div className="relative">
@@ -139,7 +140,6 @@ const AISettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Base URL (可选) */}
         <div>
           <label className="block text-sm font-medium mb-2">Base URL (可选)</label>
           <input
@@ -151,7 +151,6 @@ const AISettingsPage: React.FC = () => {
           />
         </div>
 
-        {/* Model */}
         <div>
           <label className="block text-sm font-medium mb-2">模型</label>
           <input
@@ -163,7 +162,6 @@ const AISettingsPage: React.FC = () => {
           />
         </div>
 
-        {/* 高级设置 */}
         <div className="border-t pt-6">
           <h3 className="text-lg font-medium mb-4">高级设置</h3>
           
@@ -202,7 +200,6 @@ const AISettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 操作按钮 */}
         <div className="flex gap-3 pt-4">
           <button
             type="submit"
@@ -221,7 +218,6 @@ const AISettingsPage: React.FC = () => {
         </div>
       </form>
 
-      {/* 说明 */}
       <div className="mt-8 p-4 bg-blue-50 rounded-lg">
         <h3 className="font-medium text-blue-800 mb-2">使用说明</h3>
         <ul className="text-sm text-blue-700 space-y-1">
@@ -231,6 +227,14 @@ const AISettingsPage: React.FC = () => {
         </ul>
       </div>
     </div>
+  );
+};
+
+const AISettingsPage: React.FC = () => {
+  return (
+    <ToastProvider>
+      <AISettingsContent />
+    </ToastProvider>
   );
 };
 

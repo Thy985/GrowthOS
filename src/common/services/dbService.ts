@@ -1,17 +1,28 @@
 import { Capacitor } from '@capacitor/core';
 
-// 当前用户上下文
+interface CapacitorSQLiteInterface {
+  createConnection(options: {
+    database: string;
+    encrypted?: boolean;
+    mode?: string;
+    version?: number;
+    readerVersion?: number;
+  }): Promise<void>;
+  retrieveConnection(database: string): Promise<{
+    execute(sql: string): Promise<void>;
+    close(): Promise<void>;
+  }>;
+}
+
 let currentUserId: number | null = null;
 
-// 检测是否在移动端
 const isNative = Capacitor.isNativePlatform();
 
-// 数据库初始化
 async function initDatabase() {
   if (isNative) {
     try {
       const { CapacitorSQLite } = await import('@capacitor-community/sqlite');
-      const sqlite = CapacitorSQLite as any;
+      const sqlite = CapacitorSQLite as CapacitorSQLiteInterface;
       
       // 创建数据库
       await sqlite.createConnection({
