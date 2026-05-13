@@ -4,6 +4,8 @@ import authReducer from './slices/authSlice';
 import themeReducer from './slices/themeSlice';
 import goalReducer from './slices/goalSlice';
 import reminderReducer from './slices/reminderSlice';
+import aiReducer from './slices/aiSlice';
+import type { RootState as TRootState } from '../types';
 
 export const store = configureStore({
   reducer: {
@@ -11,9 +13,11 @@ export const store = configureStore({
     auth: authReducer,
     theme: themeReducer,
     goal: goalReducer,
-    reminder: reminderReducer
+    reminder: reminderReducer,
+    ai: aiReducer
   }
 });
 
+export type RootState = TRootState;
 export type AppDispatch = typeof store.dispatch;
 export default store;

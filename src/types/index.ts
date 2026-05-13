@@ -202,3 +202,88 @@ export interface AppError {
   message: string;
   details?: unknown;
 }
+
+// === AI Agent 类型 ===
+
+// LLM 提供者类型
+export type LLMProvider = 'openai' | 'anthropic' | 'deepseek' | 'custom';
+
+// LLM 配置
+export interface LLMConfig {
+  provider: LLMProvider;
+  apiKey: string;
+  baseUrl?: string;
+  model: string;
+  temperature: number;
+  maxTokens: number;
+}
+
+// 聊天消息角色
+export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
+
+// 聊天消息
+export interface ChatMessage {
+  id: string;
+  role: ChatMessageRole;
+  content: string;
+  timestamp: string;
+  tokens?: number;
+}
+
+// 对话会话
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+}
+
+// 完整会话（包含消息）
+export interface ChatSessionWithMessages extends ChatSession {
+  messages: ChatMessage[];
+}
+
+// 工具参数类型
+export interface ToolParameter {
+  name: string;
+  type: 'string' | 'number' | 'boolean';
+  required: boolean;
+  description: string;
+}
+
+// 工具定义
+export interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  parameters: ToolParameter[];
+}
+
+// 工具调用结果
+export interface ToolCallResult {
+  toolName: string;
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+// AI 状态
+export interface AIState {
+  config: LLMConfig | null;
+  currentSession: ChatSession | null;
+  sessions: ChatSession[];
+  isLoading: boolean;
+  isStreaming: boolean;
+  error: string | null;
+}
+
+// 更新根状态类型
+export interface RootState {
+  auth: AuthState;
+  growth: GrowthState;
+  theme: ThemeState;
+  goal: GoalState;
+  reminder: ReminderState;
+  ai: AIState;
+}

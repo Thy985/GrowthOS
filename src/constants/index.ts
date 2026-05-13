@@ -2,7 +2,7 @@
 export const APP_NAME = 'GrowthOS';
 export const APP_VERSION = '1.0.0';
 
-import type { BadgeStats } from '../types';
+import type { BadgeStats, LLMConfig, LLMProvider } from '../types';
 
 // 存储键名常量
 export const STORAGE_KEYS = {
@@ -133,4 +133,127 @@ export const DEFAULTS = {
   MOOD: '一般',
   DATE_FORMAT: 'YYYY-MM-DD',
   TIME_FORMAT: 'HH:mm'
+} as const;
+
+// === AI Agent 常量 ===
+
+// AI 存储键
+export const AI_STORAGE_KEYS = {
+  LLM_CONFIG: 'ai_llm_config',
+  CHAT_SESSIONS: 'ai_chat_sessions',
+  RECENT_MESSAGES: 'ai_recent_messages',
+  ARCHIVED_MESSAGES: 'ai_archived_messages',
+  SETTINGS: 'ai_settings'
+} as const;
+
+// LLM 提供者配置
+export const DEFAULT_LLM_CONFIGS: Record<LLMProvider, Omit<LLMConfig, 'apiKey'>> = {
+  openai: {
+    provider: 'openai',
+    model: 'gpt-4o',
+    temperature: 0.7,
+    maxTokens: 1000,
+    baseUrl: 'https://api.openai.com/v1'
+  },
+  anthropic: {
+    provider: 'anthropic',
+    model: 'claude-3-haiku-20240307',
+    temperature: 0.7,
+    maxTokens: 1000,
+    baseUrl: 'https://api.anthropic.com/v1'
+  },
+  deepseek: {
+    provider: 'deepseek',
+    model: 'deepseek-chat',
+    temperature: 0.7,
+    maxTokens: 1000,
+    baseUrl: 'https://api.deepseek.com/v1'
+  },
+  custom: {
+    provider: 'custom',
+    model: 'gpt-4o',
+    temperature: 0.7,
+    maxTokens: 1000,
+    baseUrl: ''
+  }
+} as const;
+
+// LLM 提供者列表
+export const LLM_PROVIDERS = [
+  { value: 'openai', label: 'OpenAI', icon: '🤖' },
+  { value: 'anthropic', label: 'Anthropic', icon: '🌟' },
+  { value: 'deepseek', label: 'DeepSeek', icon: '🚀' },
+  { value: 'custom', label: '自定义', icon: '⚙️' }
+] as const;
+
+// 系统提示词
+export const AI_SYSTEM_PROMPT = `你是 GrowthOS 的 AI 成长导师，帮助用户实现个人成长。
+
+你的人设：
+- 友好、鼓励、支持的导师
+- 专业但不傲慢
+- 善于发现用户的进步并给予肯定
+- 建议具体、可行，有时间节点
+
+你的职责：
+1. 分析用户的成长树、记录、目标
+2. 提供个性化的学习建议
+3. 帮助用户建立良好的习惯
+4. 当用户遇到挫折时给予鼓励
+5. 发现用户没注意到的成长点
+
+你的限制：
+- 不要编造用户的数据
+- 如果不确定，先询问用户
+- 保持简洁，不要太啰嗦
+- 尊重用户的隐私`;
+
+// 工具描述
+export const AI_TOOL_DESCRIPTIONS = {
+  getGrowthTrees: {
+    name: 'getGrowthTrees',
+    description: '获取用户的所有技能树数据',
+    parameters: []
+  },
+  getRecords: {
+    name: 'getRecords',
+    description: '获取用户的每日记录，可按日期范围筛选',
+    parameters: [
+      { name: 'limit', type: 'number', required: false, description: '返回记录数量，默认 10' },
+      { name: 'startDate', type: 'string', required: false, description: '开始日期，YYYY-MM-DD 格式' },
+      { name: 'endDate', type: 'string', required: false, description: '结束日期，YYYY-MM-DD 格式' }
+    ]
+  },
+  getGoals: {
+    name: 'getGoals',
+    description: '获取用户的所有目标',
+    parameters: [
+      { name: 'status', type: 'string', required: false, description: '状态筛选：active/completed/cancelled' }
+    ]
+  },
+  getReminders: {
+    name: 'getReminders',
+    description: '获取用户的提醒列表',
+    parameters: []
+  },
+  getBadges: {
+    name: 'getBadges',
+    description: '获取用户的徽章解锁状态',
+    parameters: []
+  },
+  analyzeMoodTrend: {
+    name: 'analyzeMoodTrend',
+    description: '分析用户近期情绪趋势',
+    parameters: []
+  },
+  analyzeProgress: {
+    name: 'analyzeProgress',
+    description: '分析用户的整体进步情况',
+    parameters: []
+  },
+  suggestNextStep: {
+    name: 'suggestNextStep',
+    description: '基于当前状态，智能推荐下一步行动',
+    parameters: []
+  }
 } as const;

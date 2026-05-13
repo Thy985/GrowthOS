@@ -9,8 +9,10 @@ import { checkAuth, logout } from './store/slices/authSlice';
 import { toggleTheme } from './store/slices/themeSlice';
 import { loadGoals } from './store/slices/goalSlice';
 import { loadReminders } from './store/slices/reminderSlice';
+import { loadAIConfig } from './store/slices/aiSlice';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ChatWidget } from './components/ai/ChatWidget';
 
 // 使用React.lazy实现代码分割
 const Dashboard = lazy(() => import('./pages/dashboard'));
@@ -23,6 +25,7 @@ const Tutorial = lazy(() => import('./components/Tutorial'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'));
+const AISettingsPage = lazy(() => import('./pages/ai/AISettingsPage'));
 
 function Navbar() {
   const location = useLocation();
@@ -72,6 +75,9 @@ function Navbar() {
               </Link>
               <Link to="/analytics" className={`nav-link ${location.pathname === '/analytics' ? 'active' : ''}`}>
                 {t('common.analytics')}
+              </Link>
+              <Link to="/ai-settings" className={`nav-link ${location.pathname === '/ai-settings' ? 'active' : ''}`}>
+                🤖 AI
               </Link>
               <button 
                 onClick={handleOpenShortcuts}
@@ -145,6 +151,9 @@ function Navbar() {
                 </Link>
                 <Link to="/analytics" className={`nav-mobile-link ${location.pathname === '/analytics' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                   {t('common.analytics')}
+                </Link>
+                <Link to="/ai-settings" className={`nav-mobile-link ${location.pathname === '/ai-settings' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  🤖 AI 设置
                 </Link>
                 <div className="nav-mobile-theme-toggle">
                   <span>主题</span>
@@ -243,6 +252,8 @@ function AppContent() {
         dispatch(loadGoals());
         // 加载提醒数据
         dispatch(loadReminders());
+        // 加载 AI 配置
+        dispatch(loadAIConfig());
       }, 500);
       
       return () => clearTimeout(timer);
@@ -315,6 +326,7 @@ function AppContent() {
               <Route path="/reminders" element={<ProtectedRoute><ErrorBoundary><Reminders /></ErrorBoundary></ProtectedRoute>} />
               <Route path="/growth-tree" element={<ProtectedRoute><ErrorBoundary><GrowthTree /></ErrorBoundary></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><ErrorBoundary><Analytics /></ErrorBoundary></ProtectedRoute>} />
+              <Route path="/ai-settings" element={<ProtectedRoute><ErrorBoundary><AISettingsPage /></ErrorBoundary></ProtectedRoute>} />
               <Route path="/login" element={<ErrorBoundary><Login /></ErrorBoundary>} />
               <Route path="/register" element={<ErrorBoundary><Register /></ErrorBoundary>} />
               <Route path="/auth" element={<Navigate to="/login" />} />
@@ -323,6 +335,7 @@ function AppContent() {
           </Suspense>
         </ErrorBoundary>
       </div>
+      {isAuthenticated && <ChatWidget />}
     </>
   );
 }
