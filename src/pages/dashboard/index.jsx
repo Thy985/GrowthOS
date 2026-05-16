@@ -20,8 +20,11 @@ const Dashboard = () => {
   const calculateStreak = useCallback((records) => {
     if (!records || records.length === 0) return 0;
     
-    const sortedRecords = [...records].sort((a, b) => 
-      new Date(b.createdAt) - new Date(a.createdAt)
+    // 使用 Set 快速查找日期
+    const datesSet = new Set(
+      records.map(record => 
+        new Date(record.createdAt).toISOString().split('T')[0]
+      )
     );
     
     let streak = 0;
@@ -33,12 +36,7 @@ const Dashboard = () => {
       checkDate.setDate(checkDate.getDate() - i);
       const checkDateStr = checkDate.toISOString().split('T')[0];
       
-      const hasRecord = sortedRecords.some(record => {
-        const recordDate = new Date(record.createdAt).toISOString().split('T')[0];
-        return recordDate === checkDateStr;
-      });
-      
-      if (hasRecord) {
+      if (datesSet.has(checkDateStr)) {
         streak++;
       } else if (i > 0) {
         break;
