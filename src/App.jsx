@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -10,12 +10,16 @@ import { toggleTheme } from './store/slices/themeSlice';
 import { loadGoals } from './store/slices/goalSlice';
 import { loadReminders } from './store/slices/reminderSlice';
 import { loadAIConfig } from './store/slices/aiSlice';
+import { loadSyncStatus } from './store/slices/syncSlice';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ChatWidget } from './components/ai/ChatWidget';
 import { ToastProvider } from './components/Toast';
+import OfflineIndicator from './components/OfflineIndicator';
+import SyncPanel from './components/SyncPanel';
+import ConflictModal from './components/ConflictModal';
+import { initOfflineDB } from './utils/offlineStorage';
 
-// 使用React.lazy实现代码分割
 const Dashboard = lazy(() => import('./pages/dashboard'));
 const GrowthTree = lazy(() => import('./pages/growth-tree'));
 const Analytics = lazy(() => import('./pages/analytics'));
@@ -36,18 +40,15 @@ function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
   
-  // 打开快捷键帮助的回调
   const handleOpenShortcuts = () => {
     const event = new CustomEvent('openShortcutsHelp');
     window.dispatchEvent(event);
   };
   
-  // 处理登出
   const handleLogout = () => {
     dispatch(logout());
   };
   
-  // 处理主题切换
   const handleToggleTheme = () => {
     dispatch(toggleTheme());
   };
@@ -232,38 +233,36 @@ function App() {
 }
 
 function AppContent() {
-  const { isAuthenticated } = useSelector(state => state.auth);
   const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector(state => state.auth);
   const navigate = useNavigate();
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
+  const [showSyncPanel, setShowSyncPanel] = useState(false);
+  const [selectedConflict, setSelectedConflict] = useState(null);
+  const { conflicts } = useSelector(state => state.sync);
 
-  // 初始化数据
   useEffect(() => {
-    // 检查认证状态
+    initOfflineDB().catch(console.error);
+  }, []);
+
+  useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
   
-  // 延迟加载非关键数据
   useEffect(() => {
     if (isAuthenticated) {
-      // 延迟加载数据，让应用先渲染
       const timer = setTimeout(() => {
-        // 加载数据
         dispatch(loadData());
-        // 加载目标数据
         dispatch(loadGoals());
-        // 加载提醒数据
         dispatch(loadReminders());
-        // 加载 AI 配置
         dispatch(loadAIConfig());
+        dispatch(loadSyncStatus());
       }, 500);
       
       return () => clearTimeout(timer);
     }
   }, [dispatch, isAuthenticated]);
 
-  // 监听自定义事件
   useEffect(() => {
     const handleOpenShortcuts = () => {
       setShowShortcutsHelp(true);
@@ -273,7 +272,12 @@ function AppContent() {
     return () => window.removeEventListener('openShortcutsHelp', handleOpenShortcuts);
   }, []);
 
-  // 使用useMemo来避免每次渲染都重新创建shortcuts数组
+  useEffect(() => {
+    if (conflicts.length > 0 && !selectedConflict) {
+      setSelectedConflict(conflicts[0]);
+    }
+  }, [conflicts, selectedConflict]);
+
   const shortcuts = useMemo(() => [
     {
       key: 'h',
@@ -296,23 +300,25 @@ function AppContent() {
       callback: () => setShowShortcutsHelp(!showShortcutsHelp),
     },
     {
-      key: 'k',
+      key: 's',
       ctrl: true,
-      callback: () => isAuthenticated && setShowSearch(!showSearch),
+      callback: () => isAuthenticated && setShowSyncPanel(true),
     },
     {
       key: 'Escape',
       callback: () => {
         setShowShortcutsHelp(false);
-        setShowSearch(false);
+        setShowSyncPanel(false);
       },
     },
-  ], [isAuthenticated, navigate, showShortcutsHelp, showSearch]);
+  ], [isAuthenticated, navigate, showShortcutsHelp]);
 
   useKeyboardShortcuts(shortcuts);
   
   return (
     <>
+      <OfflineIndicator onOpenSyncPanel={() => setShowSyncPanel(true)} />
+      
       {isAuthenticated && <Navbar />}
       <div className="main">
         <ErrorBoundary>
@@ -339,6 +345,16 @@ function AppContent() {
         </ErrorBoundary>
       </div>
       {isAuthenticated && <ChatWidget />}
+      
+      <SyncPanel 
+        isOpen={showSyncPanel} 
+        onClose={() => setShowSyncPanel(false)} 
+      />
+      
+      <ConflictModal 
+        conflict={selectedConflict}
+        onClose={() => setSelectedConflict(null)}
+      />
     </>
   );
 }

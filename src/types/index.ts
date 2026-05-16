@@ -286,4 +286,21 @@ export interface RootState {
   goal: GoalState;
   reminder: ReminderState;
   ai: AIState;
+  sync: SyncState;
+}
+
+// 同步状态
+export interface SyncState {
+  isOnline: boolean;
+  isSyncing: boolean;
+  pendingCount: number;
+  queue: unknown[];
+  conflicts: unknown[];
+  lastSyncTime: string | null;
+  syncProgress: {
+    total: number;
+    completed: number;
+    current: unknown | null;
+  };
+  error: string | null;
 }

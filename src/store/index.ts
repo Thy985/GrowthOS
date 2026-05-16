@@ -5,6 +5,7 @@ import themeReducer from './slices/themeSlice';
 import goalReducer from './slices/goalSlice';
 import reminderReducer from './slices/reminderSlice';
 import aiReducer from './slices/aiSlice';
+import syncReducer from './slices/syncSlice';
 import type { RootState as TRootState } from '../types';
 
 export const store = configureStore({
@@ -14,7 +15,8 @@ export const store = configureStore({
     theme: themeReducer,
     goal: goalReducer,
     reminder: reminderReducer,
-    ai: aiReducer
+    ai: aiReducer,
+    sync: syncReducer
   }
 });
 
