@@ -99,12 +99,9 @@ const Login: React.FC = () => {
             </div>
 
             <div className="text-sm">
-              <a
-                href="#"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                忘记密码?
-              </a>
+              <span className="text-gray-500">
+                忘记密码？联系管理员恢复
+              </span>
             </div>
           </div>
 
