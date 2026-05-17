@@ -10,10 +10,10 @@ const SALT_LENGTH = 16;
 const ITERATIONS = 100000;
 
 export class SecureEncryption {
-  constructor() {
-    this._derivedKey = null;
-    this._salt = null;
-  }
+  private _derivedKey: CryptoKey | null = null;
+  private _salt: ArrayBuffer | null = null;
+
+  constructor() {}
 
   /**
    * 从密码派生加密密钥
@@ -27,7 +27,7 @@ export class SecureEncryption {
 
     const keyMaterial = await crypto.subtle.importKey(
       'raw',
-      passwordBuffer,
+      passwordBuffer as unknown as BufferSource,
       'PBKDF2',
       false,
       ['deriveKey']
@@ -36,7 +36,7 @@ export class SecureEncryption {
     return crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: salt,
+        salt: salt as unknown as BufferSource,
         iterations: ITERATIONS,
         hash: 'SHA-256'
       },

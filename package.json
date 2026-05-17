@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "build:typecheck": "tsc && vite build",
+    "lint": "eslint . --ext js,jsx,ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "jest"
+    "test": "jest",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css}",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css}",
+    "validate": "npm run type-check && npm run lint && npm run test"
   },
   "dependencies": {
     "@capacitor-community/sqlite": "^8.1.0",
@@ -46,6 +52,7 @@
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
     "postcss": "^8.4.32",
+    "prettier": "^3.8.3",
     "tailwindcss": "^3.4.0",
     "terser": "^5.47.1",
     "vite": "^5.0.8"

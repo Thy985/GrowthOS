@@ -1,5 +1,4 @@
-import { secureEncryption } from './secureEncryption';
-import type { SecureEncryption } from './secureEncryption';
+import { secureEncryption, SecureEncryption } from './secureEncryption';
 
 const DEVICE_ID_KEY = '_growthos_device_id';
 
