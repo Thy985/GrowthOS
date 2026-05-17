@@ -5,9 +5,6 @@ import type { User } from '../../types';
 
 const isNative = Capacitor.isNativePlatform();
 
-// 使用 WeakMap 来存储用户引用而不是全局变量
-const userCache = new WeakMap<object, User | null>();
-
 // 盐值迭代次数（根据 OWASP 建议，至少 600,000 次）
 const PBKDF2_ITERATIONS = 600000;
 
@@ -31,7 +28,7 @@ async function hashPassword(
   // 导入密钥材料
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    passwordData,
+    passwordData as unknown as BufferSource,
     { name: 'PBKDF2' },
     false,
     ['deriveBits', 'deriveKey']
@@ -41,7 +38,7 @@ async function hashPassword(
   const derivedKey = await crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: actualSalt,
+      salt: actualSalt as unknown as BufferSource,
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256'
     },
