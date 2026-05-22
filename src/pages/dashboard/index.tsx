@@ -2,6 +2,108 @@ import React, { useState, useRef, useCallback, memo, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addRecord } from '../../store/slices/growthSlice';
 import { calculateStreak } from '../../utils/recordUtils';
+import { GROWTH_BENCHMARKS, STREAK_MILESTONES, ACTIVE_WEEK } from '../../constants';
+
+/**
+ * 计算仪表盘统计数据
+ * @param records - 记录列表
+ * @returns 统计数据对象
+ */
+const calculateStats = (records: GrowthRecord[]) => {
+  const now = new Date();
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  
+  const twoWeeksAgo = new Date(today);
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  
+  // 本周记录
+  const thisWeekRecords = records.filter(record => {
+    const recordDate = new Date(record.createdAt);
+    return recordDate >= weekAgo;
+  });
+  
+  // 上周记录
+  const lastWeekRecords = records.filter(record => {
+    const recordDate = new Date(record.createdAt);
+    return recordDate >= twoWeeksAgo && recordDate < weekAgo;
+  });
+  
+  // 计算连续记录天数
+  const streak = calculateStreak(records);
+  
+  // 情绪统计
+  const moodStats = records.reduce((acc, record) => {
+    if (record.mood) {
+      acc[record.mood] = (acc[record.mood] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const totalRecords = records.length;
+  const growthProgress = Math.min(Math.round((totalRecords / GROWTH_BENCHMARKS.SENIOR) * 100), 100);
+  
+  const weekChange = thisWeekRecords.length - lastWeekRecords.length;
+  const weekChangePercent = lastWeekRecords.length > 0 
+    ? Math.round((weekChange / lastWeekRecords.length) * 100) 
+    : (thisWeekRecords.length > 0 ? 100 : 0);
+
+  return {
+    weeklyRecords: thisWeekRecords.length,
+    totalRecords,
+    growthProgress,
+    streak,
+    moodStats,
+    weekChange,
+    weekChangePercent,
+    thisWeekRecords,
+    lastWeekRecords
+  };
+};
+
+/**
+ * 计算徽章
+ * @param stats - 统计数据
+ * @returns 徽章列表
+ */
+const calculateBadges = (stats: ReturnType<typeof calculateStats>) => {
+  const earned = [];
+  
+  // 基于记录数的徽章
+  if (stats.totalRecords >= GROWTH_BENCHMARKS.FIRST_RECORD) {
+    earned.push({ id: 'first_record', name: '初次记录', icon: '🌱', description: '完成第一条记录' });
+  }
+  if (stats.totalRecords >= GROWTH_BENCHMARKS.STARTER) {
+    earned.push({ id: 'ten_records', name: '十次成长', icon: '🌿', description: '完成10条记录' });
+  }
+  if (stats.totalRecords >= GROWTH_BENCHMARKS.JUNIOR) {
+    earned.push({ id: 'fifty_records', name: '稳步前进', icon: '🌳', description: '完成50条记录' });
+  }
+  if (stats.totalRecords >= GROWTH_BENCHMARKS.SENIOR) {
+    earned.push({ id: 'hundred_records', name: '百日成长', icon: '🏆', description: '完成100条记录' });
+  }
+  
+  // 基于连续记录天数的徽章
+  if (stats.streak >= STREAK_MILESTONES.BEGINNER) {
+    earned.push({ id: 'streak_3', name: '连续3天', icon: '🔥', description: '连续记录3天' });
+  }
+  if (stats.streak >= STREAK_MILESTONES.WEEK) {
+    earned.push({ id: 'streak_7', name: '一周坚持', icon: '⭐', description: '连续记录7天' });
+  }
+  if (stats.streak >= STREAK_MILESTONES.MONTH) {
+    earned.push({ id: 'streak_30', name: '月度坚持', icon: '💎', description: '连续记录30天' });
+  }
+  
+  // 活跃周徽章
+  if (stats.weekChangePercent >= ACTIVE_WEEK.MIN_CHANGE_PERCENT && stats.thisWeekRecords.length >= ACTIVE_WEEK.MIN_RECORDS) {
+    earned.push({ id: 'active_week', name: '活跃周', icon: '🚀', description: '本周记录数增长50%以上' });
+  }
+  
+  return earned;
+};
 
 const Dashboard = () => {
   const [formData, setFormData] = useState({
@@ -15,91 +117,16 @@ const Dashboard = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const dispatch = useDispatch();
   const { records, isLoading, error } = useSelector(state => state.growth);
-  const feedbackRef = useRef(null);
-  const treeRef = useRef(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  const treeRef = useRef<HTMLDivElement>(null);
 
-  const stats = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-    
-    const weekAgo = new Date(today);
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    
-    const twoWeeksAgo = new Date(today);
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-    
-    const thisWeekRecords = records.filter(record => {
-      const recordDate = new Date(record.createdAt);
-      return recordDate >= weekAgo;
-    });
-    
-    const lastWeekRecords = records.filter(record => {
-      const recordDate = new Date(record.createdAt);
-      return recordDate >= twoWeeksAgo && recordDate < weekAgo;
-    });
-    
-    const streak = calculateStreak(records);
-    
-    const moodStats = records.reduce((acc, record) => {
-      if (record.mood) {
-        acc[record.mood] = (acc[record.mood] || 0) + 1;
-      }
-      return acc;
-    }, {});
-    
-    const totalRecords = records.length;
-    const growthProgress = Math.min(Math.round((totalRecords / 100) * 100), 100);
-    
-    const weekChange = thisWeekRecords.length - lastWeekRecords.length;
-    const weekChangePercent = lastWeekRecords.length > 0 
-      ? Math.round((weekChange / lastWeekRecords.length) * 100) 
-      : (thisWeekRecords.length > 0 ? 100 : 0);
+  // 计算统计数据
+  const stats = useMemo(() => calculateStats(records), [records]);
+  
+  // 计算徽章
+  const badges = useMemo(() => calculateBadges(stats), [stats]);
 
-    return {
-      weeklyRecords: thisWeekRecords.length,
-      totalRecords,
-      growthProgress,
-      streak,
-      moodStats,
-      weekChange,
-      weekChangePercent,
-      thisWeekRecords,
-      lastWeekRecords
-    };
-  }, [records]);
-
-  const badges = useMemo(() => {
-    const earned = [];
-    
-    if (stats.totalRecords >= 1) {
-      earned.push({ id: 'first_record', name: '初次记录', icon: '🌱', description: '完成第一条记录' });
-    }
-    if (stats.totalRecords >= 10) {
-      earned.push({ id: 'ten_records', name: '十次成长', icon: '🌿', description: '完成10条记录' });
-    }
-    if (stats.totalRecords >= 50) {
-      earned.push({ id: 'fifty_records', name: '稳步前进', icon: '🌳', description: '完成50条记录' });
-    }
-    if (stats.totalRecords >= 100) {
-      earned.push({ id: 'hundred_records', name: '百日成长', icon: '🏆', description: '完成100条记录' });
-    }
-    if (stats.streak >= 3) {
-      earned.push({ id: 'streak_3', name: '连续3天', icon: '🔥', description: '连续记录3天' });
-    }
-    if (stats.streak >= 7) {
-      earned.push({ id: 'streak_7', name: '一周坚持', icon: '⭐', description: '连续记录7天' });
-    }
-    if (stats.streak >= 30) {
-      earned.push({ id: 'streak_30', name: '月度坚持', icon: '💎', description: '连续记录30天' });
-    }
-    if (stats.weekChangePercent >= 50 && stats.thisWeekRecords.length >= 5) {
-      earned.push({ id: 'active_week', name: '活跃周', icon: '🚀', description: '本周记录数增长50%以上' });
-    }
-    
-    return earned;
-  }, [stats]);
-
+  // 最近活动
   const recentActivities = useMemo(() => {
     return stats.thisWeekRecords.slice(0, 5).map(record => ({
       id: record.id,
@@ -109,13 +136,14 @@ const Dashboard = () => {
     }));
   }, [stats.thisWeekRecords]);
 
-  const handleChange = useCallback((e) => {
+  // 表单变化处理
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    if (errors[name]) {
+    if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({
         ...prev,
         [name]: ''
@@ -123,15 +151,17 @@ const Dashboard = () => {
     }
   }, [errors]);
 
+  // 表单验证
   const validateForm = useCallback(() => {
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
     if (!formData.activity.trim() && !formData.learning.trim()) {
       newErrors.activity = '请输入做了什么或学了什么';
     }
     return newErrors;
   }, [formData]);
 
-  const handleSubmit = useCallback((e) => {
+  // 提交表单
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     
     const validationErrors = validateForm();
@@ -143,7 +173,8 @@ const Dashboard = () => {
     setIsSubmitting(true);
     
     try {
-      const extractTags = (text) => {
+      // 提取标签
+      const extractTags = (text: string) => {
         const tagRegex = /#([^\s]+)/g;
         const matches = text.match(tagRegex);
         return matches ? matches.map(tag => tag.substring(1)) : [];
@@ -161,6 +192,7 @@ const Dashboard = () => {
         setSuccessMessage('');
       }, 3000);
       
+      // 显示反馈动画
       if (feedbackRef.current) {
         feedbackRef.current.style.opacity = '0';
         feedbackRef.current.style.animation = 'none';
@@ -173,6 +205,7 @@ const Dashboard = () => {
         }, 1000);
       }
       
+      // 显示成长树动画
       if (treeRef.current) {
         treeRef.current.style.animation = 'none';
         void treeRef.current.offsetWidth;
@@ -182,6 +215,7 @@ const Dashboard = () => {
         }, 500);
       }
       
+      // 重置表单
       setFormData({
         activity: '',
         learning: '',
@@ -199,6 +233,7 @@ const Dashboard = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">仪表盘</h1>
       
+      {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
@@ -254,6 +289,7 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
+          {/* 快速记录表单 */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">快速记录</h2>
             {successMessage && (
@@ -356,6 +392,7 @@ const Dashboard = () => {
             </div>
           </div>
           
+          {/* 本周活动 */}
           <div className="bg-white rounded-lg shadow p-6 mt-6">
             <h2 className="text-xl font-semibold mb-4">本周活动</h2>
             {recentActivities.length === 0 ? (
@@ -381,6 +418,7 @@ const Dashboard = () => {
         </div>
         
         <div className="space-y-6">
+          {/* 成长树预览 */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">成长树预览</h2>
             <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg p-8 min-h-[200px] flex items-center justify-center" ref={treeRef}>
@@ -394,6 +432,7 @@ const Dashboard = () => {
             </p>
           </div>
           
+          {/* 成就徽章 */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">成就徽章</h2>
             {badges.length === 0 ? (
@@ -417,6 +456,7 @@ const Dashboard = () => {
             )}
           </div>
           
+          {/* 情绪分布 */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">情绪分布</h2>
             {Object.keys(stats.moodStats).length === 0 ? (

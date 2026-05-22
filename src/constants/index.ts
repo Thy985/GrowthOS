@@ -32,14 +32,14 @@ export type MoodValue = typeof MOOD_OPTIONS[number]['value'];
 
 // 徽章配置
 export const BADGES = [
-  { id: 'first_record', name: '初次记录', icon: '🌱', description: '完成第一条记录', condition: (stats: BadgeStats) => stats.totalRecords >= 1 },
-  { id: 'ten_records', name: '十次成长', icon: '🌿', description: '完成10条记录', condition: (stats: BadgeStats) => stats.totalRecords >= 10 },
-  { id: 'fifty_records', name: '稳步前进', icon: '🌳', description: '完成50条记录', condition: (stats: BadgeStats) => stats.totalRecords >= 50 },
-  { id: 'hundred_records', name: '百日成长', icon: '🏆', description: '完成100条记录', condition: (stats: BadgeStats) => stats.totalRecords >= 100 },
-  { id: 'streak_3', name: '连续3天', icon: '🔥', description: '连续记录3天', condition: (stats: BadgeStats) => stats.streak >= 3 },
-  { id: 'streak_7', name: '一周坚持', icon: '⭐', description: '连续记录7天', condition: (stats: BadgeStats) => stats.streak >= 7 },
-  { id: 'streak_30', name: '月度坚持', icon: '💎', description: '连续记录30天', condition: (stats: BadgeStats) => stats.streak >= 30 },
-  { id: 'active_week', name: '活跃周', icon: '🚀', description: '本周记录数增长50%以上', condition: (stats: BadgeStats) => stats.weeklyChangePercent >= 50 && stats.weeklyRecords >= 5 }
+  { id: 'first_record', name: '初次记录', icon: '🌱', description: '完成第一条记录', condition: (stats: BadgeStats) => stats.totalRecords >= GROWTH_BENCHMARKS.FIRST_RECORD },
+  { id: 'ten_records', name: '十次成长', icon: '🌿', description: '完成10条记录', condition: (stats: BadgeStats) => stats.totalRecords >= GROWTH_BENCHMARKS.STARTER },
+  { id: 'fifty_records', name: '稳步前进', icon: '🌳', description: '完成50条记录', condition: (stats: BadgeStats) => stats.totalRecords >= GROWTH_BENCHMARKS.JUNIOR },
+  { id: 'hundred_records', name: '百日成长', icon: '🏆', description: '完成100条记录', condition: (stats: BadgeStats) => stats.totalRecords >= GROWTH_BENCHMARKS.SENIOR },
+  { id: 'streak_3', name: '连续3天', icon: '🔥', description: '连续记录3天', condition: (stats: BadgeStats) => stats.streak >= STREAK_MILESTONES.BEGINNER },
+  { id: 'streak_7', name: '一周坚持', icon: '⭐', description: '连续记录7天', condition: (stats: BadgeStats) => stats.streak >= STREAK_MILESTONES.WEEK },
+  { id: 'streak_30', name: '月度坚持', icon: '💎', description: '连续记录30天', condition: (stats: BadgeStats) => stats.streak >= STREAK_MILESTONES.MONTH },
+  { id: 'active_week', name: '活跃周', icon: '🚀', description: '本周记录数增长50%以上', condition: (stats: BadgeStats) => stats.weeklyChangePercent >= ACTIVE_WEEK.MIN_CHANGE_PERCENT && stats.weeklyRecords >= ACTIVE_WEEK.MIN_RECORDS }
 ] as const;
 
 // 徽章类型
@@ -101,7 +101,21 @@ export const GROWTH_BENCHMARKS = {
   STARTER: 10,
   JUNIOR: 50,
   SENIOR: 100,
-  MASTER: 500
+  MASTER: 500,
+  FIRST_RECORD: 1
+} as const;
+
+// 连续记录里程碑
+export const STREAK_MILESTONES = {
+  BEGINNER: 3,
+  WEEK: 7,
+  MONTH: 30
+} as const;
+
+// 活跃周条件
+export const ACTIVE_WEEK = {
+  MIN_RECORDS: 5,
+  MIN_CHANGE_PERCENT: 50
 } as const;
 
 // 表格配置
