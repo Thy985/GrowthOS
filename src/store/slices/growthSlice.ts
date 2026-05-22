@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import recordServiceV2 from '../../common/services/recordServiceV2';
 import growthTreeServiceV2 from '../../common/services/growthTreeServiceV2';
-import { GrowthState, Record, Tag, Tree, GoalState, CreateRecordDTO } from '../../types';
+import { GrowthState, GrowthRecord, Tag, Tree, GoalState, CreateRecordDTO } from '../../types';
 import logger from '../../utils/logger';
 
 const initialState: GrowthState = {
@@ -67,7 +67,7 @@ export const searchRecords = createSelector(
 );
 
 export const filterRecordsByMood = createSelector(
-  [(state: GrowthState) => state.records, (_state: GrowthState, mood: Record['mood']) => mood],
+  [(state: GrowthState) => state.records, (_state: GrowthState, mood: GrowthRecord['mood']) => mood],
   (records, mood) => {
     return records.filter(record => record.mood === mood);
   }
@@ -221,7 +221,7 @@ export const exportData = createAsyncThunk(
 export const importData = createAsyncThunk('growth/importData', async (data: Partial<GrowthState>) => {
   try {
     if (data.records && Array.isArray(data.records)) {
-      data.records.forEach(async (record) => {
+      for (const record of data.records) {
         await recordServiceV2.createRecord({
           activity: record.activity,
           learning: record.learning,
@@ -230,10 +230,11 @@ export const importData = createAsyncThunk('growth/importData', async (data: Par
           tags: record.tags,
           date: record.date
         });
-      });
+      }
     }
     return data;
   } catch (error) {
+    logger.error('导入数据异常', error instanceof Error ? error : undefined);
     throw error;
   }
 });
@@ -242,7 +243,7 @@ const growthSlice = createSlice({
   name: 'growth',
   initialState,
   reducers: {
-    setRecords: (state, action: PayloadAction<Record[]>) => {
+    setRecords: (state, action: PayloadAction<GrowthRecord[]>) => {
       state.records = action.payload;
     },
     setTags: (state, action: PayloadAction<Tag[]>) => {

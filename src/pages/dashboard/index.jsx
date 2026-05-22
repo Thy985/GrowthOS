@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, memo, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addRecord } from '../../store/slices/growthSlice';
+import { calculateStreak } from '../../utils/recordUtils';
 
 const Dashboard = () => {
   const [formData, setFormData] = useState({
@@ -16,35 +17,6 @@ const Dashboard = () => {
   const { records, isLoading, error } = useSelector(state => state.growth);
   const feedbackRef = useRef(null);
   const treeRef = useRef(null);
-
-  const calculateStreak = useCallback((records) => {
-    if (!records || records.length === 0) return 0;
-    
-    // 使用 Set 快速查找日期
-    const datesSet = new Set(
-      records.map(record => 
-        new Date(record.createdAt).toISOString().split('T')[0]
-      )
-    );
-    
-    let streak = 0;
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-    
-    for (let i = 0; i < 365; i++) {
-      const checkDate = new Date(currentDate);
-      checkDate.setDate(checkDate.getDate() - i);
-      const checkDateStr = checkDate.toISOString().split('T')[0];
-      
-      if (datesSet.has(checkDateStr)) {
-        streak++;
-      } else if (i > 0) {
-        break;
-      }
-    }
-    
-    return streak;
-  }, []);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -95,7 +67,7 @@ const Dashboard = () => {
       thisWeekRecords,
       lastWeekRecords
     };
-  }, [records, calculateStreak]);
+  }, [records]);
 
   const badges = useMemo(() => {
     const earned = [];

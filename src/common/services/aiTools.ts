@@ -1,43 +1,12 @@
-import type { Tree, Record, Goal, Reminder, BadgeStats } from '../../types';
+import type { Tree, GrowthRecord, Goal, Reminder, BadgeStats } from '../../types';
 import { getRecords } from '../../common/services/recordServiceV2';
 import { getGrowthTrees } from '../../common/services/growthTreeServiceV2';
 import { getGoals } from '../../common/services/goalServiceV2';
 import { getReminders } from '../../common/services/reminderServiceV2';
+import { calculateStreak } from '../../utils/recordUtils';
 import { BADGES } from '../../constants';
 
-// 统计计算函数
-const calculateStreak = (records: Record[]): number => {
-  if (!records || records.length === 0) return 0;
-  
-  const sortedRecords = [...records].sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-  
-  let streak = 0;
-  let currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
-  
-  for (let i = 0; i < 365; i++) {
-    const checkDate = new Date(currentDate);
-    checkDate.setDate(checkDate.getDate() - i);
-    const checkDateStr = checkDate.toISOString().split('T')[0];
-    
-    const hasRecord = sortedRecords.some(record => {
-      const recordDate = new Date(record.createdAt).toISOString().split('T')[0];
-      return recordDate === checkDateStr;
-    });
-    
-    if (hasRecord) {
-      streak++;
-    } else if (i > 0) {
-      break;
-    }
-  }
-  
-  return streak;
-};
-
-const calculateBadgeStats = (records: Record[], goals: Goal[]): BadgeStats => {
+const calculateBadgeStats = (records: GrowthRecord[], goals: Goal[]): BadgeStats => {
   const now = new Date();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
@@ -60,7 +29,7 @@ const calculateBadgeStats = (records: Record[], goals: Goal[]): BadgeStats => {
   
   const streak = calculateStreak(records);
   const weekChange = thisWeekRecords.length - lastWeekRecords.length;
-  const weekChangePercent = lastWeekRecords.length > 0 
+  const weeklyChangePercent = lastWeekRecords.length > 0 
     ? Math.round((weekChange / lastWeekRecords.length) * 100) 
     : (thisWeekRecords.length > 0 ? 100 : 0);
   
@@ -68,13 +37,13 @@ const calculateBadgeStats = (records: Record[], goals: Goal[]): BadgeStats => {
     totalRecords: records.length,
     streak,
     weeklyRecords: thisWeekRecords.length,
-    weekChangePercent
+    weeklyChangePercent
   };
 };
 
 // 工具执行器接口
 interface ToolExecutor {
-  execute(params: Record<string, any>): Promise<any>;
+  execute(params: Record<string, unknown>): Promise<unknown>;
 }
 
 // 获取技能树
@@ -186,7 +155,7 @@ const analyzeProgressTool: ToolExecutor = {
     const records = await getRecords();
     const goals = await getGoals();
     const trees = await getGrowthTrees();
-    const stats = calculateDashboardStats(records, goals);
+    const stats = calculateBadgeStats(records, goals);
     
     const completedGoals = goals.filter(g => g.status === 'completed');
     const activeGoals = goals.filter(g => g.status === 'active');
@@ -244,7 +213,7 @@ const suggestNextStepTool: ToolExecutor = {
         suggestions.push({
           type: 'goal',
           title: '推进目标',
-          description: `目标“${goal.title}”进度较慢，赶紧行动起来！`,
+          description: `目标"${goal.title}"进度较慢，赶紧行动起来！`,
           goalId: goal.id,
           priority: 2
         });
@@ -260,7 +229,7 @@ const suggestNextStepTool: ToolExecutor = {
         suggestions.push({
           type: 'tree',
           title: '开始新技能',
-          description: `技能树“${tree.name}”还有未开始的节点，试试学习“${notStarted[0].name}”？`,
+          description: `技能树"${tree.name}"还有未开始的节点，试试学习"${notStarted[0].name}"？`,
           treeId: tree.id,
           priority: 3
         });
@@ -290,7 +259,7 @@ export const TOOLS = {
 export type ToolName = keyof typeof TOOLS;
 
 // 执行工具
-export const executeTool = async (toolName: string, params: Record<string, any> = {}) => {
+export const executeTool = async (toolName: string, params: Record<string, unknown> = {}): Promise<unknown> => {
   const tool = TOOLS[toolName as ToolName];
   if (!tool) {
     throw new Error(`工具不存在: ${toolName}`);

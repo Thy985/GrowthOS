@@ -1,5 +1,37 @@
 import React from 'react';
-import { Record } from '../types';
+import { GrowthRecord } from '../types';
+
+// 计算连续记录天数
+export const calculateStreak = (records: GrowthRecord[]): number => {
+  if (!records || records.length === 0) return 0;
+  
+  // 使用 Set 快速查找日期
+  const datesSet = new Set(
+    records.map(record => 
+      new Date(record.createdAt).toISOString().split('T')[0]
+    )
+  );
+  
+  let streak = 0;
+  let currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0);
+  
+  for (let i = 0; i < 365; i++) {
+    const checkDate = new Date(currentDate);
+    checkDate.setDate(checkDate.getDate() - i);
+    const checkDateStr = checkDate.toISOString().split('T')[0];
+    
+    if (datesSet.has(checkDateStr)) {
+      streak++;
+    } else if (i > 0) {
+      // 如果不是今天且没有记录，中断连续
+      break;
+    }
+    // i === 0 时（今天），即使没有记录也不中断
+  }
+  
+  return streak;
+};
 
 // 格式化日期
 export const formatDate = (dateStr: string): string => {
@@ -54,12 +86,12 @@ export const highlightSearchTerm = (text: string | undefined, searchTerm: string
 
 // 过滤记录
 export const filterRecords = (
-  records: Record[],
+  records: GrowthRecord[],
   searchTerm: string,
   selectedMoods: string[],
   selectedTags: string[],
   dateRange: { start: string; end: string }
-): Record[] => {
+): GrowthRecord[] => {
   let filtered = records;
   
   // 搜索过滤

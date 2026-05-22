@@ -7,8 +7,8 @@ export type Mood = '很好' | '一般' | '不太好';
 // 目标状态
 export type GoalStatus = 'active' | 'completed' | 'cancelled';
 
-// 记录类型
-export interface Record {
+// 记录类型 (重命名以避免与内置 Record 类型冲突)
+export interface GrowthRecord {
   id: ID;
   date?: string;
   activity: string;
@@ -19,6 +19,9 @@ export interface Record {
   createdAt: string;
   updatedAt?: string;
 }
+
+// 向后兼容别名
+export type Record = GrowthRecord;
 
 // 标签类型
 export type Tag = string;
@@ -70,7 +73,7 @@ export interface ThemeState {
 
 // 成长状态类型
 export interface GrowthState {
-  records: Record[];
+  records: GrowthRecord[];
   tags: Tag[];
   trees: Tree[];
   isLoading: boolean;
@@ -304,3 +307,6 @@ export interface SyncState {
   };
   error: string | null;
 }
+
+// 导出 AppDispatch (从 store 中导入)
+export type { RootState as AppRootState };
