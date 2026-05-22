@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addRecord } from '../../store/slices/growthSlice';
 import { calculateStreak } from '../../utils/recordUtils';
 import { GROWTH_BENCHMARKS, STREAK_MILESTONES, ACTIVE_WEEK } from '../../constants';
+import { useI18n } from '../../i18n/useI18n';
 
 /**
  * 计算仪表盘统计数据
@@ -106,6 +107,7 @@ const calculateBadges = (stats: ReturnType<typeof calculateStats>) => {
 };
 
 const Dashboard = () => {
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     activity: '',
     learning: '',
@@ -130,11 +132,11 @@ const Dashboard = () => {
   const recentActivities = useMemo(() => {
     return stats.thisWeekRecords.slice(0, 5).map(record => ({
       id: record.id,
-      text: record.activity || record.learning || '无内容',
+      text: record.activity || record.learning || t('dashboard.noContent'),
       mood: record.mood,
       date: record.createdAt
     }));
-  }, [stats.thisWeekRecords]);
+  }, [stats.thisWeekRecords, t]);
 
   // 表单变化处理
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -155,10 +157,10 @@ const Dashboard = () => {
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
     if (!formData.activity.trim() && !formData.learning.trim()) {
-      newErrors.activity = '请输入做了什么或学了什么';
+      newErrors.activity = t('dashboard.pleaseEnterActivityOrLearning');
     }
     return newErrors;
-  }, [formData]);
+  }, [formData, t]);
 
   // 提交表单
   const handleSubmit = useCallback((e: React.FormEvent) => {
@@ -187,7 +189,7 @@ const Dashboard = () => {
       
       dispatch(addRecord(newRecord));
       
-      setSuccessMessage('记录保存成功！');
+      setSuccessMessage(t('dashboard.recordSaved'));
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
@@ -223,22 +225,22 @@ const Dashboard = () => {
         reflection: ''
       });
     } catch (err) {
-      console.error('保存记录失败:', err);
+      console.error(t('errors.unknown'), err);
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateForm, dispatch]);
+  }, [formData, validateForm, dispatch, t]);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">仪表盘</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">{t('dashboard.title')}</h1>
       
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">本周记录</p>
+              <p className="text-sm text-gray-500">{t('dashboard.weeklyRecords')}</p>
               <p className="text-3xl font-bold text-blue-600">{stats.weeklyRecords}</p>
               <p className={`text-sm ${stats.weekChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {stats.weekChange >= 0 ? '+' : ''}{stats.weekChange} ({stats.weekChangePercent}%)
@@ -251,9 +253,9 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">连续记录</p>
+              <p className="text-sm text-gray-500">{t('dashboard.continuousRecords')}</p>
               <p className="text-3xl font-bold text-orange-600">{stats.streak}</p>
-              <p className="text-sm text-gray-400">天</p>
+              <p className="text-sm text-gray-400">{t('dashboard.days')}</p>
             </div>
             <div className="text-4xl">🔥</div>
           </div>
@@ -262,9 +264,9 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">总记录</p>
+              <p className="text-sm text-gray-500">{t('dashboard.totalRecordsCount')}</p>
               <p className="text-3xl font-bold text-green-600">{stats.totalRecords}</p>
-              <p className="text-sm text-gray-400">条</p>
+              <p className="text-sm text-gray-400">{t('dashboard.recordsUnit')}</p>
             </div>
             <div className="text-4xl">🌱</div>
           </div>
@@ -273,7 +275,7 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">成长进度</p>
+              <p className="text-sm text-gray-500">{t('dashboard.growthProgress')}</p>
               <p className="text-3xl font-bold text-purple-600">{stats.growthProgress}%</p>
               <div className="w-24 h-2 bg-gray-200 rounded-full mt-1">
                 <div 
@@ -291,7 +293,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           {/* 快速记录表单 */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">快速记录</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('dashboard.quickRecord')}</h2>
             {successMessage && (
               <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                 {successMessage}
@@ -305,12 +307,12 @@ const Dashboard = () => {
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">做了什么</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.whatDidYouDo')}</label>
                   <input 
                     type="text" 
                     name="activity"
                     className={`w-full px-3 py-2 border rounded-md ${errors.activity ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="今天做了什么... 支持 #标签" 
+                    placeholder={`${t('dashboard.whatDidYouDo')}... ${t('dashboard.supportHashTags')}`}
                     value={formData.activity}
                     onChange={handleChange}
                     disabled={isSubmitting}
@@ -320,12 +322,12 @@ const Dashboard = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">学了什么</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.whatDidYouLearn')}</label>
                   <input 
                     type="text" 
                     name="learning"
                     className={`w-full px-3 py-2 border rounded-md ${errors.learning ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="今天学了什么... 支持 #标签" 
+                    placeholder={`${t('dashboard.whatDidYouLearn')}... ${t('dashboard.supportHashTags')}`}
                     value={formData.learning}
                     onChange={handleChange}
                     disabled={isSubmitting}
@@ -335,34 +337,38 @@ const Dashboard = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">状态如何</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.howDoYouFeel')}</label>
                   <div className="flex gap-2">
-                    {['很好', '一般', '不太好'].map(mood => (
+                    {[
+                      { value: '很好', label: t('moods.great'), emoji: '😊' },
+                      { value: '一般', label: t('moods.okay'), emoji: '😐' },
+                      { value: '不太好', label: t('moods.notGood'), emoji: '😔' }
+                    ].map(mood => (
                       <button
-                        key={mood}
+                        key={mood.value}
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, mood }))}
+                        onClick={() => setFormData(prev => ({ ...prev, mood: mood.value }))}
                         className={`flex-1 py-2 px-3 rounded-md transition-colors ${
-                          formData.mood === mood 
-                            ? mood === '很好' ? 'bg-green-500 text-white' 
-                            : mood === '一般' ? 'bg-yellow-500 text-white'
+                          formData.mood === mood.value 
+                            ? mood.value === '很好' ? 'bg-green-500 text-white' 
+                            : mood.value === '一般' ? 'bg-yellow-500 text-white'
                             : 'bg-red-500 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                         disabled={isSubmitting}
                       >
-                        {mood === '很好' ? '😊' : mood === '一般' ? '😐' : '😔'} {mood}
+                        {mood.emoji} {mood.label}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">反思</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.reflection')}</label>
                   <textarea 
                     name="reflection"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     rows="2" 
-                    placeholder="今天的反思..."
+                    placeholder={t('dashboard.reflectionPlaceholder')}
                     value={formData.reflection}
                     onChange={handleChange}
                     disabled={isSubmitting}
@@ -381,22 +387,22 @@ const Dashboard = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    提交中...
+                    {t('dashboard.submitting')}
                   </span>
-                ) : '提交记录'}
+                ) : t('dashboard.submitRecord')}
               </button>
             </form>
             <div ref={feedbackRef} className="feedback-animation opacity-0 mt-4 text-center">
               <span className="text-2xl">🎉</span>
-              <span className="ml-2 font-medium text-green-600">+1 经验值</span>
+              <span className="ml-2 font-medium text-green-600">{t('dashboard.experienceGained')}</span>
             </div>
           </div>
           
           {/* 本周活动 */}
           <div className="bg-white rounded-lg shadow p-6 mt-6">
-            <h2 className="text-xl font-semibold mb-4">本周活动</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('dashboard.weeklyActivity')}</h2>
             {recentActivities.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">暂无记录，开始记录你的成长吧！</p>
+              <p className="text-gray-500 text-center py-8">{t('dashboard.noRecordsYet')}</p>
             ) : (
               <div className="space-y-3">
                 {recentActivities.map((activity, index) => (
@@ -420,23 +426,23 @@ const Dashboard = () => {
         <div className="space-y-6">
           {/* 成长树预览 */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">成长树预览</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('dashboard.growthTreePreview')}</h2>
             <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg p-8 min-h-[200px] flex items-center justify-center" ref={treeRef}>
               <div className="text-center">
                 <div className="text-6xl mb-2">🌳</div>
-                <p className="text-gray-500">成长树可视化区域</p>
+                <p className="text-gray-500">{t('dashboard.growthTreeVisualization')}</p>
               </div>
             </div>
             <p className="text-xs text-gray-400 mt-2 text-center">
-              使用 #标签 记录，系统会自动创建节点
+              {t('dashboard.useHashTagsHint')}
             </p>
           </div>
           
           {/* 成就徽章 */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">成就徽章</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('dashboard.achievementBadges')}</h2>
             {badges.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">开始记录来解锁徽章！</p>
+              <p className="text-gray-500 text-center py-4">{t('dashboard.startRecordingHint')}</p>
             ) : (
               <div className="grid grid-cols-4 gap-2">
                 {badges.map(badge => (
@@ -458,9 +464,9 @@ const Dashboard = () => {
           
           {/* 情绪分布 */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">情绪分布</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('dashboard.moodDistribution')}</h2>
             {Object.keys(stats.moodStats).length === 0 ? (
-              <p className="text-gray-500 text-center py-4">暂无数据</p>
+              <p className="text-gray-500 text-center py-4">{t('dashboard.noDataYet')}</p>
             ) : (
               <div className="space-y-3">
                 {Object.entries(stats.moodStats).map(([mood, count]) => {
