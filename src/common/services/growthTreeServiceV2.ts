@@ -9,13 +9,26 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
+async function ensureStorageInitialized(): Promise<void> {
+  await secureStorage.initialize();
+}
+
+async function getTreesFromStorage(): Promise<Tree[]> {
+  await ensureStorageInitialized();
+  return (await secureStorage.getItem<Tree[]>(STORAGE_KEYS.TREES)) || [];
+}
+
+async function saveTreesToStorage(trees: Tree[]): Promise<void> {
+  await ensureStorageInitialized();
+  await secureStorage.setItem(STORAGE_KEYS.TREES, trees);
+}
+
 // 加载成长树
 export async function getGrowthTrees(): Promise<Tree[]> {
   if (isNative) {
     throw new Error('Native SQLite getGrowthTrees not implemented yet');
   } else {
-    const trees = secureStorage.getItem<Tree[]>(STORAGE_KEYS.TREES) || [];
-    return trees;
+    return getTreesFromStorage();
   }
 }
 
@@ -24,7 +37,7 @@ export async function createGrowthTree(name: string): Promise<Tree> {
   if (isNative) {
     throw new Error('Native SQLite createGrowthTree not implemented yet');
   } else {
-    const trees = secureStorage.getItem<Tree[]>(STORAGE_KEYS.TREES) || [];
+    const trees = await getTreesFromStorage();
     const newTree: Tree = {
       id: generateId(),
       name,
@@ -33,7 +46,7 @@ export async function createGrowthTree(name: string): Promise<Tree> {
     };
     
     trees.push(newTree);
-    secureStorage.setItem(STORAGE_KEYS.TREES, trees);
+    await saveTreesToStorage(trees);
     
     return newTree;
   }
@@ -44,9 +57,9 @@ export async function deleteGrowthTree(id: string): Promise<void> {
   if (isNative) {
     throw new Error('Native SQLite deleteGrowthTree not implemented yet');
   } else {
-    const trees = secureStorage.getItem<Tree[]>(STORAGE_KEYS.TREES) || [];
+    const trees = await getTreesFromStorage();
     const updatedTrees = trees.filter((t: Tree) => t.id !== id);
-    secureStorage.setItem(STORAGE_KEYS.TREES, updatedTrees);
+    await saveTreesToStorage(updatedTrees);
   }
 }
 
@@ -55,7 +68,7 @@ export async function addTreeNode(treeId: string, node: Omit<TreeNode, 'id' | 't
   if (isNative) {
     throw new Error('Native SQLite addTreeNode not implemented yet');
   } else {
-    const trees = secureStorage.getItem<Tree[]>(STORAGE_KEYS.TREES) || [];
+    const trees = await getTreesFromStorage();
     const treeIndex = trees.findIndex((t: Tree) => t.id === treeId);
     
     if (treeIndex === -1) {
@@ -74,7 +87,7 @@ export async function addTreeNode(treeId: string, node: Omit<TreeNode, 'id' | 't
     }
     
     trees[treeIndex].children!.push(newNode);
-    secureStorage.setItem(STORAGE_KEYS.TREES, trees);
+    await saveTreesToStorage(trees);
     
     return newNode;
   }
@@ -85,7 +98,7 @@ export async function updateTreeNode(nodeId: string, updates: Partial<Omit<TreeN
   if (isNative) {
     throw new Error('Native SQLite updateTreeNode not implemented yet');
   } else {
-    const trees = secureStorage.getItem<Tree[]>(STORAGE_KEYS.TREES) || [];
+    const trees = await getTreesFromStorage();
     
     for (let i = 0; i < trees.length; i++) {
       if (trees[i].children) {
@@ -96,7 +109,7 @@ export async function updateTreeNode(nodeId: string, updates: Partial<Omit<TreeN
             ...updates,
             updatedAt: new Date().toISOString()
           };
-          secureStorage.setItem(STORAGE_KEYS.TREES, trees);
+          await saveTreesToStorage(trees);
           return trees[i].children![nodeIndex];
         }
       }
@@ -111,7 +124,7 @@ export async function deleteTreeNode(nodeId: string): Promise<void> {
   if (isNative) {
     throw new Error('Native SQLite deleteTreeNode not implemented yet');
   } else {
-    const trees = secureStorage.getItem<Tree[]>(STORAGE_KEYS.TREES) || [];
+    const trees = await getTreesFromStorage();
     
     for (let i = 0; i < trees.length; i++) {
       if (trees[i].children) {
@@ -119,7 +132,7 @@ export async function deleteTreeNode(nodeId: string): Promise<void> {
         trees[i].children = trees[i].children!.filter((n: TreeNode) => n.id !== nodeId);
         
         if (trees[i].children!.length !== initialLength) {
-          secureStorage.setItem(STORAGE_KEYS.TREES, trees);
+          await saveTreesToStorage(trees);
           return;
         }
       }

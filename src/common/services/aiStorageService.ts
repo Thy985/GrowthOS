@@ -34,7 +34,23 @@ export const saveSessions = async (sessions: ChatSession[]): Promise<void> => {
 
 export const getSessions = async (): Promise<ChatSession[]> => {
   await ensureInitialized();
-  return secureStorage.getItem<ChatSession[]>(AI_STORAGE_KEYS.CHAT_SESSIONS) || [];
+  return (await secureStorage.getItem<ChatSession[]>(AI_STORAGE_KEYS.CHAT_SESSIONS)) || [];
+};
+
+export const saveSessionMessages = async (sessionId: string, messages: ChatMessage[]): Promise<void> => {
+  await ensureInitialized();
+  await secureStorage.setItem(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`, messages);
+};
+
+export const getSessionMessages = async (sessionId: string): Promise<ChatMessage[]> => {
+  await ensureInitialized();
+  return (await secureStorage.getItem<ChatMessage[]>(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`)) || [];
+};
+
+export const clearSessionMessages = async (sessionId: string): Promise<void> => {
+  await ensureInitialized();
+  secureStorage.removeItem(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`);
+  secureStorage.removeItem(`${AI_STORAGE_KEYS.ARCHIVED_MESSAGES}_${sessionId}`);
 };
 
 export const createSession = async (title: string): Promise<ChatSession> => {
@@ -77,26 +93,22 @@ export const updateSession = async (sessionId: string, updates: Partial<ChatSess
 export const deleteSession = async (sessionId: string): Promise<void> => {
   await ensureInitialized();
   
-  const sessions = (await getSessions()).filter(s => s.id !== sessionId);
-  await saveSessions(sessions);
+  const sessions = await getSessions();
+  const filtered = sessions.filter(s => s.id !== sessionId);
   
-  localStorage.removeItem(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`);
-  localStorage.removeItem(`${AI_STORAGE_KEYS.ARCHIVED_MESSAGES}_${sessionId}`);
+  await saveSessions(filtered);
+  await clearSessionMessages(sessionId);
 };
 
-const SESSION_MESSAGES_LIMIT = 50;
-
-export const getSessionMessages = async (sessionId: string): Promise<ChatSessionWithMessages> => {
+export const getSession = async (sessionId: string): Promise<ChatSessionWithMessages | null> => {
   await ensureInitialized();
   
   const sessions = await getSessions();
   const session = sessions.find(s => s.id === sessionId);
   
-  if (!session) {
-    throw new Error('Session not found');
-  }
+  if (!session) return null;
   
-  const messages = await secureStorage.getItem<ChatMessage[]>(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`) || [];
+  const messages = await getSessionMessages(sessionId);
   
   return {
     ...session,
@@ -107,58 +119,65 @@ export const getSessionMessages = async (sessionId: string): Promise<ChatSession
 export const addMessage = async (sessionId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>): Promise<ChatMessage> => {
   await ensureInitialized();
   
+  const messages = await getSessionMessages(sessionId);
+  
   const newMessage: ChatMessage = {
-    ...message,
     id: generateId(),
+    ...message,
     timestamp: new Date().toISOString()
   };
   
-  const key = `${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`;
-  let messages = await secureStorage.getItem<ChatMessage[]>(key) || [];
-  
   messages.push(newMessage);
+  await saveSessionMessages(sessionId, messages);
   
-  if (messages.length > SESSION_MESSAGES_LIMIT) {
-    const toArchive = messages.slice(0, messages.length - SESSION_MESSAGES_LIMIT);
-    messages = messages.slice(messages.length - SESSION_MESSAGES_LIMIT);
-    
-    const archiveKey = `${AI_STORAGE_KEYS.ARCHIVED_MESSAGES}_${sessionId}`;
-    const archived = await secureStorage.getItem<ChatMessage[]>(archiveKey) || [];
-    await secureStorage.setItem(archiveKey, [...archived, ...toArchive]);
-  }
-  
-  await secureStorage.setItem(key, messages);
-  await updateSession(sessionId, { messageCount: messages.length });
+  await updateSession(sessionId, {
+    messageCount: messages.length
+  });
   
   return newMessage;
 };
 
-export const clearSessionMessages = async (sessionId: string): Promise<void> => {
+export const updateMessage = async (sessionId: string, messageId: string, updates: Partial<ChatMessage>): Promise<ChatMessage | null> => {
   await ensureInitialized();
-  secureStorage.removeItem(`${AI_STORAGE_KEYS.RECENT_MESSAGES}_${sessionId}`);
-  secureStorage.removeItem(`${AI_STORAGE_KEYS.ARCHIVED_MESSAGES}_${sessionId}`);
-  await updateSession(sessionId, { messageCount: 0 });
+  
+  const messages = await getSessionMessages(sessionId);
+  const index = messages.findIndex(m => m.id === messageId);
+  
+  if (index === -1) return null;
+  
+  messages[index] = {
+    ...messages[index],
+    ...updates
+  };
+  
+  await saveSessionMessages(sessionId, messages);
+  return messages[index];
 };
 
-interface AISettings {
-  autoSuggestions: boolean;
-  maxHistoryLength: number;
-  showToolCalls: boolean;
-}
-
-const DEFAULT_SETTINGS: AISettings = {
-  autoSuggestions: true,
-  maxHistoryLength: 30,
-  showToolCalls: false
+export const deleteMessage = async (sessionId: string, messageId: string): Promise<void> => {
+  await ensureInitialized();
+  
+  const messages = await getSessionMessages(sessionId);
+  const filtered = messages.filter(m => m.id !== messageId);
+  
+  await saveSessionMessages(sessionId, filtered);
+  
+  await updateSession(sessionId, {
+    messageCount: filtered.length
+  });
 };
 
-export const getAISettings = async (): Promise<AISettings> => {
+export const saveAISettings = async (settings: any): Promise<void> => {
   await ensureInitialized();
-  return secureStorage.getItem<AISettings>(AI_STORAGE_KEYS.SETTINGS) || DEFAULT_SETTINGS;
+  await secureStorage.setItem(AI_STORAGE_KEYS.SETTINGS, settings);
 };
 
-export const saveAISettings = async (settings: Partial<AISettings>): Promise<void> => {
+export const getAISettings = async (): Promise<any> => {
   await ensureInitialized();
-  const current = await getAISettings();
-  await secureStorage.setItem(AI_STORAGE_KEYS.SETTINGS, { ...current, ...settings });
+  return (await secureStorage.getItem<any>(AI_STORAGE_KEYS.SETTINGS)) || {};
+};
+
+export const clearAISettings = async (): Promise<void> => {
+  await ensureInitialized();
+  secureStorage.removeItem(AI_STORAGE_KEYS.SETTINGS);
 };

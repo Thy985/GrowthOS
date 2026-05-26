@@ -144,7 +144,7 @@ export const VALIDATION = {
 
 // 默认值
 export const DEFAULTS = {
-  MOOD: '一般',
+  MOOD: 'okay',
   DATE_FORMAT: 'YYYY-MM-DD',
   TIME_FORMAT: 'HH:mm'
 } as const;
@@ -157,7 +157,9 @@ export const AI_STORAGE_KEYS = {
   CHAT_SESSIONS: 'ai_chat_sessions',
   RECENT_MESSAGES: 'ai_recent_messages',
   ARCHIVED_MESSAGES: 'ai_archived_messages',
-  SETTINGS: 'ai_settings'
+  SETTINGS: 'ai_settings',
+  AI_SETTINGS: 'ai_settings',
+  SESSION_MESSAGES: 'ai_session_messages'
 } as const;
 
 // LLM 提供者配置

@@ -9,9 +9,14 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-function getGoalFromStorage(): Goal[] {
+async function ensureStorageInitialized(): Promise<void> {
+  await secureStorage.initialize();
+}
+
+async function getGoalFromStorage(): Promise<Goal[]> {
+  await ensureStorageInitialized();
   try {
-    const data = secureStorage.getItem<Goal[]>(STORAGE_KEYS.GOALS);
+    const data = await secureStorage.getItem<Goal[]>(STORAGE_KEYS.GOALS);
     return data ?? [];
   } catch (error) {
     console.error('Error reading goals from storage:', error);
@@ -19,9 +24,10 @@ function getGoalFromStorage(): Goal[] {
   }
 }
 
-function saveGoalsToStorage(goals: Goal[]): void {
+async function saveGoalsToStorage(goals: Goal[]): Promise<void> {
+  await ensureStorageInitialized();
   try {
-    secureStorage.setItem(STORAGE_KEYS.GOALS, goals);
+    await secureStorage.setItem(STORAGE_KEYS.GOALS, goals);
   } catch (error) {
     console.error('Error saving goals to storage:', error);
     throw new Error('保存目标失败');
@@ -36,7 +42,7 @@ export async function getGoals(): Promise<Goal[]> {
 }
 
 export async function getGoalById(id: string): Promise<Goal | null> {
-  const goals = getGoalFromStorage();
+  const goals = await getGoalFromStorage();
   return goals.find(g => g.id === id) || null;
 }
 
@@ -47,7 +53,7 @@ export async function createGoal(data: {
   start_date: string;
   end_date: string;
 }): Promise<Goal> {
-  const goals = getGoalFromStorage();
+  const goals = await getGoalFromStorage();
   
   const newGoal: Goal = {
     id: generateId(),
@@ -63,13 +69,13 @@ export async function createGoal(data: {
   };
   
   goals.push(newGoal);
-  saveGoalsToStorage(goals);
+  await saveGoalsToStorage(goals);
   
   return newGoal;
 }
 
 export async function updateGoal(id: string, updates: UpdateGoalDTO): Promise<Goal> {
-  const goals = getGoalFromStorage();
+  const goals = await getGoalFromStorage();
   const index = goals.findIndex(g => g.id === id);
   
   if (index === -1) {
@@ -85,24 +91,24 @@ export async function updateGoal(id: string, updates: UpdateGoalDTO): Promise<Go
   };
   
   goals[index] = updatedGoal;
-  saveGoalsToStorage(goals);
+  await saveGoalsToStorage(goals);
   
   return updatedGoal;
 }
 
 export async function deleteGoal(id: string): Promise<void> {
-  const goals = getGoalFromStorage();
+  const goals = await getGoalFromStorage();
   const filteredGoals = goals.filter(g => g.id !== id);
   
   if (filteredGoals.length === goals.length) {
     throw new Error('目标不存在');
   }
   
-  saveGoalsToStorage(filteredGoals);
+  await saveGoalsToStorage(filteredGoals);
 }
 
 export async function incrementGoalProgress(id: string, value: number): Promise<Goal> {
-  const goals = getGoalFromStorage();
+  const goals = await getGoalFromStorage();
   const goal = goals.find(g => g.id === id);
   
   if (!goal) {
