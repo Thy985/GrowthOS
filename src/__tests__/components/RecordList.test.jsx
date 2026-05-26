@@ -12,7 +12,7 @@ const mockRecords = [
     activity: '学习React',
     learning: '学习了React的hooks',
     reflection: 'React的hooks很强大',
-    mood: '很好',
+    mood: 'great',
     tags: ['学习', 'React'],
     createdAt: '2024-01-01T10:00:00.000Z'
   },
@@ -21,7 +21,7 @@ const mockRecords = [
     activity: '学习Redux',
     learning: '学习了Redux Toolkit',
     reflection: 'Redux Toolkit简化了Redux的使用',
-    mood: '一般',
+    mood: 'okay',
     tags: ['学习', 'Redux'],
     createdAt: '2024-01-02T10:00:00.000Z'
   }
@@ -57,15 +57,12 @@ describe('RecordList Component', () => {
       </Provider>
     );
     
-    // 检查是否渲染了记录列表标题
-    expect(screen.getByText('记录列表')).toBeInTheDocument();
+    expect(screen.getByText('Records')).toBeInTheDocument();
     
-    // 检查是否渲染了记录
     expect(screen.getByText('学习React')).toBeInTheDocument();
     expect(screen.getByText('学习Redux')).toBeInTheDocument();
     
-    // 检查是否显示了记录数量
-    expect(screen.getByText('显示 2 条记录')).toBeInTheDocument();
+    expect(screen.getByText('Showing 2 records')).toBeInTheDocument();
   });
   
   test('filters records by search term', () => {
@@ -77,14 +74,12 @@ describe('RecordList Component', () => {
       </Provider>
     );
     
-    // 输入搜索关键词
-    const searchInput = screen.getByPlaceholderText('搜索记录...');
+    const searchInput = screen.getByPlaceholderText('Search Records');
     fireEvent.change(searchInput, { target: { value: 'React' } });
     
-    // 检查是否只显示包含React的记录
     expect(screen.getByText('学习')).toBeInTheDocument();
     expect(screen.queryByText('学习Redux')).not.toBeInTheDocument();
-    expect(screen.getByText('显示 1 条记录')).toBeInTheDocument();
+    expect(screen.getByText('Showing 1 records')).toBeInTheDocument();
   });
   
   test('filters records by mood', () => {
@@ -96,15 +91,13 @@ describe('RecordList Component', () => {
       </Provider>
     );
     
-    // 点击情绪过滤按钮
-    const buttons = screen.getAllByText('很好');
-    const goodMoodButton = buttons[0]; // 第一个是过滤按钮
+    const buttons = screen.getAllByText('Great');
+    const goodMoodButton = buttons[0];
     fireEvent.click(goodMoodButton);
     
-    // 检查是否只显示情绪为很好的记录
     expect(screen.getByText('学习React')).toBeInTheDocument();
     expect(screen.queryByText('学习Redux')).not.toBeInTheDocument();
-    expect(screen.getByText('显示 1 条记录')).toBeInTheDocument();
+    expect(screen.getByText('Showing 1 records')).toBeInTheDocument();
   });
   
   test('clears filters when clear button is clicked', () => {
@@ -116,20 +109,16 @@ describe('RecordList Component', () => {
       </Provider>
     );
     
-    // 输入搜索关键词
-    const searchInput = screen.getByPlaceholderText('搜索记录...');
+    const searchInput = screen.getByPlaceholderText('Search Records');
     fireEvent.change(searchInput, { target: { value: 'React' } });
     
-    // 点击清除过滤按钮
-    const clearButton = screen.getByText('清除过滤');
+    const clearButton = screen.getByText('Clear Filters');
     fireEvent.click(clearButton);
     
-    // 检查是否显示所有记录
     expect(screen.getByText('学习React')).toBeInTheDocument();
     expect(screen.getByText('学习Redux')).toBeInTheDocument();
-    expect(screen.getByText('显示 2 条记录')).toBeInTheDocument();
+    expect(screen.getByText('Showing 2 records')).toBeInTheDocument();
     
-    // 检查搜索框是否被清空
     expect(searchInput.value).toBe('');
   });
 });

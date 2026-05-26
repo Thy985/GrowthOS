@@ -3,11 +3,11 @@ import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import growthReducer from '../src/store/slices/growthSlice';
-import authReducer from '../src/store/slices/authSlice';
-import themeReducer from '../src/store/slices/themeSlice';
-import goalReducer from '../src/store/slices/goalSlice';
-import reminderReducer from '../src/store/slices/reminderSlice';
+import growthReducer from '../store/slices/growthSlice';
+import authReducer from '../store/slices/authSlice';
+import themeReducer from '../store/slices/themeSlice';
+import goalReducer from '../store/slices/goalSlice';
+import reminderReducer from '../store/slices/reminderSlice';
 
 // 创建测试 store
 const createTestStore = (preloadedState = {}) => {
