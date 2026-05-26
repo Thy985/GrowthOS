@@ -54,7 +54,7 @@ export interface Tree {
 export interface User {
   id: ID;
   email: string;
-  username: string;
+  username?: string;
   name?: string;
   createdAt: string;
 }
@@ -122,7 +122,32 @@ export interface ReminderState {
   error: string | null;
 }
 
-// 根状态类型将在后面更新
+// 同步状态类型
+export interface SyncState {
+  isOnline: boolean;
+  isSyncing: boolean;
+  pendingCount: number;
+  queue: unknown[];
+  conflicts: unknown[];
+  lastSyncTime: string | null;
+  syncProgress: {
+    total: number;
+    completed: number;
+    current: unknown | null;
+  };
+  error: string | null;
+}
+
+// 根状态类型
+export interface RootState {
+  auth: AuthState;
+  growth: GrowthState;
+  theme: ThemeState;
+  goal: GoalState;
+  reminder: ReminderState;
+  ai: AIState;
+  sync: SyncState;
+}
 
 // 服务层 DTO 类型
 export interface CreateRecordDTO {
@@ -274,34 +299,3 @@ export interface AIState {
   isStreaming: boolean;
   error: string | null;
 }
-
-// 更新根状态类型
-export interface RootState {
-  auth: AuthState;
-  growth: GrowthState;
-  theme: ThemeState;
-  goal: GoalState;
-  reminder: ReminderState;
-  ai: AIState;
-  sync: SyncState;
-}
-
-// 同步状态
-export interface SyncState {
-  isOnline: boolean;
-  isSyncing: boolean;
-  pendingCount: number;
-  queue: unknown[];
-  conflicts: unknown[];
-  lastSyncTime: string | null;
-  syncProgress: {
-    total: number;
-    completed: number;
-    current: unknown | null;
-  };
-  error: string | null;
-}
-
-// 导出 AppDispatch (从 store 中导入)
-export type { RootState as AppRootState };
-export type AppDispatch = import('../store').AppDispatch;

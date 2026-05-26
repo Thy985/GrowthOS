@@ -294,18 +294,18 @@ export async function markAsConflict(
 export async function resolveConflict(
   store: EntityStore,
   id: string,
-  resolution: 'local' | 'server',
+  resolution: 'local' | 'server' | 'merge',
   mergedData?: unknown
 ): Promise<void> {
   const db = await getDB();
   const entity = await db.get(store, id);
   if (!entity) return;
 
-  if (resolution === 'server' && entity.data._serverData) {
+  if ((resolution === 'local' || resolution === 'merge') && mergedData) {
+    entity.data = mergedData as Record<string, unknown>;
+  } else if (resolution === 'server' && entity.data._serverData) {
     entity.data = entity.data._serverData as Record<string, unknown>;
     entity.serverVersion = entity.localVersion;
-  } else if (resolution === 'merge' && mergedData) {
-    entity.data = mergedData as Record<string, unknown>;
   }
 
   delete entity.data._serverData;

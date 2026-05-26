@@ -6,9 +6,8 @@ import goalReducer from './slices/goalSlice';
 import reminderReducer from './slices/reminderSlice';
 import aiReducer from './slices/aiSlice';
 import syncReducer from './slices/syncSlice';
-import type { RootState as TRootState } from '../types';
 
-export const store = configureStore({
+const store = configureStore({
   reducer: {
     growth: growthReducer,
     auth: authReducer,
@@ -20,6 +19,6 @@ export const store = configureStore({
   }
 });
 
-export type RootState = TRootState;
-export type AppDispatch = typeof store.dispatch;
 export default store;
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;

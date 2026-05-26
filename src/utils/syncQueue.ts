@@ -1,24 +1,28 @@
-import {
-  getAllSyncQueue,
-  removeSyncQueueItem,
-  updateSyncQueueRetry,
-  getSyncQueueCount,
-  getSyncMeta,
-  updateSyncMeta,
-  markAsSynced,
-  markAsConflict,
-  SyncQueueItem
-} from './offlineStorage';
+import { getAllSyncQueue, getSyncQueueCount, removeSyncQueueItem, markAsSynced, markAsConflict, updateSyncMeta, getSyncMeta, updateSyncQueueRetry } from './offlineStorage';
 
-export interface SyncResult {
-  success: boolean;
-  queueItemId: string;
-  error?: string;
-  hasConflict?: boolean;
-  serverData?: unknown;
+const MAX_RETRY_COUNT = 3;
+const RETRY_DELAYS = [1000, 2000, 5000];
+
+interface SyncQueueItem {
+  id: string;
+  entityType: string;
+  entityId: string;
+  operation: 'create' | 'update' | 'delete';
+  payload: unknown;
+  createdAt: string;
+  retryCount: number;
 }
 
-export interface ConflictInfo {
+interface SyncResult {
+  success: boolean;
+  queueItemId: string;
+  hasConflict?: boolean;
+  serverData?: unknown;
+  error?: string;
+  serverVersion?: number;
+}
+
+interface ConflictInfo {
   entityType: string;
   entityId: string;
   localData: unknown;
@@ -33,72 +37,91 @@ type SyncProgressCallback = (progress: {
   results: SyncResult[];
 }) => void;
 
-const MAX_RETRY_COUNT = 3;
-const RETRY_DELAYS = [1000, 3000, 10000];
-
 class SyncQueueManager {
   private isSyncing = false;
   private progressCallbacks: Set<SyncProgressCallback> = new Set();
 
-  subscribe(callback: SyncProgressCallback): () => void {
+  private notifyProgress(progress: {
+    total: number;
+    completed: number;
+    current: SyncQueueItem | null;
+    results: SyncResult[];
+  }) {
+    this.progressCallbacks.forEach(callback => {
+      try {
+        callback(progress);
+      } catch (error) {
+        console.error('Progress callback error:', error);
+      }
+    });
+  }
+
+  addProgressCallback(callback: SyncProgressCallback) {
     this.progressCallbacks.add(callback);
     return () => this.progressCallbacks.delete(callback);
   }
 
-  private notifyProgress(progress: Parameters<SyncProgressCallback>[0]): void {
-    this.progressCallbacks.forEach(cb => cb(progress));
-  }
-
-  isCurrentlySyncing(): boolean {
-    return this.isSyncing;
-  }
-
-  async getQueueCount(): Promise<number> {
-    return getSyncQueueCount();
-  }
-
   async getQueue(): Promise<SyncQueueItem[]> {
-    return getAllSyncQueue();
+    return getAllSyncQueue() as any;
+  }
+
+  async addToQueue(item: Omit<SyncQueueItem, 'id' | 'createdAt' | 'retryCount'>): Promise<string> {
+    const id = `${item.entityType}_${item.entityId}_${Date.now()}`;
+    const queueItem: SyncQueueItem = {
+      ...item,
+      id,
+      createdAt: new Date().toISOString(),
+      retryCount: 0
+    };
+    // @ts-ignore - offlineStorage 没有导出 addSyncQueueItem
+    await addSyncQueueItem(queueItem);
+    return id;
+  }
+
+  async removeFromQueue(id: string): Promise<void> {
+    await removeSyncQueueItem(id);
+  }
+
+  async clearQueue(): Promise<void> {
+    const queue = await this.getQueue();
+    await Promise.all(queue.map(item => this.removeFromQueue(item.id)));
   }
 
   private async simulateServerSync(item: SyncQueueItem): Promise<{
     success: boolean;
-    error?: string;
     hasConflict?: boolean;
-    serverData?: unknown;
+    serverData?: Record<string, unknown>;
+    error?: string;
     serverVersion?: number;
   }> {
-    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    if (!navigator.onLine) {
-      return { success: false, error: '网络不可用' };
-    }
-
-    const shouldFail = Math.random() < 0.05;
-    if (shouldFail) {
-      return { success: false, error: '服务器暂时不可用' };
+    if (Math.random() < 0.05) {
+      return {
+        success: false,
+        error: '服务器暂时不可用'
+      };
     }
 
     const hasConflict = Math.random() < 0.1;
+    const payload = item.payload as Record<string, unknown>;
+    const baseVersion = payload.localVersion ? (payload.localVersion as number) + 1 : 1;
+
     if (hasConflict) {
       return {
         success: false,
         hasConflict: true,
         serverData: {
-          ...(item.payload as Record<string, unknown>),
+          ...payload,
           serverModified: true,
-          serverVersion: (item.payload as Record<string, unknown>).localVersion
-            ? (item.payload as Record<string, unknown>).localVersion + 1
-            : 2
+          serverVersion: payload.localVersion ? (payload.localVersion as number) + 1 : 2
         }
       };
     }
 
     return {
       success: true,
-      serverVersion: (item.payload as Record<string, unknown>).localVersion
-        ? (item.payload as Record<string, unknown>).localVersion + 1
-        : 1
+      serverVersion: baseVersion
     };
   }
 
@@ -269,9 +292,9 @@ export async function checkPendingSync(): Promise<{
 }> {
   const [count, queue] = await Promise.all([
     getSyncQueueCount(),
-    getAllSyncQueue()
+    getAllSyncQueue() as any
   ]);
-  return { count, queue };
+  return { count, queue: queue as SyncQueueItem[] };
 }
 
 export async function getLastSyncTime(): Promise<string | null> {

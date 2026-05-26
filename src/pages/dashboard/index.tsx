@@ -6,6 +6,37 @@ import { GROWTH_BENCHMARKS, STREAK_MILESTONES, ACTIVE_WEEK, MOOD_OPTIONS } from 
 import { useI18n } from '../../i18n/useI18n';
 import type { GrowthRecord, Mood, RootState, AppDispatch } from '../../types';
 
+// Mood type for consistent mood handling across the app
+export type MoodValue = 'great' | 'okay' | 'not_good' | '很好' | '一般' | '不太好';
+
+// Helper function to get mood label (emoji)
+const getMoodLabel = (mood: MoodValue | undefined): string => {
+  if (!mood) return '未记录';
+  const moodLabels: Record<string, string> = {
+    'great': '😊',
+    'okay': '😐',
+    'not_good': '😔',
+    '很好': '😊',
+    '一般': '😐',
+    '不太好': '😔'
+  };
+  return moodLabels[mood] || '😐';
+};
+
+// Helper function to get mood color class
+const getMoodColor = (mood: MoodValue | undefined): string => {
+  if (!mood) return 'bg-gray-100 text-gray-400';
+  const moodColors: Record<string, string> = {
+    'great': 'bg-green-100 text-green-700',
+    'okay': 'bg-yellow-100 text-yellow-700',
+    'not_good': 'bg-red-100 text-red-700',
+    '很好': 'bg-green-100 text-green-700',
+    '一般': 'bg-yellow-100 text-yellow-700',
+    '不太好': 'bg-red-100 text-red-700'
+  };
+  return moodColors[mood] || 'bg-gray-100 text-gray-400';
+};
+
 /**
  * 计算仪表盘统计数据
  * @param records - 记录列表
@@ -162,6 +193,34 @@ const Dashboard = () => {
     }
     return newErrors;
   }, [formData, t]);
+
+  // Helper to get mood label
+  const getMoodLabelByValue = (moodValue: string | undefined): string => {
+    if (!moodValue) return '未记录';
+    const labels: Record<string, string> = {
+      'great': '😊',
+      'okay': '😐',
+      'not_good': '😔',
+      '很好': '😊',
+      '一般': '😐',
+      '不太好': '😔'
+    };
+    return labels[moodValue] || '😐';
+  };
+
+  // Helper to get mood color
+  const getMoodColorByValue = (moodValue: string | undefined): string => {
+    if (!moodValue) return 'bg-gray-100 text-gray-400';
+    const colors: Record<string, string> = {
+      'great': 'bg-green-100 text-green-700',
+      'okay': 'bg-yellow-100 text-yellow-700',
+      'not_good': 'bg-red-100 text-red-700',
+      '很好': 'bg-green-100 text-green-700',
+      '一般': 'bg-yellow-100 text-yellow-700',
+      '不太好': 'bg-red-100 text-red-700'
+    };
+    return colors[moodValue] || 'bg-gray-100 text-gray-400';
+  };
 
   // 提交表单
   const handleSubmit = useCallback((e: React.FormEvent) => {
@@ -340,25 +399,21 @@ const Dashboard = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.howDoYouFeel')}</label>
                   <div className="flex gap-2">
-                    {[
-                      { value: '很好', label: t('moods.great'), emoji: '😊' },
-                      { value: '一般', label: t('moods.okay'), emoji: '😐' },
-                      { value: '不太好', label: t('moods.notGood'), emoji: '😔' }
-                    ].map(mood => (
+                    {MOOD_OPTIONS.map(mood => (
                       <button
                         key={mood.value}
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, mood: mood.value }))}
                         className={`flex-1 py-2 px-3 rounded-md transition-colors ${
                           formData.mood === mood.value 
-                            ? mood.value === '很好' ? 'bg-green-500 text-white' 
-                            : mood.value === '一般' ? 'bg-yellow-500 text-white'
+                            ? mood.value === 'great' ? 'bg-green-500 text-white' 
+                            : mood.value === 'okay' ? 'bg-yellow-500 text-white'
                             : 'bg-red-500 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                         disabled={isSubmitting}
                       >
-                        {mood.emoji} {mood.label}
+                        {mood.emoji} {t(mood.i18nKey)}
                       </button>
                     ))}
                   </div>

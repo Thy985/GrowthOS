@@ -1,7 +1,7 @@
 import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import store from './store/index';
+import store, { AppDispatch } from './store';
 import { loadData } from './store/slices/growthSlice';
 import { checkAuth } from './store/slices/authSlice';
 import { loadGoals } from './store/slices/goalSlice';
@@ -49,7 +49,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const AppContent: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { conflicts } = useSelector((state: RootState) => state.sync);
   const navigate = useNavigate();
@@ -169,7 +169,7 @@ const AppContent: React.FC = () => {
       />
 
       <ConflictModal
-        conflict={selectedConflict}
+        conflict={selectedConflict as any}
         onClose={() => setSelectedConflict(null)}
       />
     </>

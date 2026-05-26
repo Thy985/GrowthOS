@@ -2,24 +2,30 @@ import React, { memo, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { loadSyncStatus, performSync } from '../store/slices/syncSlice';
 import { useNetworkStatus } from '../utils/networkDetector';
+import { useI18n } from '../i18n/useI18n';
 
-const ENTITY_LABELS = {
-  record: '记录',
-  goal: '目标',
-  reminder: '提醒',
-  tree: '成长树',
-  treeNode: '节点'
-};
+interface SyncPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-const OPERATION_LABELS = {
-  create: '创建',
-  update: '更新',
-  delete: '删除'
-};
+const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
+  const { t } = useI18n();
 
-const SyncPanel = memo(({ isOpen, onClose }) => {
-  const dispatch = useDispatch();
-  const { queue, pendingCount, isSyncing, lastSyncTime } = useSelector(state => state.sync);
+  const ENTITY_LABELS: Record<string, string> = {
+    record: t('common.records'),
+    goal: t('common.goals'),
+    reminder: t('common.reminders'),
+    tree: t('common.growthTree'),
+    treeNode: t('common.node')
+  };
+
+  const OPERATION_LABELS: Record<string, string> = {
+    create: t('common.create'),
+    update: t('common.update'),
+    delete: t('common.delete')
+  };
+  const { queue, pendingCount, isSyncing, lastSyncTime } = useSelector((state: any) => state.sync);
   const { isOnline } = useNetworkStatus();
   const [expandedItems, setExpandedItems] = useState(new Set());
 
@@ -75,7 +81,7 @@ const SyncPanel = memo(({ isOpen, onClose }) => {
 
       <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-xl z-50 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">同步管理</h2>
+          <h2 className="text-lg font-semibold">{t('common.syncManagement')}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -87,7 +93,7 @@ const SyncPanel = memo(({ isOpen, onClose }) => {
         <div className="p-4 border-b bg-gray-50">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-sm text-gray-600">待同步项目</p>
+              <p className="text-sm text-gray-600">{t('common.pendingItems')}</p>
               <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
             </div>
             <button
@@ -99,20 +105,20 @@ const SyncPanel = memo(({ isOpen, onClose }) => {
                   : 'bg-blue-500 text-white hover:bg-blue-600'
               }`}
             >
-              {isSyncing ? '同步中...' : '全部同步'}
+              {isSyncing ? t('common.syncing') : t('common.syncAll')}
             </button>
           </div>
 
           {!isOnline && (
             <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-2 rounded">
               <span>📴</span>
-              <span>网络不可用，请检查连接后重试</span>
+              <span>{t('common.networkUnavailable')}</span>
             </div>
           )}
 
           {lastSyncTime && (
             <p className="text-xs text-gray-500 mt-2">
-              上次同步: {formatTime(lastSyncTime)}
+              {t('common.lastSync')}: {formatTime(lastSyncTime)}
             </p>
           )}
         </div>
@@ -121,7 +127,7 @@ const SyncPanel = memo(({ isOpen, onClose }) => {
           {queue.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
               <span className="text-4xl mb-2">✅</span>
-              <p>所有数据已同步</p>
+              <p>{t('common.allSynced')}</p>
             </div>
           ) : (
             <div className="divide-y">

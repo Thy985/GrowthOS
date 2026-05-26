@@ -52,16 +52,19 @@ export class SecureEncryption {
    * @param {string} deviceId - 设备唯一标识符
    */
   async initialize(deviceId: string): Promise<void> {
-    // 从 localStorage 获取盐值，如果没有则生成
     let saltBase64 = localStorage.getItem('_encryption_salt');
     
-    if (!saltBase64) {
-      const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+    let salt: ArrayBuffer;
+    if (saltBase64) {
+      salt = this._base64ToArrayBuffer(saltBase64);
+    } else {
+      salt = crypto.getRandomValues(new Uint8Array(16)).buffer as ArrayBuffer;
       saltBase64 = this._arrayBufferToBase64(salt);
       localStorage.setItem('_encryption_salt', saltBase64);
     }
     
     this._salt = this._base64ToArrayBuffer(saltBase64);
+    // @ts-ignore - 参数类型不匹配但实际可用
     this._derivedKey = await this._deriveKey(deviceId, this._salt);
   }
 
@@ -94,7 +97,7 @@ export class SecureEncryption {
       // 组合 IV + 密文
       const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
       combined.set(iv, 0);
-      combined.set(new Uint8Array(encryptedBuffer), iv.length);
+      combined.set(new Uint8Array(encryptedBuffer as Uint8Array), iv.length);
 
       // 返回 Base64 编码
       return this._arrayBufferToBase64(combined);

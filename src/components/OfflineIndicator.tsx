@@ -2,9 +2,16 @@ import React, { memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNetworkStatus } from '../utils/networkDetector';
 import { performSync } from '../store/slices/syncSlice';
+import { useI18n } from '../i18n/useI18n';
+import { AppDispatch } from '../store';
 
-const OfflineIndicator = memo(({ onOpenSyncPanel }) => {
-  const dispatch = useDispatch();
+interface OfflineIndicatorProps {
+  onOpenSyncPanel?: () => void;
+}
+
+const OfflineIndicator: React.FC<OfflineIndicatorProps> = memo(({ onOpenSyncPanel }) => {
+  const { t } = useI18n();
+  const dispatch = useDispatch<AppDispatch>();
   const { isOnline } = useNetworkStatus();
   const { pendingCount, isSyncing } = useSelector(state => state.sync);
 
@@ -35,17 +42,17 @@ const OfflineIndicator = memo(({ onOpenSyncPanel }) => {
           {!isOnline ? (
             <>
               <span>📴</span>
-              <span>离线模式</span>
+              <span>{t('common.offline')}</span>
               {pendingCount > 0 && (
                 <span className="bg-white/20 px-2 py-0.5 rounded text-xs">
-                  {pendingCount} 项待同步
+                  {t('common.pendingItems', { count: pendingCount })}
                 </span>
               )}
             </>
           ) : (
             <>
               <span>🔄</span>
-              <span>{pendingCount} 项待同步</span>
+              <span>{t('common.pendingItems', { count: pendingCount })}</span>
             </>
           )}
         </div>
@@ -62,7 +69,7 @@ const OfflineIndicator = memo(({ onOpenSyncPanel }) => {
                 : 'bg-white text-amber-600 hover:bg-white/90'
             }`}
           >
-            {isSyncing ? '同步中...' : '同步'}
+            {isSyncing ? t('common.syncing') : t('common.sync')}
           </button>
         )}
       </div>

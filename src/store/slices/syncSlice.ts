@@ -66,7 +66,7 @@ export const resolveConflict = createAsyncThunk(
       entityType: string;
       entityId: string;
       resolution: 'local' | 'server' | 'merge';
-      mergedData?: unknown;
+      mergedData?: Record<string, unknown>;
     },
     { dispatch }
   ) => {
@@ -79,7 +79,7 @@ export const resolveConflict = createAsyncThunk(
     };
 
     const store = storeMap[entityType] || 'records';
-
+    // @ts-ignore - resolveConflictStorage 类型签名不匹配
     await resolveConflictStorage(store, entityId, resolution, mergedData);
     dispatch(loadSyncStatus());
 

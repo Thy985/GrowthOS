@@ -1,18 +1,33 @@
 import React, { memo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { resolveConflict as resolveConflictAction, removeConflict } from '../store/slices/syncSlice';
+import { useI18n } from '../i18n/useI18n';
+import { AppDispatch } from '../store';
 
-const ENTITY_LABELS = {
-  record: '记录',
-  goal: '目标',
-  reminder: '提醒',
-  tree: '成长树',
-  treeNode: '节点'
-};
+interface ConflictData {
+  entityType: string;
+  entityId: string;
+  localData?: Record<string, unknown>;
+  serverData?: Record<string, unknown>;
+}
 
-const ConflictModal = memo(({ conflict, onClose }) => {
-  const dispatch = useDispatch();
+interface ConflictModalProps {
+  conflict: ConflictData | null;
+  onClose: () => void;
+}
+
+const ConflictModal: React.FC<ConflictModalProps> = memo(({ conflict, onClose }) => {
+  const { t } = useI18n();
+  const dispatch = useDispatch<AppDispatch>();
   const [isResolving, setIsResolving] = useState(false);
+
+  const ENTITY_LABELS: Record<string, string> = {
+    record: t('common.records'),
+    goal: t('common.goals'),
+    reminder: t('common.reminders'),
+    tree: t('common.growthTree'),
+    treeNode: t('common.node')
+  };
 
   if (!conflict) return null;
 
@@ -30,7 +45,8 @@ const ConflictModal = memo(({ conflict, onClose }) => {
     new Set([...Object.keys(localData), ...Object.keys(serverData)])
   ).filter(k => !k.startsWith('_') && !['id', 'localVersion', 'serverVersion'].includes(k));
 
-  const handleResolve = async (resolution) => {
+  const handleResolve = async (resolution: 'local' | 'server' | 'merge') => {
+    if (!conflict) return;
     setIsResolving(true);
     try {
       if (resolution === 'merge') {
@@ -65,10 +81,10 @@ const ConflictModal = memo(({ conflict, onClose }) => {
         <div className="p-4 border-b bg-amber-50">
           <div className="flex items-center gap-2">
             <span className="text-2xl">⚠️</span>
-            <h2 className="text-lg font-semibold text-amber-800">同步冲突</h2>
+            <h2 className="text-lg font-semibold text-amber-800">{t('common.syncConflict')}</h2>
           </div>
           <p className="text-sm text-amber-600 mt-1">
-            {ENTITY_LABELS[conflict.entityType] || conflict.entityType} 存在版本冲突，请选择保留哪个版本
+            {t('common.conflictDescription', { entity: ENTITY_LABELS[conflict.entityType] || conflict.entityType })}
           </p>
         </div>
 
@@ -77,7 +93,7 @@ const ConflictModal = memo(({ conflict, onClose }) => {
             <div className="border rounded-xl overflow-hidden">
               <div className="bg-blue-50 p-3 border-b">
                 <h3 className="font-medium text-blue-700 flex items-center gap-2">
-                  <span>📱</span> 本地版本
+                  <span>📱</span> {t('common.localVersion')}
                 </h3>
               </div>
               <div className="p-3 space-y-2 text-sm">
@@ -95,7 +111,7 @@ const ConflictModal = memo(({ conflict, onClose }) => {
             <div className="border rounded-xl overflow-hidden">
               <div className="bg-purple-50 p-3 border-b">
                 <h3 className="font-medium text-purple-700 flex items-center gap-2">
-                  <span>☁️</span> 服务器版本
+                  <span>☁️</span> {t('common.serverVersion')}
                 </h3>
               </div>
               <div className="p-3 space-y-2 text-sm">
@@ -120,7 +136,7 @@ const ConflictModal = memo(({ conflict, onClose }) => {
           <div className="mt-4 p-3 bg-gray-50 rounded-xl text-sm text-gray-600">
             <p className="flex items-start gap-2">
               <span className="text-gray-400">💡</span>
-              <span>* 表示该字段在两个版本中不同。如果选择"合并"，本地版本的更改将覆盖服务器版本的不同字段。</span>
+              <span>{t('common.conflictHint')}</span>
             </p>
           </div>
         </div>
@@ -132,21 +148,21 @@ const ConflictModal = memo(({ conflict, onClose }) => {
               disabled={isResolving}
               className="flex-1 py-3 px-4 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              保留本地
+              {t('common.keepLocal')}
             </button>
             <button
               onClick={() => handleResolve('server')}
               disabled={isResolving}
               className="flex-1 py-3 px-4 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              使用服务器
+              {t('common.useServer')}
             </button>
             <button
               onClick={() => handleResolve('merge')}
               disabled={isResolving}
               className="flex-1 py-3 px-4 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              合并
+              {t('common.merge')}
             </button>
           </div>
           <button
@@ -154,7 +170,7 @@ const ConflictModal = memo(({ conflict, onClose }) => {
             disabled={isResolving}
             className="w-full mt-3 py-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
           >
-            稍后处理
+            {t('common.handleLater')}
           </button>
         </div>
       </div>
