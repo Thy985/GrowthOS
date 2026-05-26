@@ -22,9 +22,9 @@ export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
 
 // 情绪选项
 export const MOOD_OPTIONS = [
-  { value: '很好', label: '很好', emoji: '😊', color: 'green' },
-  { value: '一般', label: '一般', emoji: '😐', color: 'yellow' },
-  { value: '不太好', label: '不太好', emoji: '😔', color: 'red' }
+  { value: 'great', i18nKey: 'moods.great', emoji: '😊', color: 'green' },
+  { value: 'okay', i18nKey: 'moods.okay', emoji: '😐', color: 'yellow' },
+  { value: 'not_good', i18nKey: 'moods.not_good', emoji: '😔', color: 'red' }
 ] as const;
 
 // 情绪类型

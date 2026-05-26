@@ -24,7 +24,7 @@
     "warning": "Warning",
     "info": "Info",
     "loading": "Loading...",
-    "noData": "No data",
+    "noData": "No Data",
     "search": "Search",
     "filter": "Filter",
     "export": "Export",
@@ -34,7 +34,10 @@
     "lightMode": "Light Mode",
     "keyboardShortcuts": "Keyboard Shortcuts",
     "help": "Help",
-    "about": "About"
+    "about": "About",
+    "toggleMenu": "Toggle Menu",
+    "startDate": "Start Date",
+    "endDate": "End Date"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -48,7 +51,37 @@
     "totalGoals": "Total Goals",
     "completedGoals": "Completed Goals",
     "learningHours": "Learning Hours",
-    "averageMood": "Average Mood"
+    "averageMood": "Average Mood",
+    "weeklyRecords": "Weekly Records",
+    "continuousRecords": "Continuous Records",
+    "totalRecordsCount": "Total Records",
+    "growthProgress": "Growth Progress",
+    "days": "days",
+    "recordsUnit": "records",
+    "quickRecord": "Quick Record",
+    "whatDidYouDo": "What did you do",
+    "whatDidYouLearn": "What did you learn",
+    "howDoYouFeel": "How do you feel",
+    "reflection": "Reflection",
+    "reflectionPlaceholder": "Today's reflection...",
+    "submitting": "Submitting...",
+    "submitRecord": "Submit Record",
+    "pleaseEnterActivityOrLearning": "Please enter what you did or learned",
+    "supportHashTags": "Supports #tags",
+    "weeklyActivity": "Weekly Activity",
+    "noRecordsYet": "No records yet, start recording your growth!",
+    "growthTreePreview": "Growth Tree Preview",
+    "growthTreeVisualization": "Growth Tree Visualization Area",
+    "useHashTagsHint": "Use #tags to record, system will automatically create nodes",
+    "achievementBadges": "Achievement Badges",
+    "startRecordingHint": "Start recording to unlock badges!",
+    "moodDistribution": "Mood Distribution",
+    "noDataYet": "No data yet",
+    "experienceGained": "+1 Experience",
+    "recordSaved": "Record saved successfully!",
+    "streakDays": "days",
+    "noContent": "No content",
+    "recordsCount": "Showing {{count}} records"
   },
   "records": {
     "title": "Records",
@@ -274,6 +307,6 @@
   "moods": {
     "great": "Great",
     "okay": "Okay",
-    "notGood": "Not Good"
+    "not_good": "Not Good"
   }
 }

@@ -1,5 +1,7 @@
 import React from 'react';
-import { GrowthRecord } from '../types';
+import { GrowthRecord, Mood } from '../types';
+import { MOOD_OPTIONS } from '../constants';
+import i18n from '../i18n';
 
 // 计算连续记录天数
 export const calculateStreak = (records: GrowthRecord[]): number => {
@@ -34,29 +36,40 @@ export const calculateStreak = (records: GrowthRecord[]): number => {
 };
 
 // 格式化日期
-export const formatDate = (dateStr: string): string => {
+export const formatDate = (dateStr: string, options?: Intl.DateTimeFormatOptions): string => {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('zh-CN', {
+  const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  });
+  };
+  return new Intl.DateTimeFormat(i18n.language, options || defaultOptions).format(date);
 };
 
-// 获取情绪颜色
-export const getMoodColor = (mood: '很好' | '一般' | '不太好'): string => {
-  switch (mood) {
-    case '很好':
-      return 'bg-green-100 text-green-800';
-    case '一般':
-      return 'bg-yellow-100 text-yellow-800';
-    case '不太好':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
+// 获取情绪颜色类名
+export const getMoodColor = (mood: Mood): string => {
+  const moodOption = MOOD_OPTIONS.find(opt => opt.value === mood);
+  const color = moodOption?.color || 'gray';
+  
+  const colorMap: Record<string, string> = {
+    green: 'bg-green-100 text-green-800',
+    yellow: 'bg-yellow-100 text-yellow-800',
+    red: 'bg-red-100 text-red-800',
+    gray: 'bg-gray-100 text-gray-800'
+  };
+  
+  return colorMap[color] || colorMap.gray;
+};
+
+// 获取情绪显示文本
+export const getMoodText = (mood: Mood): string => {
+  const moodOption = MOOD_OPTIONS.find(opt => opt.value === mood);
+  if (moodOption) {
+    return i18n.t(moodOption.i18nKey);
   }
+  return '';
 };
 
 // 高亮搜索结果
@@ -88,7 +101,7 @@ export const highlightSearchTerm = (text: string | undefined, searchTerm: string
 export const filterRecords = (
   records: GrowthRecord[],
   searchTerm: string,
-  selectedMoods: string[],
+  selectedMoods: Mood[],
   selectedTags: string[],
   dateRange: { start: string; end: string }
 ): GrowthRecord[] => {

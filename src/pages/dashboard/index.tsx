@@ -2,8 +2,9 @@ import React, { useState, useRef, useCallback, memo, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { addRecord } from '../../store/slices/growthSlice';
 import { calculateStreak } from '../../utils/recordUtils';
-import { GROWTH_BENCHMARKS, STREAK_MILESTONES, ACTIVE_WEEK } from '../../constants';
+import { GROWTH_BENCHMARKS, STREAK_MILESTONES, ACTIVE_WEEK, MOOD_OPTIONS } from '../../constants';
 import { useI18n } from '../../i18n/useI18n';
+import type { GrowthRecord, Mood, RootState, AppDispatch } from '../../types';
 
 /**
  * 计算仪表盘统计数据
@@ -111,7 +112,7 @@ const Dashboard = () => {
   const [formData, setFormData] = useState({
     activity: '',
     learning: '',
-    mood: '很好',
+    mood: 'okay' as Mood,
     reflection: ''
   });
   const [errors, setErrors] = useState({});

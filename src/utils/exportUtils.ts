@@ -1,4 +1,4 @@
-import type { GrowthRecord, Goal } from '../../types';
+import type { GrowthRecord, Goal } from '../types';
 
 /**
  * 导出选项接口

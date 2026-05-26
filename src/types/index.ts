@@ -1,8 +1,8 @@
 // ID 类型别名 - 统一使用 string
 export type ID = string;
 
-// 情绪类型
-export type Mood = '很好' | '一般' | '不太好';
+// 情绪类型 (使用 i18n key)
+export type Mood = 'great' | 'okay' | 'not_good';
 
 // 目标状态
 export type GoalStatus = 'active' | 'completed' | 'cancelled';
@@ -54,6 +54,7 @@ export interface Tree {
 export interface User {
   id: ID;
   email: string;
+  username: string;
   name?: string;
   createdAt: string;
 }
@@ -121,14 +122,7 @@ export interface ReminderState {
   error: string | null;
 }
 
-// 根状态类型
-export interface RootState {
-  auth: AuthState;
-  growth: GrowthState;
-  theme: ThemeState;
-  goal: GoalState;
-  reminder: ReminderState;
-}
+// 根状态类型将在后面更新
 
 // 服务层 DTO 类型
 export interface CreateRecordDTO {
@@ -310,3 +304,4 @@ export interface SyncState {
 
 // 导出 AppDispatch (从 store 中导入)
 export type { RootState as AppRootState };
+export type AppDispatch = import('../store').AppDispatch;
