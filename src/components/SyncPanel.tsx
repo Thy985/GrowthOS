@@ -11,6 +11,7 @@ interface SyncPanelProps {
 
 const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
   const { t } = useI18n();
+  const dispatch = useDispatch();
 
   const ENTITY_LABELS: Record<string, string> = {
     record: t('common.records'),
