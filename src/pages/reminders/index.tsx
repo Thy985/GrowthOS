@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../../types';
+import type { RootState, Reminder } from '../../types';
 import { type AppDispatch } from '../../store';
 import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -17,7 +17,7 @@ const Reminders = () => {
   const { reminders, isLoading, error } = useSelector((state: RootState) => state.reminder);
   
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingReminder, setEditingReminder] = useState<any>(null);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -59,7 +59,7 @@ const Reminders = () => {
     }
   }, [dispatch, formData, editingReminder]);
 
-  const handleEditReminder = (reminder: any) => {
+  const handleEditReminder = (reminder: Reminder) => {
     setEditingReminder(reminder);
     setFormData({
       title: reminder.title,

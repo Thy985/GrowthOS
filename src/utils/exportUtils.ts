@@ -154,9 +154,11 @@ export const generateExportData = (
   // 根据日期范围过滤记录
   let filteredRecords = data.records;
   if (options.startDate && options.endDate) {
+    const startDate = options.startDate;
+    const endDate = options.endDate;
     filteredRecords = data.records.filter(record => {
       const recordDate = new Date(record.createdAt);
-      return recordDate >= options.startDate! && recordDate <= options.endDate!;
+      return recordDate >= startDate && recordDate <= endDate;
     });
   }
   

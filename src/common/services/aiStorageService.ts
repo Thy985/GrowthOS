@@ -165,14 +165,18 @@ export const deleteMessage = async (sessionId: string, messageId: string): Promi
   });
 };
 
-export const saveAISettings = async (settings: any): Promise<void> => {
+export interface AISettings {
+  [key: string]: unknown,
+}
+
+export const saveAISettings = async (settings: AISettings): Promise<void> => {
   await ensureInitialized();
   await secureStorage.setItem(AI_STORAGE_KEYS.SETTINGS, settings);
 };
 
-export const getAISettings = async (): Promise<any> => {
+export const getAISettings = async (): Promise<AISettings> => {
   await ensureInitialized();
-  return (await secureStorage.getItem<any>(AI_STORAGE_KEYS.SETTINGS)) || {};
+  return (await secureStorage.getItem<AISettings>(AI_STORAGE_KEYS.SETTINGS)) || {};
 };
 
 export const clearAISettings = async (): Promise<void> => {

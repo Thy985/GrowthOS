@@ -321,10 +321,12 @@ export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
       agentInstance = new AgentOrchestrator();
     }
 
+    const currentAgent = agentInstance;
+
     const initAgent = async () => {
       try {
-        await agentInstance!.loadConfig();
-        setStatus(agentInstance!.status);
+        await currentAgent.loadConfig();
+        setStatus(currentAgent.status);
       } catch (err) {
         setError(err instanceof Error ? err.message : '初始化失败');
       }
@@ -333,12 +335,14 @@ export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
     void initAgent();
 
     return () => {
-      agentInstance?.cancel();
+      currentAgent?.cancel();
     };
   }, []);
 
+  const safeAgent = agentInstance ?? new AgentOrchestrator();
+
   const value: AgentContextValue = {
-    agent: agentInstance!,
+    agent: safeAgent,
     status,
     isReady: status.isReady,
     isLoading: status.state === AgentState.INITIALIZING,

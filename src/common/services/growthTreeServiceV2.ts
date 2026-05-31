@@ -86,7 +86,7 @@ export async function addTreeNode(treeId: string, node: Omit<TreeNode, 'id' | 't
       trees[treeIndex].children = [];
     }
     
-    trees[treeIndex].children!.push(newNode);
+    trees[treeIndex].children.push(newNode);
     await saveTreesToStorage(trees);
     
     return newNode;
@@ -100,17 +100,17 @@ export async function updateTreeNode(nodeId: string, updates: Partial<Omit<TreeN
   } else {
     const trees = await getTreesFromStorage();
     
-    for (let i = 0; i < trees.length; i++) {
-      if (trees[i].children) {
-        const nodeIndex = trees[i].children!.findIndex((n: TreeNode) => n.id === nodeId);
+    for (const tree of trees) {
+      if (tree.children) {
+        const nodeIndex = tree.children.findIndex((n: TreeNode) => n.id === nodeId);
         if (nodeIndex !== -1) {
-          trees[i].children![nodeIndex] = {
-            ...trees[i].children![nodeIndex],
+          tree.children[nodeIndex] = {
+            ...tree.children[nodeIndex],
             ...updates,
             updatedAt: new Date().toISOString()
           };
           await saveTreesToStorage(trees);
-          return trees[i].children![nodeIndex];
+          return tree.children[nodeIndex];
         }
       }
     }
@@ -126,12 +126,12 @@ export async function deleteTreeNode(nodeId: string): Promise<void> {
   } else {
     const trees = await getTreesFromStorage();
     
-    for (let i = 0; i < trees.length; i++) {
-      if (trees[i].children) {
-        const initialLength = trees[i].children!.length;
-        trees[i].children = trees[i].children!.filter((n: TreeNode) => n.id !== nodeId);
+    for (const tree of trees) {
+      if (tree.children) {
+        const initialLength = tree.children.length;
+        tree.children = tree.children.filter((n: TreeNode) => n.id !== nodeId);
         
-        if (trees[i].children!.length !== initialLength) {
+        if (tree.children.length !== initialLength) {
           await saveTreesToStorage(trees);
           return;
         }

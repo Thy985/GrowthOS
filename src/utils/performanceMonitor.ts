@@ -116,6 +116,7 @@ class PerformanceMonitor {
   }
 
   reportToConsole(): void {
+    // eslint-disable-next-line no-console
     console.group('📊 Performance Metrics');
     console.log('LCP (Largest Contentful Paint):', `${this.metrics.lcp.toFixed(0)}ms`);
     console.log('FID (First Input Delay):', `${this.metrics.fid.toFixed(0)}ms`);
@@ -123,6 +124,7 @@ class PerformanceMonitor {
     console.log('FCP (First Contentful Paint):', `${this.metrics.fcp.toFixed(0)}ms`);
     console.log('TTFB (Time to First Byte):', `${this.metrics.ttfb.toFixed(0)}ms`);
     console.log('INP (Interaction to Next Paint):', `${this.metrics.inp.toFixed(0)}ms`);
+    // eslint-disable-next-line no-console
     console.groupEnd();
   }
 }

@@ -1,10 +1,18 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState } from '../../types';
+import type { RootState, Goal } from '../../types';
 import { type AppDispatch } from '../../store';
 import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../utils/goalUtils';
+import { 
+  responsiveSpacingClasses, 
+  responsiveTextClasses, 
+  responsiveButtonClasses,
+  responsiveCardClasses,
+  touchFriendlyClasses,
+  responsiveGridClasses
+} from '../../styles/responsive';
 
 interface FormErrors {
   title?: string,
@@ -28,7 +36,7 @@ const Goals = () => {
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [currentGoal, setCurrentGoal] = useState<any>(null);
+  const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -96,7 +104,7 @@ const Goals = () => {
     setShowAddForm(false);
   }, [formData, validateForm, dispatch]);
   
-  const handleEditGoal = useCallback((goal: any) => {
+  const handleEditGoal = useCallback((goal: Goal) => {
     setCurrentGoal(goal);
     setFormData({
       title: goal.title,
@@ -154,8 +162,8 @@ const Goals = () => {
   
   return (
     <ErrorBoundary>
-      <div className="goals-page">
-        <h1 className="page-title">目标管理</h1>
+      <div className={`goals-page ${responsiveSpacingClasses.sectionPadding}`}>
+        <h1 className={`page-title ${responsiveTextClasses.heading}`}>目标管理</h1>
         
         {error && (
           <div className="error-message">
@@ -163,9 +171,9 @@ const Goals = () => {
           </div>
         )}
         
-        <div className="goals-header">
+        <div className="goals-header mb-4">
           <button 
-            className="btn btn-primary"
+            className={`btn btn-primary ${responsiveButtonClasses.sizes.md}`}
             onClick={() => setShowAddForm(!showAddForm)}
           >
             {showAddForm ? '取消' : '添加目标'}
@@ -173,15 +181,15 @@ const Goals = () => {
         </div>
         
         {showAddForm && (
-          <div className="goal-form card">
-            <h2 className="text-xl font-semibold mb-4">添加新目标</h2>
+          <div className={`goal-form card ${responsiveCardClasses.base} ${responsiveCardClasses.border} mb-4`}>
+            <h2 className={`${responsiveTextClasses.subheading} mb-4`}>添加新目标</h2>
             <form onSubmit={handleAddGoal}>
               <div className="form-group">
                 <label className="form-label">目标标题</label>
                 <input 
                   type="text" 
                   name="title"
-                  className={`input ${formErrors.title ? 'border-error' : ''}`} 
+                  className={`input ${touchFriendlyClasses.inputMinHeight} ${formErrors.title ? 'border-error' : ''}`} 
                   placeholder="例如：每天学习1小时"
                   value={formData.title}
                   onChange={handleChange}
@@ -206,7 +214,7 @@ const Goals = () => {
                 <input 
                   type="number" 
                   name="targetValue"
-                  className={`input ${formErrors.targetValue ? 'border-error' : ''}`} 
+                  className={`input ${touchFriendlyClasses.inputMinHeight} ${formErrors.targetValue ? 'border-error' : ''}`} 
                   placeholder="例如：30"
                   value={formData.targetValue}
                   onChange={handleChange}
@@ -358,7 +366,7 @@ const Goals = () => {
         )}
         
         <div className="goals-list">
-          <h2 className="text-xl font-semibold mb-4">我的目标</h2>
+          <h2 className={`${responsiveTextClasses.subheading} mb-4`}>我的目标</h2>
           {isLoading ? (
             <div className="loading">加载中...</div>
           ) : goals.length === 0 ? (
@@ -366,9 +374,9 @@ const Goals = () => {
               <p>还没有设置目标，点击&ldquo;添加目标&rdquo;按钮开始设置吧！</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`grid ${responsiveGridClasses.autoCols} ${responsiveSpacingClasses.gap}`}>
               {goals.map(goal => (
-                <div key={goal.id} className="goal-card card">
+                <div key={goal.id} className={`goal-card card ${responsiveCardClasses.base} ${responsiveCardClasses.border} ${responsiveCardClasses.hover}`}>
                   <div className="goal-header">
                     <h3 className="font-semibold">{goal.title}</h3>
                     <span className={`status-badge ${goal.status}`}>

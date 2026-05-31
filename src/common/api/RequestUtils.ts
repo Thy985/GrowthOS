@@ -26,7 +26,7 @@ export async function withRetry<T>(
   fn: () => Promise<T>,
   config: RetryConfig = DEFAULT_RETRY_CONFIG
 ): Promise<T> {
-  let lastError: Error;
+  let lastError: Error | undefined;
   let delay = config.initialDelay;
 
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
@@ -50,7 +50,10 @@ export async function withRetry<T>(
     }
   }
 
-  throw lastError!;
+  if (lastError !== undefined) {
+    throw lastError;
+  }
+  throw new Error('Retry failed');
 }
 
 export async function withTimeout<T>(

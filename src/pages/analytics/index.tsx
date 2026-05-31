@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -162,7 +162,7 @@ const Analytics = () => {
     };
   }, [records]);
 
-  const processChartData = (records: RecordData[], timeRange: string): ChartDataResult => {
+  const processChartData = useCallback((records: RecordData[], timeRange: string): ChartDataResult => {
     const now = new Date();
     const dailyData: Array<{ date: string, count: number }> = [];
     
@@ -313,11 +313,11 @@ const Analytics = () => {
       scatterData,
       heatmapData
     };
-  };
+  }, []);
 
   const chartData = useMemo(() => {
     return processChartData(records, timeRange);
-  }, [records, timeRange]);
+  }, [records, timeRange, processChartData]);
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

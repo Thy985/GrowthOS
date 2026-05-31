@@ -29,6 +29,7 @@ const logger = {
   // 调试日志
   debug: (message: string, data: Record<string, unknown> = {}) => {
     if (logger.shouldLog(LOG_LEVELS.DEBUG)) {
+      // eslint-disable-next-line no-console
       console.debug(`[DEBUG] ${new Date().toISOString()} - ${message}`, data);
     }
   },

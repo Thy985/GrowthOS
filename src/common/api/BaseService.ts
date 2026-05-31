@@ -6,7 +6,7 @@ import {
   ErrorFactory,
   isSuccess
 } from './ApiResponse';
-import { withRetry, deduplicator, withTimeout, type RequestConfig } from './RequestUtils';
+import { withRetry, deduplicator, withTimeout, type RequestConfig, type RetryConfig } from './RequestUtils';
 import logger from '../../utils/logger';
 
 export abstract class BaseService {
@@ -41,15 +41,18 @@ export abstract class BaseService {
       let fnToExecute = fn;
 
       if (config?.retry && this.enableRetry) {
-        const retryConfig = {
-          ...config.retry,
+        const retryConfig: RetryConfig = {
+          maxRetries: config.retry.maxRetries ?? 3,
+          initialDelay: config.retry.initialDelay ?? 1000,
+          maxDelay: config.retry.maxDelay ?? 10000,
+          backoffMultiplier: config.retry.backoffMultiplier ?? 2,
           retryableErrors: config.retry.retryableErrors || [
             'NETWORK_ERROR',
             'STORAGE_ERROR',
             'INTERNAL_ERROR'
           ]
         };
-        fnToExecute = async () => withRetry(fn, retryConfig as any);
+        fnToExecute = async () => withRetry(fn, retryConfig);
       }
 
       if (this.enableDeduplication) {

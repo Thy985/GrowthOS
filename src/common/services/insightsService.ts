@@ -7,7 +7,7 @@ export interface Insight {
   description: string,
   priority: 'high' | 'medium' | 'low',
   category: 'activity' | 'mood' | 'learning' | 'goal' | 'habit',
-  data?: any,
+  data?: Record<string, unknown>,
   createdAt: Date,
 }
 

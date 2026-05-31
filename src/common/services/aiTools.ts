@@ -61,10 +61,12 @@ const getRecordsTool: ToolExecutor = {
     let filtered = [...allRecords];
     
     if (params.startDate) {
-      filtered = filtered.filter(r => (r.date || r.createdAt.split('T')[0]) >= params.startDate!);
+      const startDate = params.startDate;
+      filtered = filtered.filter(r => (r.date || r.createdAt.split('T')[0]) >= startDate);
     }
     if (params.endDate) {
-      filtered = filtered.filter(r => (r.date || r.createdAt.split('T')[0]) <= params.endDate!);
+      const endDate = params.endDate;
+      filtered = filtered.filter(r => (r.date || r.createdAt.split('T')[0]) <= endDate);
     }
     
     const limit = params.limit || 10;

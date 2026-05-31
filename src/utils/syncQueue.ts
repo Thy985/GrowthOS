@@ -62,7 +62,9 @@ class SyncQueueManager {
   }
 
   async getQueue(): Promise<SyncQueueItem[]> {
-    return getAllSyncQueue() as any;
+    const queue = await getAllSyncQueue();
+    // @ts-expect-error - offlineStorage 返回的类型与 syncQueue 不同但兼容
+    return queue as SyncQueueItem[];
   }
 
   async addToQueue(item: Omit<SyncQueueItem, 'id' | 'createdAt' | 'retryCount'>): Promise<string> {
@@ -292,8 +294,9 @@ export async function checkPendingSync(): Promise<{
 }> {
   const [count, queue] = await Promise.all([
     getSyncQueueCount(),
-    getAllSyncQueue() as any
+    getAllSyncQueue()
   ]);
+  // @ts-expect-error - offlineStorage 返回的类型与 syncQueue 不同但兼容
   return { count, queue: queue as SyncQueueItem[] };
 }
 

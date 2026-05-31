@@ -126,7 +126,10 @@ export class WeeklyReportGenerator {
       if (!grouped.has(date)) {
         grouped.set(date, []);
       }
-      grouped.get(date)!.push(record);
+      const group = grouped.get(date);
+      if (group) {
+        group.push(record);
+      }
     });
     
     return grouped;
