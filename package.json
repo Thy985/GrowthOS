@@ -33,8 +33,10 @@
     "react-i18next": "^17.0.4",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.22.0",
+    "react-window": "^2.2.7",
     "reactflow": "^11.8.3",
-    "recharts": "^2.10.4"
+    "recharts": "^2.10.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -46,6 +48,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
+    "@types/react-window": "^1.8.8",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.55.0",
