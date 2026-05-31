@@ -26,10 +26,12 @@ module.exports = {
       { allowConstantExport: true }
     ],
     'react/prop-types': 'off',
+    'react/no-unused-vars': 'off',
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     'prefer-const': 'warn',
     'no-var': 'error',
-    'no-console': 'warn'
+    'no-console': 'warn',
+    'react-hooks/exhaustive-deps': 'warn'
   },
   settings: {
     react: {
@@ -42,6 +44,12 @@ module.exports = {
       rules: {
         'no-unused-vars': 'off'
       }
+    },
+    {
+      files: ['**/*.jsx'],
+      rules: {
+        'react/no-unused-vars': 'off'
+      }
     }
   ],
   ignorePatterns: [
@@ -49,6 +57,7 @@ module.exports = {
     'node_modules/',
     'build/',
     'coverage/',
+    'public/',
     '**/*.ts',
     '**/*.tsx',
     '**/*.d.ts'

@@ -280,7 +280,7 @@ export class AgentOrchestrator {
         () => executeTool('suggestNextStep'),
         { ...DEFAULT_RETRY_CONFIG, maxRetries: 1 },
         '获取建议'
-      ) as { success: boolean; data: Array<{ title: string; description: string; type: string }> };
+      ) as { success: boolean; data: Array<{ title: string; description: string; type: 'record' | 'goal' | 'tree' | 'general' }> };
       if (result.success && result.data.length > 0) {
         return result.data;
       }

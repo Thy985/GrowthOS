@@ -3,6 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { loadSyncStatus, performSync } from '../store/slices/syncSlice';
 import { useNetworkStatus } from '../utils/networkDetector';
 import { useI18n } from '../i18n/useI18n';
+import { AppDispatch } from '../store';
+import type { RootState } from '../types';
+import type { SyncQueueItem } from '../utils/syncQueue';
 
 interface SyncPanelProps {
   isOpen: boolean;
@@ -11,7 +14,7 @@ interface SyncPanelProps {
 
 const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
   const { t } = useI18n();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const ENTITY_LABELS: Record<string, string> = {
     record: t('common.records'),
@@ -26,7 +29,7 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
     update: t('common.update'),
     delete: t('common.delete')
   };
-  const { queue, pendingCount, isSyncing, lastSyncTime } = useSelector((state: any) => state.sync);
+  const { queue, pendingCount, isSyncing, lastSyncTime } = useSelector((state: RootState) => state.sync);
   const { isOnline } = useNetworkStatus();
   const [expandedItems, setExpandedItems] = useState(new Set());
 
@@ -41,7 +44,7 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
     await dispatch(performSync());
   };
 
-  const toggleExpand = (id) => {
+  const toggleExpand = (id: string) => {
     setExpandedItems(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -53,7 +56,7 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
     });
   };
 
-  const formatTime = (isoString) => {
+  const formatTime = (isoString: string) => {
     const date = new Date(isoString);
     return date.toLocaleString('zh-CN', {
       month: 'short',
@@ -63,8 +66,8 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
     });
   };
 
-  const getPayloadPreview = (item) => {
-    const payload = item.payload || {};
+  const getPayloadPreview = (item: SyncQueueItem) => {
+    const payload = item.payload as { title?: string; name?: string; content?: string } || {};
     if (payload.title) return payload.title;
     if (payload.name) return payload.name;
     if (payload.content) return payload.content.substring(0, 50);
@@ -132,7 +135,7 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
             </div>
           ) : (
             <div className="divide-y">
-              {queue.map(item => (
+              {queue.map((item: SyncQueueItem) => (
                 <div key={item.id} className="p-4">
                   <div
                     className="flex items-start gap-3 cursor-pointer"
@@ -159,7 +162,7 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
                         {getPayloadPreview(item)}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {formatTime(item.timestamp)}
+                        {formatTime(item.createdAt)}
                       </p>
                     </div>
                     <span className="text-gray-400">
@@ -172,9 +175,9 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
                       <div className="space-y-1">
                         <p><span className="text-gray-500">ID:</span> {item.entityId}</p>
                         <p><span className="text-gray-500">重试次数:</span> {item.retryCount}</p>
-                        <p><span className="text-gray-500">时间:</span> {item.timestamp}</p>
+                        <p><span className="text-gray-500">时间:</span> {item.createdAt}</p>
                       </div>
-                      {item.payload && (
+                      {item.payload !== undefined && item.payload !== null && (
                         <pre className="mt-2 p-2 bg-white rounded overflow-x-auto">
                           {JSON.stringify(item.payload, null, 2)}
                         </pre>

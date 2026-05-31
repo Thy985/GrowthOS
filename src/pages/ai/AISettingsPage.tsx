@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch, LLMConfig, LLMProvider } from '../../types';
+import type { RootState, LLMConfig, LLMProvider } from '../../types';
+import { AppDispatch } from '../../store';
 import { loadAIConfig, saveAIConfig, clearError } from '../../store/slices/aiSlice';
 import { DEFAULT_LLM_CONFIGS, LLM_PROVIDERS } from '../../constants';
 import { ToastProvider, useToast } from '../../components/Toast';

@@ -52,6 +52,9 @@ declare module './components/KeyboardShortcutsHelp' {
 }
 
 declare module './i18n' {
-  const i18n: Record<string, unknown>;
+  const i18n: {
+    t: (key: string) => string;
+    changeLanguage: (lang: string) => Promise<void>;
+  };
   export default i18n;
 }

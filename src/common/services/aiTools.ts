@@ -133,7 +133,7 @@ const analyzeMoodTrendTool: ToolExecutor = {
     const prev10 = last30Days.slice(10, 20);
     
     const avgMood = (moods: string[]) => {
-      const score = moods.map(m => m === '很好' ? 2 : m === '一般' ? 1 : 0).reduce((a, b) => a + b, 0);
+      const score = moods.map(m => m === '很好' ? 2 : m === '一般' ? 1 : 0).reduce((a: number, b) => a + b, 0);
       return moods.length ? score / moods.length : 0;
     };
     
