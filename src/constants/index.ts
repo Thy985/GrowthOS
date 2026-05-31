@@ -14,7 +14,9 @@ export const STORAGE_KEYS = {
   USER: 'auth-user',
   USERS: 'auth-users',
   THEME: 'app-theme',
-  SETTINGS: 'app-settings'
+  SETTINGS: 'app-settings',
+  TOKEN: 'auth-token',
+  REFRESH_TOKEN: 'auth-refresh-token'
 } as const;
 
 // 存储键名类型
