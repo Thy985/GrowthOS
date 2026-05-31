@@ -1,0 +1,120 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types: [completed]
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/develop'
+    
+    environment:
+      name: staging
+      url: https://staging.growthos.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build production bundle
+        run: npm run build
+        env:
+          VITE_APP_TITLE: GrowthOS Staging
+          VITE_APP_VERSION: ${{ github.sha }}
+      
+      - name: Deploy to staging server
+        run: |
+          echo "Deploying to staging environment..."
+          # Add your deployment commands here
+          # Example: rsync -avz dist/ user@staging-server:/var/www/growthos/
+          echo "Staging deployment completed"
+        continue-on-error: true
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Staging deployment successful"
+          else
+            echo "❌ Staging deployment failed"
+          fi
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main'
+    
+    environment:
+      name: production
+      url: https://growthos.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build production bundle
+        run: npm run build
+        env:
+          VITE_APP_TITLE: GrowthOS
+          VITE_APP_VERSION: ${{ github.sha }}
+      
+      - name: Run tests before deployment
+        run: npm test -- --ci
+      
+      - name: Deploy to production server
+        run: |
+          echo "Deploying to production environment..."
+          # Add your deployment commands here
+          # Example: rsync -avz dist/ user@production-server:/var/www/growthos/
+          # Example: ./scripts/deploy.sh production
+          echo "Production deployment completed"
+        continue-on-error: true
+      
+      - name: Create GitHub Release
+        if: github.event.workflow_run.conclusion == 'success'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          draft: false
+          prerelease: false
+        continue-on-error: true
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Production deployment successful"
+            echo "🚀 Release v${{ github.run_number }} deployed"
+          else
+            echo "❌ Production deployment failed"
+          fi

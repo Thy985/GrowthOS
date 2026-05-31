@@ -1,0 +1,139 @@
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-info:
+    name: PR Information
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get PR info
+        id: pr_info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            core.setOutput('title', pr.title);
+            core.setOutput('number', pr.number);
+            core.setOutput('author', pr.user.login);
+            core.setOutput('head_ref', pr.head.ref);
+            core.setOutput('base_ref', pr.base.ref);
+            core.setOutput('changed_files', pr.changed_files);
+            
+            // Check for breaking changes
+            const breaking = pr.body?.includes('[BREAKING CHANGE]') || 
+                            pr.title?.includes('BREAKING') ||
+                            pr.title?.startsWith('feat!:') ||
+                            pr.title?.startsWith('fix!:');
+            core.setOutput('has_breaking_change', breaking);
+      
+      - name: Comment PR information
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prInfo = `
+            ## 📋 Pull Request 信息
+            
+            **标题**: ${{ steps.pr_info.outputs.title }}
+            **编号**: #${{ steps.pr_info.outputs.number }}
+            **作者**: @${{ steps.pr_info.outputs.author }}
+            **分支**: \`${{ steps.pr_info.outputs.head_ref }}\` → \`${{ steps.pr_info.outputs.base_ref }}\`
+            **修改文件数**: ${{ steps.pr_info.outputs.changed_files }}
+            
+            ${{ steps.pr_info.outputs.has_breaking_change == 'true' && '⚠️ **注意**: 此 PR 包含破坏性变更' || '' }}
+            
+            ---
+            
+            自动化检查已启动，请等待 CI 流水线结果。
+            `;
+            
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: prInfo
+            });
+
+  size-label:
+    name: Size Label
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get changed files count
+        id: changed_files
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            const changedFiles = pr.changed_files;
+            
+            let sizeLabel;
+            let sizeColor;
+            
+            if (changedFiles <= 10) {
+              sizeLabel = 'size/xs';
+              sizeColor = 'green';
+            } else if (changedFiles <= 30) {
+              sizeLabel = 'size/s';
+              sizeColor = 'green';
+            } else if (changedFiles <= 100) {
+              sizeLabel = 'size/m';
+              sizeColor = 'yellow';
+            } else if (changedFiles <= 300) {
+              sizeLabel = 'size/l';
+              sizeColor = 'orange';
+            } else {
+              sizeLabel = 'size/xl';
+              sizeColor = 'red';
+            }
+            
+            core.setOutput('size_label', sizeLabel);
+            core.setOutput('size_color', sizeColor);
+            core.setOutput('changed_files', changedFiles);
+      
+      - name: Apply size label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = '${{ steps.changed_files.outputs.size_label }}';
+            const labelColor = '${{ steps.changed_files.outputs.size_color }}';
+            
+            // Create label if not exists
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: labelColor,
+                description: `PR size: ${label.replace('size/', '')}`
+              });
+            } catch (e) {
+              // Label might already exist
+            }
+            
+            // Add label to PR
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [label]
+            });
