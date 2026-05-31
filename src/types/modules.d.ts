@@ -1,33 +1,74 @@
-declare module '*/utils/secureStorage' {
-  interface SecureStorage {
-    encryptionEnabled: boolean;
-    setItem(key: string, value: unknown): boolean;
-    getItem<T = unknown>(key: string, defaultValue?: T | null): T | null;
-    removeItem(key: string): boolean;
-    clear(): boolean;
-    setEncryptionEnabled(enabled: boolean): void;
-  }
+import { KeyboardShortcutsShortcut } from '../hooks/useKeyboardShortcuts';
 
-  const secureStorage: SecureStorage;
-  export default secureStorage;
-  export { secureStorage };
+declare module '*.jsx' {
+  const component: React.ComponentType<unknown>;
+  export default component;
 }
 
-declare module '*/utils/logger' {
-  type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+declare module './hooks/useKeyboardShortcuts' {
+  const useKeyboardShortcuts: (shortcuts: KeyboardShortcutsShortcut[]) => void;
+  export default useKeyboardShortcuts;
+}
 
-  interface Logger {
-    setLogLevel(level: LogLevel): void;
-    shouldLog(level: LogLevel): boolean;
-    debug(message: string, data?: Record<string, unknown>): void;
-    info(message: string, data?: Record<string, unknown>): void;
-    warn(message: string, data?: Record<string, unknown>): void;
-    error(message: string, error?: Error | null, data?: Record<string, unknown>): void;
-    logApiError(endpoint: string, error: Error, data?: Record<string, unknown>): void;
-    logUserAction(action: string, data?: Record<string, unknown>): void;
-    logSystemEvent(event: string, data?: Record<string, unknown>): void;
+declare module './components/ErrorBoundary' {
+  interface ErrorBoundaryProps {
+    children?: React.ReactNode;
+    fallback?: React.ReactNode;
   }
+  class ErrorBoundary extends React.Component<ErrorBoundaryProps, { hasError: boolean; error?: Error }> {
+    static getDerivedStateFromError(error: Error): { hasError: boolean; error: Error };
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void;
+    render(): React.ReactNode;
+  }
+  export default ErrorBoundary;
+}
 
-  const logger: Logger;
-  export default logger;
+declare module './components/OfflineIndicator' {
+  const OfflineIndicator: React.FC;
+  export default OfflineIndicator;
+}
+
+declare module './components/Tutorial' {
+  const Tutorial: React.LazyExoticComponent<React.ComponentType>;
+  export default Tutorial;
+}
+
+declare module './components/KeyboardShortcutsHelp' {
+  const KeyboardShortcutsHelp: React.LazyExoticComponent<React.ComponentType<{ isOpen: boolean; onClose: () => void }>>;
+  export default KeyboardShortcutsHelp;
+}
+
+declare module './pages/growth-tree' {
+  const GrowthTree: React.LazyExoticComponent<React.ComponentType>;
+  export default GrowthTree;
+}
+
+declare module './pages/goals' {
+  const Goals: React.LazyExoticComponent<React.ComponentType>;
+  export default Goals;
+}
+
+declare module './pages/reminders' {
+  const Reminders: React.LazyExoticComponent<React.ComponentType>;
+  export default Reminders;
+}
+
+declare module './pages/analytics' {
+  const Analytics: React.LazyExoticComponent<React.ComponentType>;
+  export default Analytics;
+}
+
+declare module './pages/auth/Login' {
+  const Login: React.ComponentType;
+  export default Login;
+}
+
+declare module './pages/auth/Register' {
+  const Register: React.ComponentType;
+  export default Register;
+}
+
+declare module './pages/ai/AISettingsPage' {
+  const AISettingsPage: React.LazyExoticComponent<React.ComponentType>;
+  export default AISettingsPage;
 }

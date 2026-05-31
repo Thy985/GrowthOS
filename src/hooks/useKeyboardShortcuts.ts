@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-interface Shortcut {
+export interface KeyboardShortcutsShortcut {
   key: string;
   ctrl?: boolean;
   shift?: boolean;
@@ -9,7 +9,7 @@ interface Shortcut {
   callback: () => void;
 }
 
-const useKeyboardShortcuts = (shortcuts: Shortcut[]) => {
+const useKeyboardShortcuts = (shortcuts: KeyboardShortcutsShortcut[]) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const tagName = (event.target as HTMLElement).tagName;

@@ -122,39 +122,9 @@ export interface ReminderState {
   error: string | null;
 }
 
-// 同步状态类型
-interface SyncQueueItem {
-  id: string;
-  entityType: string;
-  entityId: string;
-  operation: 'create' | 'update' | 'delete';
-  payload: unknown;
-  createdAt: string;
-  retryCount: number;
-}
+// === Sync Types ===
 
-interface ConflictInfo {
-  entityType: string;
-  entityId: string;
-  localData: unknown;
-  serverData: unknown;
-  queueItem: SyncQueueItem;
-}
-
-export interface SyncState {
-  isOnline: boolean;
-  isSyncing: boolean;
-  pendingCount: number;
-  queue: SyncQueueItem[];
-  conflicts: ConflictInfo[];
-  lastSyncTime: string | null;
-  syncProgress: {
-    total: number;
-    completed: number;
-    current: unknown | null;
-  };
-  error: string | null;
-}
+export type { SyncQueueItem, ConflictInfo, SyncState } from '../utils/offlineStorage';
 
 // 根状态类型
 export interface RootState {
@@ -313,7 +283,9 @@ export interface AIState {
   config: LLMConfig | null;
   currentSession: ChatSession | null;
   sessions: ChatSession[];
+  messages: Record<string, ChatMessage[]>;
   isLoading: boolean;
   isStreaming: boolean;
+  streamingContent: string;
   error: string | null;
 }

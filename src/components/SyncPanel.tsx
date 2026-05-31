@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { loadSyncStatus, performSync } from '../store/slices/syncSlice';
 import { useNetworkStatus } from '../utils/networkDetector';
@@ -31,7 +31,7 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
   };
   const { queue, pendingCount, isSyncing, lastSyncTime } = useSelector((state: RootState) => state.sync);
   const { isOnline } = useNetworkStatus();
-  const [expandedItems, setExpandedItems] = useState(new Set());
+  const [expandedItems, setExpandedItems] = useState(new Set<string>());
 
   useEffect(() => {
     if (isOpen) {
@@ -39,12 +39,12 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
     }
   }, [isOpen, dispatch]);
 
-  const handleSync = async () => {
+  const handleSync = useCallback(async () => {
     if (!isOnline) return;
     await dispatch(performSync());
-  };
+  }, [isOnline, dispatch]);
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = useCallback((id: string) => {
     setExpandedItems(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -54,9 +54,9 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
       }
       return next;
     });
-  };
+  }, []);
 
-  const formatTime = (isoString: string) => {
+  const formatTime = useCallback((isoString: string) => {
     const date = new Date(isoString);
     return date.toLocaleString('zh-CN', {
       month: 'short',
@@ -64,15 +64,15 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
 
-  const getPayloadPreview = (item: SyncQueueItem) => {
+  const getPayloadPreview = useCallback((item: SyncQueueItem) => {
     const payload = item.payload as { title?: string; name?: string; content?: string } || {};
     if (payload.title) return payload.title;
     if (payload.name) return payload.name;
     if (payload.content) return payload.content.substring(0, 50);
     return item.entityId;
-  };
+  }, []);
 
   if (!isOpen) return null;
 

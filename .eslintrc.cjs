@@ -10,28 +10,37 @@ module.exports = {
     'eslint:recommended',
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
-    'plugin:react-hooks/recommended'
+    'plugin:react-hooks/recommended',
+    'plugin:@typescript-eslint/recommended'
   ],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: {
       jsx: true
     },
     ecmaVersion: 'latest',
-    sourceType: 'module'
+    sourceType: 'module',
+    project: './tsconfig.json'
   },
-  plugins: ['react-refresh'],
+  plugins: ['react-refresh', '@typescript-eslint'],
   rules: {
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true }
     ],
     'react/prop-types': 'off',
-    'react/no-unused-vars': 'off',
-    'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-    'prefer-const': 'warn',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': ['error', { 
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_'
+    }],
+    'prefer-const': 'error',
     'no-var': 'error',
-    'no-console': 'warn',
-    'react-hooks/exhaustive-deps': 'warn'
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'react-hooks/exhaustive-deps': 'warn',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'warn'
   },
   settings: {
     react: {
@@ -40,15 +49,10 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['**/*.test.js', '**/*.test.jsx'],
+      files: ['**/*.test.js', '**/*.test.jsx', '**/*.test.ts', '**/*.test.tsx'],
       rules: {
-        'no-unused-vars': 'off'
-      }
-    },
-    {
-      files: ['**/*.jsx'],
-      rules: {
-        'react/no-unused-vars': 'off'
+        'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': 'off'
       }
     }
   ],
@@ -58,8 +62,7 @@ module.exports = {
     'build/',
     'coverage/',
     'public/',
-    '**/*.ts',
-    '**/*.tsx',
-    '**/*.d.ts'
+    'android/',
+    '*.d.ts'
   ]
 };

@@ -9,8 +9,10 @@ const initialState: AIState = {
   config: null,
   currentSession: null,
   sessions: [],
+  messages: {},
   isLoading: false,
   isStreaming: false,
+  streamingContent: '',
   error: null
 };
 
@@ -101,12 +103,21 @@ const aiSlice = createSlice({
       state.currentSession = action.payload;
     },
     addLocalMessage: (state, action: PayloadAction<ChatMessage>) => {
+      const sessionId = state.currentSession?.id;
+      if (sessionId) {
+        if (!state.messages[sessionId]) {
+          state.messages[sessionId] = [];
+        }
+        state.messages[sessionId].push(action.payload);
+      }
     },
     updateStreamingMessage: (state, action: PayloadAction<string>) => {
       state.isStreaming = true;
+      state.streamingContent = action.payload;
     },
     clearStreaming: (state) => {
       state.isStreaming = false;
+      state.streamingContent = '';
     },
     clearError: (state) => {
       state.error = null;

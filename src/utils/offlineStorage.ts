@@ -31,6 +31,29 @@ export interface SyncMeta {
   serverVersions: Record<string, number>;
 }
 
+export interface ConflictInfo {
+  entityType: string;
+  entityId: string;
+  localData: unknown;
+  serverData: unknown;
+  queueItem: SyncQueueItem;
+}
+
+export interface SyncState {
+  isOnline: boolean;
+  isSyncing: boolean;
+  pendingCount: number;
+  queue: SyncQueueItem[];
+  conflicts: ConflictInfo[];
+  lastSyncTime: string | null;
+  syncProgress: {
+    total: number;
+    completed: number;
+    current: SyncQueueItem | null;
+  };
+  error: string | null;
+}
+
 interface GrowthOSDB extends DBSchema {
   records: {
     key: string;
