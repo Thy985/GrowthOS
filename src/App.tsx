@@ -1,7 +1,8 @@
 import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from './store';
+import { store } from './store';
+import type { AppDispatch, RootState } from './store';
 import { loadData } from './store/slices/growthSlice';
 import { checkAuth } from './store/slices/authSlice';
 import { loadGoals } from './store/slices/goalSlice';
@@ -37,29 +38,12 @@ const LoadingFallback: React.FC = () => (
   </div>
 );
 
-interface ProtectedRouteProps {
+interface ProtectedLayoutProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
-
-  if (isLoading) {
-    return <LoadingFallback />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const _sync = useSelector((state: RootState) => state.sync);
   const [syncPanelOpen, setSyncPanelOpen] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -80,6 +64,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   ], []);
 
   useKeyboardShortcuts(shortcuts);
+
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="app">
@@ -131,76 +123,13 @@ const AppContent: React.FC = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Dashboard />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/records"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <RecordList />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/goals"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Goals />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reminders"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Reminders />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/growth-tree"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <GrowthTree />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Analytics />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ai-settings"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <AISettingsPage />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
+        <Route path="/records" element={<ProtectedLayout><RecordList /></ProtectedLayout>} />
+        <Route path="/goals" element={<ProtectedLayout><Goals /></ProtectedLayout>} />
+        <Route path="/reminders" element={<ProtectedLayout><Reminders /></ProtectedLayout>} />
+        <Route path="/growth-tree" element={<ProtectedLayout><GrowthTree /></ProtectedLayout>} />
+        <Route path="/analytics" element={<ProtectedLayout><Analytics /></ProtectedLayout>} />
+        <Route path="/ai-settings" element={<ProtectedLayout><AISettingsPage /></ProtectedLayout>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
@@ -220,7 +149,5 @@ const App: React.FC = () => {
     </Provider>
   );
 };
-
-import store from './store';
 
 export default App;

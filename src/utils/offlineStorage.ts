@@ -16,12 +16,24 @@ export interface SyncedEntity<T> extends BaseEntity {
   serverVersion?: number;
 }
 
+export type SyncOperation = 'create' | 'update' | 'delete';
+export type EntityType = 'record' | 'goal' | 'reminder' | 'tree' | 'treeNode';
+export type Resolution = 'local' | 'server' | 'merge';
+
+export interface SyncPayload {
+  id: string;
+  operation: SyncOperation;
+  entityType: EntityType;
+  entityId: string;
+  data?: Record<string, unknown>;
+}
+
 export interface SyncQueueItem {
   id: string;
-  operation: 'create' | 'update' | 'delete';
-  entityType: 'record' | 'goal' | 'reminder' | 'tree' | 'treeNode';
+  operation: SyncOperation;
+  entityType: EntityType;
   entityId: string;
-  payload: unknown;
+  payload: SyncPayload;
   timestamp: string;
   retryCount: number;
 }
@@ -32,11 +44,17 @@ export interface SyncMeta {
 }
 
 export interface ConflictInfo {
-  entityType: string;
+  entityType: EntityType;
   entityId: string;
-  localData: unknown;
-  serverData: unknown;
+  localData: Record<string, unknown>;
+  serverData: Record<string, unknown>;
   queueItem: SyncQueueItem;
+}
+
+export interface SyncProgress {
+  total: number;
+  completed: number;
+  current: SyncQueueItem | null;
 }
 
 export interface SyncState {
@@ -46,11 +64,7 @@ export interface SyncState {
   queue: SyncQueueItem[];
   conflicts: ConflictInfo[];
   lastSyncTime: string | null;
-  syncProgress: {
-    total: number;
-    completed: number;
-    current: SyncQueueItem | null;
-  };
+  syncProgress: SyncProgress;
   error: string | null;
 }
 
@@ -164,30 +178,43 @@ export async function getDB(): Promise<IDBPDatabase<GrowthOSDB>> {
 }
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  const hex = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 type EntityStore = 'records' | 'goals' | 'reminders' | 'growthTrees' | 'treeNodes';
 
+function mapStoreToEntityType(store: EntityStore): EntityType {
+  const map: Record<EntityStore, EntityType> = {
+    records: 'record',
+    goals: 'goal',
+    reminders: 'reminder',
+    growthTrees: 'tree',
+    treeNodes: 'treeNode',
+  };
+  return map[store];
+}
+
 async function addToSyncQueue(
-  operation: 'create' | 'update' | 'delete',
-  entityType: EntityStore,
+  operation: SyncOperation,
+  store: EntityStore,
   entityId: string,
-  payload: unknown
+  payload: SyncPayload
 ): Promise<void> {
   const db = await getDB();
   const item: SyncQueueItem = {
     id: generateId(),
     operation,
-    entityType: entityType === 'records' ? 'record'
-      : entityType === 'goals' ? 'goal'
-      : entityType === 'reminders' ? 'reminder'
-      : entityType === 'growthTrees' ? 'tree'
-      : 'treeNode',
+    entityType: mapStoreToEntityType(store),
     entityId,
     payload,
     timestamp: new Date().toISOString(),
-    retryCount: 0
+    retryCount: 0,
   };
   await db.put('syncQueue', item);
 }
@@ -201,18 +228,27 @@ export async function createEntity<T extends BaseEntity>(
   const now = new Date().toISOString();
   const id = generateId();
 
+  const entityData = data as Record<string, unknown>;
   const entity: SyncedEntity<T> = {
     id,
-    data: data as T,
+    data: entityData as T,
     syncStatus: 'pending',
     localVersion: 1,
     createdAt: now,
     updatedAt: now,
-    userId
+    userId,
   } as SyncedEntity<T>;
 
   await db.put(store, entity as SyncedEntity<Record<string, unknown>>);
-  await addToSyncQueue('create', store, id, entity);
+
+  const syncPayload: SyncPayload = {
+    id,
+    operation: 'create',
+    entityType: mapStoreToEntityType(store),
+    entityId: id,
+    data: entityData,
+  };
+  await addToSyncQueue('create', store, id, syncPayload);
 
   return entity;
 }
@@ -227,16 +263,28 @@ export async function updateEntity<T extends BaseEntity>(
 
   if (!existing) return null;
 
+  const existingData = existing.data as Record<string, unknown>;
+  const updateData = updates as Record<string, unknown>;
+  const mergedData: Record<string, unknown> = { ...existingData, ...updateData };
+
   const updated: SyncedEntity<T> = {
     ...existing,
-    data: { ...existing.data, ...updates } as unknown as T,
+    data: mergedData as T,
     syncStatus: 'pending',
     localVersion: existing.localVersion + 1,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   } as SyncedEntity<T>;
 
   await db.put(store, updated as SyncedEntity<Record<string, unknown>>);
-  await addToSyncQueue('update', store, id, updated);
+
+  const syncPayload: SyncPayload = {
+    id,
+    operation: 'update',
+    entityType: mapStoreToEntityType(store),
+    entityId: id,
+    data: mergedData,
+  };
+  await addToSyncQueue('update', store, id, syncPayload);
 
   return updated;
 }
@@ -251,7 +299,14 @@ export async function deleteEntity(
   if (!existing) return false;
 
   await db.delete(store, id);
-  await addToSyncQueue('delete', store, id, { id });
+
+  const syncPayload: SyncPayload = {
+    id,
+    operation: 'delete',
+    entityType: mapStoreToEntityType(store),
+    entityId: id,
+  };
+  await addToSyncQueue('delete', store, id, syncPayload);
 
   return true;
 }
@@ -269,21 +324,24 @@ export async function getAllEntities<T>(
   store: EntityStore
 ): Promise<SyncedEntity<T>[]> {
   const db = await getDB();
-  return (await db.getAll(store)) as SyncedEntity<T>[];
+  const results = await db.getAll(store);
+  return results as SyncedEntity<T>[];
 }
 
 export async function getPendingEntities<T>(
   store: EntityStore
 ): Promise<SyncedEntity<T>[]> {
   const db = await getDB();
-  return (await db.getAllFromIndex(store, 'by-status', 'pending')) as SyncedEntity<T>[];
+  const results = await db.getAllFromIndex(store, 'by-status', 'pending');
+  return results as SyncedEntity<T>[];
 }
 
 export async function getConflictEntities<T>(
   store: EntityStore
 ): Promise<SyncedEntity<T>[]> {
   const db = await getDB();
-  return (await db.getAllFromIndex(store, 'by-status', 'conflict')) as SyncedEntity<T>[];
+  const results = await db.getAllFromIndex(store, 'by-status', 'conflict');
+  return results as SyncedEntity<T>[];
 }
 
 export async function markAsSynced(
@@ -303,13 +361,13 @@ export async function markAsSynced(
 export async function markAsConflict(
   store: EntityStore,
   id: string,
-  serverData: unknown
+  serverData?: Record<string, unknown>
 ): Promise<void> {
   const db = await getDB();
   const entity = await db.get(store, id);
   if (entity) {
     entity.syncStatus = 'conflict';
-    entity.data = { ...entity.data, _serverData: serverData };
+    entity.data = { ...entity.data, _serverData: serverData || {} };
     await db.put(store, entity);
   }
 }
@@ -317,17 +375,19 @@ export async function markAsConflict(
 export async function resolveConflict(
   store: EntityStore,
   id: string,
-  resolution: 'local' | 'server' | 'merge',
-  mergedData?: unknown
+  resolution: Resolution,
+  mergedData?: Record<string, unknown>
 ): Promise<void> {
   const db = await getDB();
   const entity = await db.get(store, id);
   if (!entity) return;
 
+  const entityData = entity.data as Record<string, unknown>;
+
   if ((resolution === 'local' || resolution === 'merge') && mergedData) {
-    entity.data = mergedData as Record<string, unknown>;
-  } else if (resolution === 'server' && entity.data._serverData) {
-    entity.data = entity.data._serverData as Record<string, unknown>;
+    entity.data = mergedData;
+  } else if (resolution === 'server' && entityData._serverData) {
+    entity.data = entityData._serverData as Record<string, unknown>;
     entity.serverVersion = entity.localVersion;
   }
 
@@ -337,7 +397,15 @@ export async function resolveConflict(
   entity.updatedAt = new Date().toISOString();
 
   await db.put(store, entity);
-  await addToSyncQueue('update', store, id, entity);
+
+  const syncPayload: SyncPayload = {
+    id,
+    operation: 'update',
+    entityType: mapStoreToEntityType(store),
+    entityId: id,
+    data: entity.data,
+  };
+  await addToSyncQueue('update', store, id, syncPayload);
 }
 
 export async function getAllSyncQueue(): Promise<SyncQueueItem[]> {
@@ -378,6 +446,6 @@ export async function getSyncMeta(): Promise<SyncMeta> {
 export async function updateSyncMeta(meta: Partial<SyncMeta>): Promise<void> {
   const db = await getDB();
   const existing = await getSyncMeta();
-  const record = { id: 'main', ...existing, ...meta };
-  await db.put('syncMeta', record as SyncMeta & { id: string });
+  const record: SyncMeta & { id: string } = { id: 'main', ...existing, ...meta };
+  await db.put('syncMeta', record);
 }

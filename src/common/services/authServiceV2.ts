@@ -1,12 +1,11 @@
-import { Capacitor } from '@capacitor/core';
 import { secureStorage } from '../../utils/secureStorage';
 import { STORAGE_KEYS } from '../../constants';
 import type { User } from '../../types';
 import { tokenManager } from '../../utils/tokenManager';
-
-const _isNative = Capacitor.isNativePlatform();
+import { ErrorFactory } from '../api/ApiResponse';
 
 const PBKDF2_ITERATIONS = 600000;
+const MIN_PASSWORD_LENGTH = 8;
 
 async function hashPassword(
   password: string, 
@@ -59,7 +58,13 @@ async function verifyPassword(
 }
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  const hex = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 interface StoredUser {
@@ -75,13 +80,17 @@ async function loadUsersFromStorage(): Promise<StoredUser[]> {
   try {
     const data = await secureStorage.getItem<StoredUser[]>(STORAGE_KEYS.USERS);
     return data ?? [];
-  } catch {
-    return [];
+  } catch (error) {
+    throw ErrorFactory.storage(`Failed to load users: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 async function saveUsersToStorage(users: StoredUser[]): Promise<void> {
-  await secureStorage.setItem(STORAGE_KEYS.USERS, users);
+  try {
+    await secureStorage.setItem(STORAGE_KEYS.USERS, users);
+  } catch (error) {
+    throw ErrorFactory.storage(`Failed to save users: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 export async function register(
@@ -91,12 +100,16 @@ export async function register(
 ): Promise<{ user: User; token: string; refreshToken?: string }> {
   const users = await loadUsersFromStorage();
   
-  if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-    throw new Error('邮箱已被注册');
+  const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (existingUser) {
+    throw ErrorFactory.conflict('邮箱已被注册', { email });
   }
   
-  if (password.length < 8) {
-    throw new Error('密码至少需要8个字符');
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw ErrorFactory.validation(`密码至少需要${MIN_PASSWORD_LENGTH}个字符`, { 
+      field: 'password',
+      minLength: MIN_PASSWORD_LENGTH 
+    });
   }
   
   const { hash: passwordHash, salt: passwordSalt } = await hashPassword(password);
@@ -139,12 +152,12 @@ export async function login(
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
   
   if (!user) {
-    throw new Error('邮箱或密码错误');
+    throw ErrorFactory.unauthorized('邮箱或密码错误');
   }
   
   const isValid = await verifyPassword(password, user.passwordHash, user.passwordSalt);
   if (!isValid) {
-    throw new Error('邮箱或密码错误');
+    throw ErrorFactory.unauthorized('邮箱或密码错误');
   }
   
   const userWithoutPassword: User = { 
@@ -171,8 +184,12 @@ export async function logout(): Promise<void> {
 }
 
 export async function getCurrentUserInfo(): Promise<User | null> {
-  const storedUser = await secureStorage.getItem<User>(STORAGE_KEYS.USER);
-  return storedUser;
+  try {
+    const storedUser = await secureStorage.getItem<User>(STORAGE_KEYS.USER);
+    return storedUser;
+  } catch {
+    return null;
+  }
 }
 
 export async function refreshAccessToken(): Promise<string | null> {
