@@ -3,7 +3,7 @@ import { getAllSyncQueue, getSyncQueueCount, removeSyncQueueItem, markAsSynced, 
 const MAX_RETRY_COUNT = 3;
 const RETRY_DELAYS = [1000, 2000, 5000];
 
-interface SyncQueueItem {
+export interface SyncQueueItem {
   id: string;
   entityType: string;
   entityId: string;
@@ -13,7 +13,7 @@ interface SyncQueueItem {
   retryCount: number;
 }
 
-interface SyncResult {
+export interface SyncResult {
   success: boolean;
   queueItemId: string;
   hasConflict?: boolean;
@@ -22,7 +22,7 @@ interface SyncResult {
   serverVersion?: number;
 }
 
-interface ConflictInfo {
+export interface ConflictInfo {
   entityType: string;
   entityId: string;
   localData: unknown;
@@ -30,7 +30,7 @@ interface ConflictInfo {
   queueItem: SyncQueueItem;
 }
 
-type SyncProgressCallback = (progress: {
+export type SyncProgressCallback = (progress: {
   total: number;
   completed: number;
   current: SyncQueueItem | null;

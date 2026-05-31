@@ -6,7 +6,7 @@ import {
   SyncResult
 } from '../../utils/syncQueue';
 import { resolveConflict as resolveConflictStorage } from '../../utils/offlineStorage';
-import type { SyncQueueItem } from '../../utils/offlineStorage';
+import type { SyncQueueItem } from '../../utils/syncQueue';
 
 interface SyncState {
   isOnline: boolean;

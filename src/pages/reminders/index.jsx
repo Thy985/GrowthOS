@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -191,7 +191,7 @@ const Reminders = () => {
         {/* 空状态 */}
         {reminders.length === 0 && !isLoading && (
           <div className="empty-state">
-            <p>暂无提醒，点击"添加提醒"按钮创建第一个提醒</p>
+            <p>暂无提醒，点击&ldquo;添加提醒&rdquo;按钮创建第一个提醒</p>
           </div>
         )}
 

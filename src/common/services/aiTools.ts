@@ -172,7 +172,7 @@ const analyzeProgressTool: ToolExecutor = {
         },
         treeSummary: {
           total: trees.length,
-          totalNodes: trees.reduce((sum, t) => sum + (t.children?.length || 0), 0)
+          totalNodes: trees.reduce((sum, t) => sum + (t.children || []).length, 0)
         }
       }
     };

@@ -34,7 +34,7 @@ const ConflictModal: React.FC<ConflictModalProps> = memo(({ conflict, onClose })
   const localData = conflict.localData || {};
   const serverData = conflict.serverData || {};
 
-  const getDisplayValue = (data, key) => {
+  const getDisplayValue = (data: Record<string, unknown>, key: string) => {
     const value = data[key];
     if (value === undefined || value === null) return '-';
     if (typeof value === 'object') return JSON.stringify(value);

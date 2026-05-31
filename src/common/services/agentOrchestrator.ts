@@ -190,12 +190,11 @@ export class AgentOrchestrator {
     const provider = createLLMProvider(this.config);
 
     try {
-      const sessionData = await this._withRetry(
+      let messages = await this._withRetry(
         () => aiStorage.getSessionMessages(sessionId),
         retryConfig,
         '获取会话消息'
       );
-      let messages = sessionData.messages;
       
       if (messages.length === 0) {
         messages = [{
@@ -281,7 +280,7 @@ export class AgentOrchestrator {
         () => executeTool('suggestNextStep'),
         { ...DEFAULT_RETRY_CONFIG, maxRetries: 1 },
         '获取建议'
-      );
+      ) as { success: boolean; data: Array<{ title: string; description: string; type: string }> };
       if (result.success && result.data.length > 0) {
         return result.data;
       }

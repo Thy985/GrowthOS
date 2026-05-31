@@ -9,9 +9,9 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-function getRecordFromStorage(): Record[] {
+async function getRecordFromStorage(): Promise<Record[]> {
   try {
-    const data = secureStorage.getItem<Record[]>(STORAGE_KEYS.RECORDS);
+    const data = await secureStorage.getItem<Record[]>(STORAGE_KEYS.RECORDS);
     return data ?? [];
   } catch (error) {
     console.error('Error reading records from storage:', error);
@@ -19,9 +19,9 @@ function getRecordFromStorage(): Record[] {
   }
 }
 
-function saveRecordsToStorage(records: Record[]): void {
+async function saveRecordsToStorage(records: Record[]): Promise<void> {
   try {
-    secureStorage.setItem(STORAGE_KEYS.RECORDS, records);
+    await secureStorage.setItem(STORAGE_KEYS.RECORDS, records);
   } catch (error) {
     console.error('Error saving records to storage:', error);
     throw new Error('保存记录失败');
@@ -36,7 +36,7 @@ export async function getRecords(): Promise<Record[]> {
 }
 
 export async function getRecordById(id: string): Promise<Record | null> {
-  const records = getRecordFromStorage();
+  const records = await getRecordFromStorage();
   return records.find(r => r.id === id) || null;
 }
 
@@ -48,7 +48,7 @@ export async function createRecord(data: {
   learning?: string;
   tags?: string[];
 }): Promise<Record> {
-  const records = getRecordFromStorage();
+  const records = await getRecordFromStorage();
   
   const extractTags = (text: string): string[] => {
     const tagRegex = /#([^\s]+)/g;
@@ -72,13 +72,13 @@ export async function createRecord(data: {
   };
   
   records.unshift(newRecord);
-  saveRecordsToStorage(records);
+  await saveRecordsToStorage(records);
   
   return newRecord;
 }
 
 export async function updateRecord(id: string, updates: Partial<Record>): Promise<Record> {
-  const records = getRecordFromStorage();
+  const records = await getRecordFromStorage();
   const index = records.findIndex(r => r.id === id);
   
   if (index === -1) {
@@ -94,30 +94,30 @@ export async function updateRecord(id: string, updates: Partial<Record>): Promis
   };
   
   records[index] = updatedRecord;
-  saveRecordsToStorage(records);
+  await saveRecordsToStorage(records);
   
   return updatedRecord;
 }
 
 export async function deleteRecord(id: string): Promise<void> {
-  const records = getRecordFromStorage();
+  const records = await getRecordFromStorage();
   const filteredRecords = records.filter(r => r.id !== id);
   
   if (filteredRecords.length === records.length) {
     throw new Error('记录不存在');
   }
   
-  saveRecordsToStorage(filteredRecords);
+  await saveRecordsToStorage(filteredRecords);
 }
 
 export async function getTags(): Promise<string[]> {
-  const records = getRecordFromStorage();
+  const records = await getRecordFromStorage();
   const allTags = records.flatMap(r => r.tags || []);
   return [...new Set(allTags)];
 }
 
 export async function searchRecords(query: string): Promise<Record[]> {
-  const records = getRecordFromStorage();
+  const records = await getRecordFromStorage();
   const lowerQuery = query.toLowerCase();
   
   return records.filter(r => {

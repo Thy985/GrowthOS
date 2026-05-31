@@ -19,7 +19,7 @@ export interface SyncedEntity<T> extends BaseEntity {
 export interface SyncQueueItem {
   id: string;
   operation: 'create' | 'update' | 'delete';
-  entityType: 'record' | 'goal' | 'reminder' | 'treeNode';
+  entityType: 'record' | 'goal' | 'reminder' | 'tree' | 'treeNode';
   entityId: string;
   payload: unknown;
   timestamp: string;
@@ -98,15 +98,11 @@ export async function initOfflineDB(): Promise<IDBPDatabase<GrowthOSDB>> {
   dbInstance = await openDB<GrowthOSDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
       const createStore = (
-        name: 'records' | 'goals' | 'reminders' | 'growthTrees' | 'treeNodes',
-        indexConfig?: { name: string; keyPath: string; options?: IDBIndexParameters }
+        name: 'records' | 'goals' | 'reminders' | 'growthTrees' | 'treeNodes'
       ) => {
         const store = db.createObjectStore(name, { keyPath: 'id' });
         store.createIndex('by-status', 'syncStatus');
         store.createIndex('by-updated', 'updatedAt');
-        if (indexConfig) {
-          store.createIndex(indexConfig.name, indexConfig.keyPath, indexConfig.options);
-        }
       };
 
       createStore('records');
@@ -160,7 +156,11 @@ async function addToSyncQueue(
   const item: SyncQueueItem = {
     id: generateId(),
     operation,
-    entityType: entityType.replace('growthTrees', 'tree') as SyncQueueItem['entityType'],
+    entityType: entityType === 'records' ? 'record'
+      : entityType === 'goals' ? 'goal'
+      : entityType === 'reminders' ? 'reminder'
+      : entityType === 'growthTrees' ? 'tree'
+      : 'treeNode',
     entityId,
     payload,
     timestamp: new Date().toISOString(),
@@ -206,7 +206,7 @@ export async function updateEntity<T extends BaseEntity>(
 
   const updated: SyncedEntity<T> = {
     ...existing,
-    data: { ...existing.data, ...updates } as T,
+    data: { ...existing.data, ...updates } as unknown as T,
     syncStatus: 'pending',
     localVersion: existing.localVersion + 1,
     updatedAt: new Date().toISOString()
@@ -355,5 +355,6 @@ export async function getSyncMeta(): Promise<SyncMeta> {
 export async function updateSyncMeta(meta: Partial<SyncMeta>): Promise<void> {
   const db = await getDB();
   const existing = await getSyncMeta();
-  await db.put('syncQueue', { id: 'main', ...existing, ...meta } as unknown as SyncMeta);
+  const record = { id: 'main', ...existing, ...meta };
+  await db.put('syncMeta', record as SyncMeta & { id: string });
 }

@@ -4,7 +4,8 @@ import { addRecord } from '../../store/slices/growthSlice';
 import { calculateStreak } from '../../utils/recordUtils';
 import { GROWTH_BENCHMARKS, STREAK_MILESTONES, ACTIVE_WEEK, MOOD_OPTIONS } from '../../constants';
 import { useI18n } from '../../i18n/useI18n';
-import type { GrowthRecord, Mood, RootState, AppDispatch } from '../../types';
+import type { GrowthRecord, Mood, RootState } from '../../types';
+import type { AppDispatch } from '../../store';
 
 // Mood type for consistent mood handling across the app
 export type MoodValue = 'great' | 'okay' | 'not_good' | '很好' | '一般' | '不太好';
@@ -146,11 +147,11 @@ const Dashboard = () => {
     mood: 'okay' as Mood,
     reflection: ''
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const dispatch = useDispatch();
-  const { records, isLoading, error } = useSelector(state => state.growth);
+  const dispatch = useDispatch<AppDispatch>();
+  const { records, isLoading, error } = useSelector((state: RootState) => state.growth);
   const feedbackRef = useRef<HTMLDivElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
 
@@ -177,7 +178,7 @@ const Dashboard = () => {
       ...prev,
       [name]: value
     }));
-    if (errors[name as keyof typeof errors]) {
+    if (errors[name]) {
       setErrors(prev => ({
         ...prev,
         [name]: ''
@@ -256,24 +257,26 @@ const Dashboard = () => {
       
       // 显示反馈动画
       if (feedbackRef.current) {
-        feedbackRef.current.style.opacity = '0';
-        feedbackRef.current.style.animation = 'none';
-        void feedbackRef.current.offsetWidth;
-        feedbackRef.current.style.animation = 'popIn 0.3s ease';
-        feedbackRef.current.style.opacity = '1';
+        const element = feedbackRef.current;
+        element.style.opacity = '0';
+        element.style.animation = 'none';
+        void element.offsetWidth;
+        element.style.animation = 'popIn 0.3s ease';
+        element.style.opacity = '1';
         setTimeout(() => {
-          feedbackRef.current.style.opacity = '0';
-          feedbackRef.current.style.animation = 'none';
+          element.style.opacity = '0';
+          element.style.animation = 'none';
         }, 1000);
       }
       
       // 显示成长树动画
       if (treeRef.current) {
-        treeRef.current.style.animation = 'none';
-        void treeRef.current.offsetWidth;
-        treeRef.current.style.animation = 'tree-shake 0.5s ease-in-out';
+        const tree = treeRef.current;
+        tree.style.animation = 'none';
+        void tree.offsetWidth;
+        tree.style.animation = 'tree-shake 0.5s ease-in-out';
         setTimeout(() => {
-          treeRef.current.style.animation = 'none';
+          tree.style.animation = 'none';
         }, 500);
       }
       
@@ -281,7 +284,7 @@ const Dashboard = () => {
       setFormData({
         activity: '',
         learning: '',
-        mood: '很好',
+        mood: 'great',
         reflection: ''
       });
     } catch (err) {
@@ -423,7 +426,7 @@ const Dashboard = () => {
                   <textarea 
                     name="reflection"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    rows="2" 
+                    rows={2} 
                     placeholder={t('dashboard.reflectionPlaceholder')}
                     value={formData.reflection}
                     onChange={handleChange}
@@ -464,7 +467,7 @@ const Dashboard = () => {
                 {recentActivities.map((activity, index) => (
                   <div key={activity.id || index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                     <div className="flex-shrink-0">
-                      {activity.mood === '很好' ? '😊' : activity.mood === '一般' ? '😐' : '😔'}
+                      {activity.mood === 'great' ? '😊' : activity.mood === 'okay' ? '😐' : '😔'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800 truncate">{activity.text}</p>
@@ -527,11 +530,11 @@ const Dashboard = () => {
               <div className="space-y-3">
                 {Object.entries(stats.moodStats).map(([mood, count]) => {
                   const percent = Math.round((count / stats.totalRecords) * 100);
-                  const colorClass = mood === '很好' ? 'bg-green-500' 
-                    : mood === '一般' ? 'bg-yellow-500' 
+                  const colorClass = mood === 'great' ? 'bg-green-500' 
+                    : mood === 'okay' ? 'bg-yellow-500' 
                     : 'bg-red-500';
-                  const emoji = mood === '很好' ? '😊' 
-                    : mood === '一般' ? '😐' 
+                  const emoji = mood === 'great' ? '😊' 
+                    : mood === 'okay' ? '😐' 
                     : '😔';
                   
                   return (

@@ -9,7 +9,9 @@ import { loadReminders } from './store/slices/reminderSlice';
 import { loadAIConfig } from './store/slices/aiSlice';
 import { loadSyncStatus } from './store/slices/syncSlice';
 import { RootState } from './types';
+// @ts-ignore - JS modules pending TS migration
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
+// @ts-ignore - JS modules pending TS migration
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import { ChatWidget } from './components/ai/ChatWidget';
@@ -22,14 +24,20 @@ import { useI18n } from './i18n/useI18n';
 
 // Lazy load components
 const Dashboard = lazy(() => import('./pages/dashboard'));
+// @ts-ignore - JS modules pending TS migration
 const GrowthTree = lazy(() => import('./pages/growth-tree'));
+// @ts-ignore - JS modules pending TS migration
 const Analytics = lazy(() => import('./pages/analytics'));
 const RecordList = lazy(() => import('./pages/records'));
+// @ts-ignore - JS modules pending TS migration
 const Goals = lazy(() => import('./pages/goals'));
+// @ts-ignore - JS modules pending TS migration
 const Reminders = lazy(() => import('./pages/reminders'));
+// @ts-ignore - JS modules pending TS migration
 const Tutorial = lazy(() => import('./components/Tutorial'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
+// @ts-ignore - JS modules pending TS migration
 const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'));
 const AISettingsPage = lazy(() => import('./pages/ai/AISettingsPage'));
 

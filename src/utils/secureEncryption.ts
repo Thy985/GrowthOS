@@ -11,7 +11,7 @@ const ITERATIONS = 100000;
 
 export class SecureEncryption {
   private _derivedKey: CryptoKey | null = null;
-  private _salt: ArrayBuffer | null = null;
+  private _salt: Uint8Array | null = null;
 
   constructor() {}
 
@@ -27,7 +27,7 @@ export class SecureEncryption {
 
     const keyMaterial = await crypto.subtle.importKey(
       'raw',
-      passwordBuffer as unknown as BufferSource,
+      passwordBuffer,
       'PBKDF2',
       false,
       ['deriveKey']
@@ -36,7 +36,7 @@ export class SecureEncryption {
     return crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: salt as unknown as BufferSource,
+        salt: salt as Uint8Array<ArrayBuffer>,
         iterations: ITERATIONS,
         hash: 'SHA-256'
       },
@@ -54,17 +54,16 @@ export class SecureEncryption {
   async initialize(deviceId: string): Promise<void> {
     let saltBase64 = localStorage.getItem('_encryption_salt');
     
-    let salt: ArrayBuffer;
+    let salt: Uint8Array;
     if (saltBase64) {
-      salt = this._base64ToArrayBuffer(saltBase64);
+      salt = new Uint8Array(this._base64ToArrayBuffer(saltBase64));
     } else {
-      salt = crypto.getRandomValues(new Uint8Array(16)).buffer as ArrayBuffer;
+      salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
       saltBase64 = this._arrayBufferToBase64(salt);
       localStorage.setItem('_encryption_salt', saltBase64);
     }
     
-    this._salt = this._base64ToArrayBuffer(saltBase64);
-    // @ts-ignore - 参数类型不匹配但实际可用
+    this._salt = new Uint8Array(this._base64ToArrayBuffer(saltBase64));
     this._derivedKey = await this._deriveKey(deviceId, this._salt);
   }
 
@@ -97,7 +96,7 @@ export class SecureEncryption {
       // 组合 IV + 密文
       const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
       combined.set(iv, 0);
-      combined.set(new Uint8Array(encryptedBuffer as Uint8Array), iv.length);
+      combined.set(new Uint8Array(encryptedBuffer), iv.length);
 
       // 返回 Base64 编码
       return this._arrayBufferToBase64(combined);

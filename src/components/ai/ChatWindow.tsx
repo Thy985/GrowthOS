@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import type { RootState, AppDispatch, ChatMessage } from '../../types';
+import type { RootState, ChatMessage } from '../../types';
+import type { AppDispatch } from '../../store';
 import { loadAIConfig, sendMessage, createSession, loadSessionMessages, clearStreaming } from '../../store/slices/aiSlice';
 import * as aiStorage from '../../common/services/aiStorageService';
 
@@ -47,8 +48,8 @@ export const ChatWindow: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   const loadMessages = useCallback(async () => {
     if (currentSession) {
-      const sessionData = await aiStorage.getSessionMessages(currentSession.id);
-      setMessages(sessionData.messages);
+      const messages = await aiStorage.getSessionMessages(currentSession.id);
+      setMessages(messages);
     }
   }, [currentSession]);
 

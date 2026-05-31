@@ -9,9 +9,9 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-function getReminderFromStorage(): Reminder[] {
+async function getReminderFromStorage(): Promise<Reminder[]> {
   try {
-    const data = secureStorage.getItem<Reminder[]>(STORAGE_KEYS.REMINDERS);
+    const data = await secureStorage.getItem<Reminder[]>(STORAGE_KEYS.REMINDERS);
     return data ?? [];
   } catch (error) {
     console.error('Error reading reminders from storage:', error);
@@ -19,9 +19,9 @@ function getReminderFromStorage(): Reminder[] {
   }
 }
 
-function saveRemindersToStorage(reminders: Reminder[]): void {
+async function saveRemindersToStorage(reminders: Reminder[]): Promise<void> {
   try {
-    secureStorage.setItem(STORAGE_KEYS.REMINDERS, reminders);
+    await secureStorage.setItem(STORAGE_KEYS.REMINDERS, reminders);
   } catch (error) {
     console.error('Error saving reminders to storage:', error);
     throw new Error('保存提醒失败');
@@ -36,12 +36,12 @@ export async function getReminders(): Promise<Reminder[]> {
 }
 
 export async function getReminderById(id: string): Promise<Reminder | null> {
-  const reminders = getReminderFromStorage();
+  const reminders = await getReminderFromStorage();
   return reminders.find(r => r.id === id) || null;
 }
 
 export async function createReminder(data: CreateReminderDTO): Promise<Reminder> {
-  const reminders = getReminderFromStorage();
+  const reminders = await getReminderFromStorage();
   
   const newReminder: Reminder = {
     id: generateId(),
@@ -56,13 +56,13 @@ export async function createReminder(data: CreateReminderDTO): Promise<Reminder>
   };
   
   reminders.push(newReminder);
-  saveRemindersToStorage(reminders);
+  await saveRemindersToStorage(reminders);
   
   return newReminder;
 }
 
 export async function updateReminder(id: string, updates: UpdateReminderDTO): Promise<Reminder> {
-  const reminders = getReminderFromStorage();
+  const reminders = await getReminderFromStorage();
   const index = reminders.findIndex(r => r.id === id);
   
   if (index === -1) {
@@ -78,20 +78,20 @@ export async function updateReminder(id: string, updates: UpdateReminderDTO): Pr
   };
   
   reminders[index] = updatedReminder;
-  saveRemindersToStorage(reminders);
+  await saveRemindersToStorage(reminders);
   
   return updatedReminder;
 }
 
 export async function deleteReminder(id: string): Promise<void> {
-  const reminders = getReminderFromStorage();
+  const reminders = await getReminderFromStorage();
   const filteredReminders = reminders.filter(r => r.id !== id);
   
   if (filteredReminders.length === reminders.length) {
     throw new Error('提醒不存在');
   }
   
-  saveRemindersToStorage(filteredReminders);
+  await saveRemindersToStorage(filteredReminders);
 }
 
 export async function completeReminder(id: string): Promise<Reminder> {
@@ -99,7 +99,7 @@ export async function completeReminder(id: string): Promise<Reminder> {
 }
 
 export async function getUpcomingReminders(): Promise<Reminder[]> {
-  const reminders = getReminderFromStorage();
+  const reminders = await getReminderFromStorage();
   const now = new Date();
   
   return reminders

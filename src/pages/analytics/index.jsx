@@ -920,11 +920,11 @@ const Analytics = () => {
             </div>
             <div className="bg-gray-50 p-4 rounded">
               <h3 className="font-medium mb-2">隐性模式识别</h3>
-              <p>分析显示，你的'放弃'通常发生在项目开始后的第 3 周（热情消退期），建议此时设置强制提醒。</p>
+              <p>分析显示，你的&apos;放弃&apos;通常发生在项目开始后的第 3 周（热情消退期），建议此时设置强制提醒。</p>
             </div>
             <div className="bg-gray-50 p-4 rounded">
               <h3 className="font-medium mb-2">性格/价值观动态画像</h3>
-              <p>本月你 80% 的记录都与'帮助他人'有关，你的核心价值观正从'成就导向'向'利他导向'偏移。</p>
+              <p>本月你 80% 的记录都与&apos;帮助他人&apos;有关，你的核心价值观正从&apos;成就导向&apos;向&apos;利他导向&apos;偏移。</p>
             </div>
           </div>
         </div>
@@ -933,11 +933,11 @@ const Analytics = () => {
           <div className="space-y-4">
             <div className="bg-gray-50 p-4 rounded">
               <h3 className="font-medium mb-2">动态策略调整</h3>
-              <p>你本周'深度学习'节点的进度滞后，但'会议'记录过多。建议下周开启'勿扰模式'，每天预留 2 小时深度工作。</p>
+              <p>你本周&apos;深度学习&apos;节点的进度滞后，但&apos;会议&apos;记录过多。建议下周开启&apos;勿扰模式&apos;，每天预留 2 小时深度工作。</p>
             </div>
             <div className="bg-gray-50 p-4 rounded">
               <h3 className="font-medium mb-2">成长树养护建议</h3>
-              <p>你的'编程'技能树已经很久没生长了，要不要回顾一下上个月的笔记？</p>
+              <p>你的&apos;编程&apos;技能树已经很久没生长了，要不要回顾一下上个月的笔记？</p>
             </div>
           </div>
         </div>

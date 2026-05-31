@@ -22,7 +22,7 @@ async function initDatabase() {
   if (isNative) {
     try {
       const { CapacitorSQLite } = await import('@capacitor-community/sqlite');
-      const sqlite = CapacitorSQLite as CapacitorSQLiteInterface;
+      const sqlite = CapacitorSQLite as unknown as CapacitorSQLiteInterface;
       
       // 创建数据库
       await sqlite.createConnection({

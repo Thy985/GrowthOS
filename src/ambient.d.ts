@@ -50,3 +50,8 @@ declare module './components/KeyboardShortcutsHelp' {
   const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps>;
   export default KeyboardShortcutsHelp;
 }
+
+declare module './i18n' {
+  const i18n: Record<string, unknown>;
+  export default i18n;
+}

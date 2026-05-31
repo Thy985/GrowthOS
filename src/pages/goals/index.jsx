@@ -359,7 +359,7 @@ const Goals = () => {
             <div className="loading">加载中...</div>
           ) : goals.length === 0 ? (
             <div className="empty-state">
-              <p>还没有设置目标，点击"添加目标"按钮开始设置吧！</p>
+              <p>还没有设置目标，点击&ldquo;添加目标&rdquo;按钮开始设置吧！</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
