@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import type { AIState, LLMConfig, ChatSession, ChatMessage } from '../../types';
-import { DEFAULT_LLM_CONFIGS } from '../../constants';
 import * as aiStorage from '../../common/services/aiStorageService';
 import { getAgent } from '../../common/services/agentOrchestrator';
 import { sanitizeUserInput, sanitizeAIOutput } from '../../utils/xssSanitizer';

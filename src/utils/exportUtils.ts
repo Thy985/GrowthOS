@@ -176,11 +176,12 @@ export const generateExportData = (
       break;
       
     case 'json':
-    default:
+    default: {
       const jsonData = generateJSON(filteredRecords, data.tags, data.trees, data.goals, options.dataTypes);
       blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
       fileName += '.json';
       break;
+    }
   }
   
   return { fileName, blob };

@@ -48,9 +48,11 @@ export class OpenAIProvider extends BaseLLMProvider {
       let fullText = '';
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        let done = false;
+        while (!done) {
+          const { done: readerDone, value } = await reader.read();
+          done = readerDone;
+          if (readerDone) break;
           
           const chunk = decoder.decode(value);
           const lines = chunk.split('\n');
@@ -120,11 +122,13 @@ export class AnthropicProvider extends BaseLLMProvider {
       let fullText = '';
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
+        let done = false;
+        while (!done) {
+          const result = await reader.read();
+          done = result.done;
           if (done) break;
           
-          const chunk = decoder.decode(value);
+          const chunk = decoder.decode(result.value);
           const lines = chunk.split('\n');
           
           for (const line of lines) {
@@ -189,11 +193,13 @@ export class DeepSeekProvider extends BaseLLMProvider {
       let fullText = '';
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
+        let done = false;
+        while (!done) {
+          const result = await reader.read();
+          done = result.done;
           if (done) break;
           
-          const chunk = decoder.decode(value);
+          const chunk = decoder.decode(result.value);
           const lines = chunk.split('\n');
           
           for (const line of lines) {

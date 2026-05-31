@@ -31,7 +31,6 @@ import {
   Copy,
   Download,
   Upload,
-  RefreshCw,
   ExternalLink,
   Link,
   Clock,
@@ -245,13 +244,6 @@ import {
   Wind,
   Droplets,
   Thermometer,
-  Sun as SunIcon,
-  Moon as MoonIcon,
-  Cloud as CloudIcon,
-  Flame as FireIcon,
-  TrendingUp as TrendUpIcon,
-  Star as StarIcon,
-  FileText,
 } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import type { FC } from 'react';

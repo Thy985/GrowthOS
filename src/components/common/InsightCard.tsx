@@ -11,7 +11,6 @@ import {
   Heart
 } from 'lucide-react';
 import type { Insight } from '../../common/services/insightsService';
-import Card from './Card';
 
 interface InsightCardProps {
   insight: Insight;

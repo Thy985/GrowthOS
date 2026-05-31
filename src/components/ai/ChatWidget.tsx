@@ -7,8 +7,7 @@ import type { RootState } from '../../types';
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { config } = useSelector((state: RootState) => state.ai);
-  const [hasNotifications, setHasNotifications] = useState(false);
+  useSelector((state: RootState) => state.ai);
 
   return (
     <>

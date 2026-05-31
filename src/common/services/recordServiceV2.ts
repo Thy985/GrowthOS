@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { secureStorage } from '../../utils/secureStorage';
 import { STORAGE_KEYS } from '../../constants';
-import type { Record } from '../../types';
+import type { GrowthRecord as Record } from '../../types';
 
 const isNative = Capacitor.isNativePlatform();
 

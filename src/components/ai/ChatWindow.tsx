@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import type { RootState, ChatMessage } from '../../types';
 import type { AppDispatch } from '../../store';
-import { loadAIConfig, sendMessage, createSession, loadSessionMessages, clearStreaming } from '../../store/slices/aiSlice';
+import { loadAIConfig, sendMessage, clearStreaming } from '../../store/slices/aiSlice';
 import * as aiStorage from '../../common/services/aiStorageService';
 
 interface MessageBubbleProps {

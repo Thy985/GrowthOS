@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom';
 
-global.TextEncoder = class TextEncoder {
+declare const global: typeof globalThis;
+
+(global as typeof globalThis).TextEncoder = class TextEncoder {
   encode(input: string): Uint8Array {
     const bytes: number[] = [];
     for (let i = 0; i < input.length; i++) {
@@ -8,16 +10,16 @@ global.TextEncoder = class TextEncoder {
     }
     return new Uint8Array(bytes);
   }
-};
+} as unknown as typeof TextEncoder;
 
-global.TextDecoder = class TextDecoder {
+(global as typeof globalThis).TextDecoder = class TextDecoder {
   decode(data: BufferSource | null): string {
     if (data instanceof Uint8Array) {
       return String.fromCharCode.apply(null, Array.from(data));
     }
     return '';
   }
-};
+} as unknown as typeof TextDecoder;
 
 Object.defineProperty(global, 'crypto', {
   value: {
@@ -36,8 +38,8 @@ Object.defineProperty(global, 'crypto', {
       digest: async () => new ArrayBuffer(0),
     },
     webcrypto: {
-      getRandomValues: global.crypto.getRandomValues,
-      subtle: global.crypto.subtle,
+      getRandomValues: (global as typeof globalThis).crypto.getRandomValues,
+      subtle: (global as typeof globalThis).crypto.subtle,
     },
   },
   writable: true,
@@ -60,12 +62,8 @@ const originalAtob = (str: string): string => {
   return String.fromCharCode.apply(null, bytes);
 };
 
-if (typeof global.btoa !== 'function') {
-  (global as any).btoa = originalBtoa;
-}
-if (typeof global.atob !== 'function') {
-  (global as any).atob = originalAtob;
-}
+(global as Record<string, unknown>).btoa = originalBtoa;
+(global as Record<string, unknown>).atob = originalAtob;
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),

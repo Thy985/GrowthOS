@@ -1,17 +1,11 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  TrendingUp,
-  TrendingDown,
-  Award,
-  Target,
   Lightbulb,
   ChevronLeft,
   ChevronRight,
-  Calendar,
   MessageSquare,
   BookOpen,
-  Clock,
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
@@ -34,7 +28,7 @@ const WeeklyReport: React.FC<WeeklyReportProps> = memo(({
   onExport,
   isCurrentWeek = true
 }) => {
-  const { t } = useI18n();
+  useI18n();
 
   const getMoodEmoji = (mood: string): string => {
     const moodMap: Record<string, string> = {
@@ -44,16 +38,6 @@ const WeeklyReport: React.FC<WeeklyReportProps> = memo(({
       'none': '❓'
     };
     return moodMap[mood] || '❓';
-  };
-
-  const getMoodLabel = (mood: string): string => {
-    const moodMap: Record<string, string> = {
-      'great': '很好',
-      'okay': '一般',
-      'not_good': '不太好',
-      'none': '无记录'
-    };
-    return moodMap[mood] || '未知';
   };
 
   const getMoodColor = (mood: string): string => {
@@ -200,7 +184,7 @@ const WeeklyReport: React.FC<WeeklyReportProps> = memo(({
       >
         <Card title="每日详情 📅">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {report.dailyBreakdown.map((day, index) => (
+            {report.dailyBreakdown.map((day, _index) => (
               <div
                 key={day.date}
                 className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"

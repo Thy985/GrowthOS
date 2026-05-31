@@ -1,5 +1,5 @@
-import React, { lazy, Suspense, useEffect, useCallback, useMemo, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from './store';
 import { loadData } from './store/slices/growthSlice';
@@ -9,7 +9,6 @@ import { loadReminders } from './store/slices/reminderSlice';
 import { loadAIConfig } from './store/slices/aiSlice';
 import { loadSyncStatus } from './store/slices/syncSlice';
 import { initOfflineDB } from './utils/offlineStorage';
-import { useI18n } from './i18n/useI18n';
 import { performanceMonitor } from './utils/performanceMonitor';
 import useKeyboardShortcuts, { KeyboardShortcutsShortcut } from './hooks/useKeyboardShortcuts';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -18,7 +17,6 @@ import { ChatWidget } from './components/ai/ChatWidget';
 import { ToastProvider } from './components/Toast';
 import OfflineIndicator from './components/OfflineIndicator';
 import SyncPanel from './components/SyncPanel';
-import ConflictModal from './components/ConflictModal';
 
 const Dashboard = lazy(() => import('./pages/dashboard'));
 const GrowthTree = lazy(() => import('./pages/growth-tree'));
@@ -62,10 +60,8 @@ interface AppLayoutProps {
 }
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const sync = useSelector((state: RootState) => state.sync);
+  const _sync = useSelector((state: RootState) => state.sync);
   const [syncPanelOpen, setSyncPanelOpen] = useState(false);
-  const [conflictModalOpen, setConflictModalOpen] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   const shortcuts = useMemo<KeyboardShortcutsShortcut[]>(() => [
@@ -85,12 +81,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   useKeyboardShortcuts(shortcuts);
 
-  useEffect(() => {
-    if (sync.conflicts.length > 0) {
-      setConflictModalOpen(true);
-    }
-  }, [sync.conflicts.length]);
-
   return (
     <div className="app">
       <Navbar />
@@ -106,7 +96,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <ChatWidget />
             <OfflineIndicator />
             <SyncPanel isOpen={syncPanelOpen} onClose={() => setSyncPanelOpen(false)} />
-            <ConflictModal conflict={null} onClose={() => setConflictModalOpen(false)} />
           </Suspense>
         </ErrorBoundary>
       </main>

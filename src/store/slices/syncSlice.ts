@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import {
   checkPendingSync,
   triggerSync,
-  ConflictInfo,
-  SyncResult
+  ConflictInfo
 } from '../../utils/syncQueue';
 import { resolveConflict as resolveConflictStorage } from '../../utils/offlineStorage';
 import type { SyncQueueItem } from '../../utils/syncQueue';
 
-interface SyncState {
+export interface SyncState {
+  isLoading: boolean;
   isOnline: boolean;
   isSyncing: boolean;
   pendingCount: number;
@@ -24,6 +24,7 @@ interface SyncState {
 }
 
 const initialState: SyncState = {
+  isLoading: false,
   isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
   isSyncing: false,
   pendingCount: 0,
@@ -79,7 +80,7 @@ export const resolveConflict = createAsyncThunk(
     };
 
     const store = storeMap[entityType] || 'records';
-    // @ts-ignore - resolveConflictStorage 类型签名不匹配
+    // @ts-expect-error - resolveConflictStorage 类型签名不匹配
     await resolveConflictStorage(store, entityId, resolution, mergedData);
     dispatch(loadSyncStatus());
 
@@ -93,6 +94,19 @@ const syncSlice = createSlice({
   reducers: {
     setOnlineStatus: (state, action: PayloadAction<boolean>) => {
       state.isOnline = action.payload;
+    },
+    setSyncing: (state, action: PayloadAction<boolean>) => {
+      state.isSyncing = action.payload;
+    },
+    setSyncProgress: (state, action: PayloadAction<{
+      total: number;
+      completed: number;
+      current: SyncQueueItem | null;
+    }>) => {
+      state.syncProgress = action.payload;
+    },
+    setSyncError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
     },
     clearSyncError: (state) => {
       state.error = null;
@@ -111,13 +125,16 @@ const syncSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loadSyncStatus.pending, (state) => {
+        state.isLoading = true;
         state.error = null;
       })
       .addCase(loadSyncStatus.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.pendingCount = action.payload.count;
         state.queue = action.payload.queue;
       })
       .addCase(loadSyncStatus.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.error.message || '加载同步状态失败';
       })
       .addCase(performSync.pending, (state) => {
@@ -142,6 +159,9 @@ const syncSlice = createSlice({
 
 export const {
   setOnlineStatus,
+  setSyncing,
+  setSyncProgress,
+  setSyncError,
   clearSyncError,
   updateProgress,
   removeConflict

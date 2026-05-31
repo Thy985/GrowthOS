@@ -168,7 +168,7 @@ export function sanitizeUrl(url: string): string {
 
 export function sanitizeFilename(filename: string): string {
   return filename
-    .replace(/[^a-zA-Z0-9_\-\.\s\u4e00-\u9fa5]/g, '')
+    .replace(/[^a-zA-Z0-9_.\-\s\u4e00-\u9fa5]/g, '')
     .replace(/\.\./g, '')
     .replace(/^\.+/, '')
     .substring(0, 255);

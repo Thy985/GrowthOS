@@ -1,5 +1,5 @@
 import { useTranslation as useI18nTranslation } from 'react-i18next';
-// @ts-ignore - i18n instance type declaration
+// @ts-expect-error - i18n instance type declaration
 import i18nInstance from './index';
 
 /**

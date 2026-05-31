@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useRef, useEffect, useState, useCallback } from 'react';
-import type { LLMConfig, ChatMessage, ChatSession } from '../../types';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import type { LLMConfig, ChatSession } from '../../types';
 import { AI_SYSTEM_PROMPT } from '../../constants';
 import { createLLMProvider } from './llmProvider';
 import * as aiStorage from './aiStorageService';
@@ -46,6 +46,8 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
 };
 
 const DEFAULT_TIMEOUT = 60000;
+
+let agentInstance: AgentOrchestrator | null = null;
 
 export class AgentOrchestrator {
   private config: LLMConfig | null = null;
@@ -104,7 +106,7 @@ export class AgentOrchestrator {
   }
 
   async getOrCreateSession(): Promise<ChatSession> {
-    let sessions = await aiStorage.getSessions();
+    const sessions = await aiStorage.getSessions();
     if (sessions.length > 0) {
       return sessions[0];
     }
@@ -307,7 +309,6 @@ interface AgentProviderProps {
 }
 
 export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
-  const agentRef = useRef<AgentOrchestrator | null>(null);
   const [status, setStatus] = useState<AgentStatus>({
     state: AgentState.IDLE,
     lastUpdate: new Date().toISOString(),
@@ -316,15 +317,14 @@ export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!agentRef.current) {
-      agentRef.current = new AgentOrchestrator();
+    if (!agentInstance) {
+      agentInstance = new AgentOrchestrator();
     }
-    const agent = agentRef.current;
 
     const initAgent = async () => {
       try {
-        await agent.loadConfig();
-        setStatus(agent.status);
+        await agentInstance!.loadConfig();
+        setStatus(agentInstance!.status);
       } catch (err) {
         setError(err instanceof Error ? err.message : '初始化失败');
       }
@@ -333,12 +333,12 @@ export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
     initAgent();
 
     return () => {
-      agent.cancel();
+      agentInstance?.cancel();
     };
   }, []);
 
   const value: AgentContextValue = {
-    agent: agentRef.current!,
+    agent: agentInstance!,
     status,
     isReady: status.isReady,
     isLoading: status.state === AgentState.INITIALIZING,
@@ -361,19 +361,15 @@ export const useAgent = (): AgentContextValue => {
 };
 
 export const getAgent = (): AgentOrchestrator => {
-  const context = useContext(AgentContext);
-  if (context) {
-    return context.agent;
+  if (!agentInstance) {
+    agentInstance = new AgentOrchestrator();
   }
-  if (!agentRef.current) {
-    agentRef.current = new AgentOrchestrator();
-  }
-  return agentRef.current;
+  return agentInstance;
 };
 
 export const resetAgent = (): void => {
-  if (agentRef.current) {
-    agentRef.current.cancel();
+  if (agentInstance) {
+    agentInstance.cancel();
   }
-  agentRef.current = null;
+  agentInstance = null;
 };

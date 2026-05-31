@@ -12,11 +12,6 @@ interface NodeFormData {
   description: string;
 }
 
-interface TreeNodeData {
-  label: string;
-  description: string;
-}
-
 const GrowthTree = () => {
   const { records, tags } = useSelector((state: RootState) => state.growth);
   

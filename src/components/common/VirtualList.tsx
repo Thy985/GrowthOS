@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, CSSProperties } from 'react';
+import React, { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader, MessageSquare } from 'lucide-react';
 
@@ -15,12 +15,6 @@ interface VirtualListProps<T> {
   width?: string | number;
 }
 
-interface RowData<T> {
-  items: T[];
-  renderItem: (item: T, index: number) => React.ReactNode;
-  keyExtractor: (item: T) => string;
-}
-
 function VirtualListInner<T>({
   items,
   height,
@@ -32,11 +26,6 @@ function VirtualListInner<T>({
   className = '',
   width = '100%'
 }: VirtualListProps<T>) {
-  const rowData = useMemo((): RowData<T> => ({
-    items,
-    renderItem,
-    keyExtractor
-  }), [items, renderItem, keyExtractor]);
 
   if (loading) {
     return (

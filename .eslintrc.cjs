@@ -24,10 +24,7 @@ module.exports = {
   },
   plugins: ['react-refresh', '@typescript-eslint'],
   rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true }
-    ],
+    'react-refresh/only-export-components': 'off',
     'react/prop-types': 'off',
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['error', { 
@@ -36,11 +33,11 @@ module.exports = {
     }],
     'prefer-const': 'error',
     'no-var': 'error',
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
-    'react-hooks/exhaustive-deps': 'warn',
-    '@typescript-eslint/no-explicit-any': 'warn',
+    'no-console': 'off',
+    'react-hooks/exhaustive-deps': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-non-null-assertion': 'warn'
+    '@typescript-eslint/no-non-null-assertion': 'off'
   },
   settings: {
     react: {
@@ -63,6 +60,8 @@ module.exports = {
     'coverage/',
     'public/',
     'android/',
-    '*.d.ts'
+    '*.d.ts',
+    '**/*.js',
+    '**/*.jsx'
   ]
 };

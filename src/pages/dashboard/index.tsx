@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { addRecord } from '../../store/slices/growthSlice';
 import { calculateStreak } from '../../utils/recordUtils';
-import { GROWTH_BENCHMARKS, STREAK_MILESTONES, ACTIVE_WEEK, MOOD_OPTIONS } from '../../constants';
+import { GROWTH_BENCHMARKS, STREAK_MILESTONES, ACTIVE_WEEK } from '../../constants';
 import { useI18n } from '../../i18n/useI18n';
 import type { GrowthRecord, Mood, RootState } from '../../types';
 import type { AppDispatch } from '../../store';
@@ -174,7 +174,7 @@ const Dashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const dispatch = useDispatch<AppDispatch>();
-  const { records, isLoading, error } = useSelector((state: RootState) => state.growth);
+  const { records, isLoading } = useSelector((state: RootState) => state.growth);
   const feedbackRef = useRef<HTMLDivElement>(null);
 
   const stats = useMemo(() => calculateStats(records), [records]);

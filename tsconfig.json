@@ -18,9 +18,8 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["vite/client"]
+    "types": ["vite/client", "jest"]
   },
-  "include": ["src"],
-  "exclude": ["src/__tests__", "node_modules", "dist"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "src/__tests__"],
+  "exclude": ["node_modules", "dist"]
 }

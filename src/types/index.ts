@@ -4,6 +4,11 @@ export type ID = string;
 // 情绪类型 (使用 i18n key)
 export type Mood = 'great' | 'okay' | 'not_good';
 
+// Sync types
+import type { SyncState } from '../store/slices/syncSlice';
+import type { SyncQueueItem, ConflictInfo } from '../utils/syncQueue';
+export type { SyncState, SyncQueueItem, ConflictInfo };
+
 // 目标状态
 export type GoalStatus = 'active' | 'completed' | 'cancelled';
 
@@ -20,8 +25,8 @@ export interface GrowthRecord {
   updatedAt?: string;
 }
 
-// 向后兼容别名
-export type Record = GrowthRecord;
+// 向后兼容别名（已禁用，以避免遮蔽内置 Record 类型）
+// export type Record = GrowthRecord;
 
 // 标签类型
 export type Tag = string;
@@ -121,10 +126,6 @@ export interface ReminderState {
   isLoading: boolean;
   error: string | null;
 }
-
-// === Sync Types ===
-
-export type { SyncQueueItem, ConflictInfo, SyncState } from '../utils/offlineStorage';
 
 // 根状态类型
 export interface RootState {

@@ -1,4 +1,4 @@
-import type { Tree, GrowthRecord, Goal, Reminder, BadgeStats } from '../../types';
+import type { GrowthRecord, Goal, BadgeStats } from '../../types';
 import { getRecords } from '../../common/services/recordServiceV2';
 import { getGrowthTrees } from '../../common/services/growthTreeServiceV2';
 import { getGoals } from '../../common/services/goalServiceV2';
@@ -6,7 +6,7 @@ import { getReminders } from '../../common/services/reminderServiceV2';
 import { calculateStreak } from '../../utils/recordUtils';
 import { BADGES } from '../../constants';
 
-const calculateBadgeStats = (records: GrowthRecord[], goals: Goal[]): BadgeStats => {
+const calculateBadgeStats = (records: GrowthRecord[], _goals: Goal[]): BadgeStats => {
   const now = new Date();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);

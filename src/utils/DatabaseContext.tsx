@@ -32,6 +32,29 @@ export interface SyncMeta {
   serverVersions: Record<string, number>;
 }
 
+export interface ConflictInfo {
+  entityType: string;
+  entityId: string;
+  localData: unknown;
+  serverData: unknown;
+  queueItem: SyncQueueItem;
+}
+
+export interface SyncState {
+  isOnline: boolean;
+  isSyncing: boolean;
+  pendingCount: number;
+  queue: SyncQueueItem[];
+  conflicts: ConflictInfo[];
+  lastSyncTime: string | null;
+  syncProgress: {
+    total: number;
+    completed: number;
+    current: SyncQueueItem | null;
+  };
+  error: string | null;
+}
+
 interface GrowthOSDB extends DBSchema {
   records: {
     key: string;
@@ -249,20 +272,20 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
     const now = new Date().toISOString();
     const id = generateId();
 
-    const entity: SyncedEntity<T> = {
+    const entity = {
       id,
       data: data as T,
-      syncStatus: 'pending',
+      syncStatus: 'pending' as SyncStatus,
       localVersion: 1,
       createdAt: now,
       updatedAt: now,
       userId
-    } as SyncedEntity<T>;
+    };
 
     await database.put(store, entity as SyncedEntity<Record<string, unknown>>);
     await addToSyncQueue('create', store, id, entity);
 
-    return entity;
+    return entity as SyncedEntity<T>;
   }, [addToSyncQueue]);
 
   const updateEntity = useCallback(async <T extends BaseEntity>(
@@ -273,21 +296,21 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
     const database = dbRef.current;
     if (!database) throw new Error('Database not initialized');
 
-    const existing = await database.get(store, id);
+    const existing = await database.get(store, id) as SyncedEntity<T> | undefined;
     if (!existing) return null;
 
-    const updated: SyncedEntity<T> = {
+    const updated = {
       ...existing,
-      data: { ...existing.data, ...updates } as unknown as T,
-      syncStatus: 'pending',
+      data: { ...existing.data, ...updates } as T,
+      syncStatus: 'pending' as SyncStatus,
       localVersion: existing.localVersion + 1,
       updatedAt: new Date().toISOString()
-    } as SyncedEntity<T>;
+    };
 
     await database.put(store, updated as SyncedEntity<Record<string, unknown>>);
     await addToSyncQueue('update', store, id, updated);
 
-    return updated;
+    return updated as SyncedEntity<T>;
   }, [addToSyncQueue]);
 
   const deleteEntity = useCallback(async (
@@ -306,42 +329,36 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
     return true;
   }, [addToSyncQueue]);
 
-  const getEntity = useCallback(async <T>(
-    store: EntityStore,
-    id: string
-  ): Promise<SyncedEntity<T> | null> => {
+  const getEntity = useCallback(async function <T>(store: EntityStore, id: string): Promise<SyncedEntity<T> | null> {
     const database = dbRef.current;
     if (!database) throw new Error('Database not initialized');
 
     const result = await database.get(store, id);
-    return result as SyncedEntity<T> | null;
+    return (result as SyncedEntity<T>) || null;
   }, []);
 
-  const getAllEntities = useCallback(async <T>(
-    store: EntityStore
-  ): Promise<SyncedEntity<T>[]> => {
+  const getAllEntities = useCallback(async function <T>(store: EntityStore): Promise<SyncedEntity<T>[]> {
     const database = dbRef.current;
     if (!database) throw new Error('Database not initialized');
 
-    return (await database.getAll(store)) as SyncedEntity<T>[];
+    const results = await database.getAll(store);
+    return results as SyncedEntity<T>[];
   }, []);
 
-  const getPendingEntities = useCallback(async <T>(
-    store: EntityStore
-  ): Promise<SyncedEntity<T>[]> => {
+  const getPendingEntities = useCallback(async function <T>(store: EntityStore): Promise<SyncedEntity<T>[]> {
     const database = dbRef.current;
     if (!database) throw new Error('Database not initialized');
 
-    return (await database.getAllFromIndex(store, 'by-status', 'pending')) as SyncedEntity<T>[];
+    const results = await database.getAllFromIndex(store, 'by-status', 'pending');
+    return results as SyncedEntity<T>[];
   }, []);
 
-  const getConflictEntities = useCallback(async <T>(
-    store: EntityStore
-  ): Promise<SyncedEntity<T>[]> => {
+  const getConflictEntities = useCallback(async function <T>(store: EntityStore): Promise<SyncedEntity<T>[]> {
     const database = dbRef.current;
     if (!database) throw new Error('Database not initialized');
 
-    return (await database.getAllFromIndex(store, 'by-status', 'conflict')) as SyncedEntity<T>[];
+    const results = await database.getAllFromIndex(store, 'by-status', 'conflict');
+    return results as SyncedEntity<T>[];
   }, []);
 
   const markAsSynced = useCallback(async (

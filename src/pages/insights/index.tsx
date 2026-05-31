@@ -1,7 +1,7 @@
 import React, { useState, useMemo, memo } from 'react';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { Sparkles, Calendar, TrendingUp, Target } from 'lucide-react';
+import { Sparkles, Calendar } from 'lucide-react';
 import { WeeklyReportGenerator } from '../../utils/weeklyReportGenerator';
 import { InsightsService } from '../../common/services/insightsService';
 import { useI18n } from '../../i18n/useI18n';
@@ -14,7 +14,7 @@ import Badge from '../../components/common/Badge';
 type ViewMode = 'overview' | 'report' | 'insights';
 
 const InsightsDashboard: React.FC = () => {
-  const { t } = useI18n();
+  useI18n();
   const [viewMode, setViewMode] = useState<ViewMode>('overview');
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
   

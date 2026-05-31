@@ -171,7 +171,7 @@ describe('AI Slice', () => {
       const store = createTestStore();
 
       await store.dispatch(loadAIConfig.rejected(
-        { message: 'Failed to load config' },
+        new Error('Failed to load config'),
         'request-id',
         undefined,
         { payload: 'Failed to load config' }

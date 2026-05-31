@@ -73,7 +73,7 @@ class SyncQueueManager {
       createdAt: new Date().toISOString(),
       retryCount: 0
     };
-    // @ts-ignore - offlineStorage 没有导出 addSyncQueueItem
+    // @ts-expect-error - offlineStorage 没有导出 addSyncQueueItem
     await addSyncQueueItem(queueItem);
     return id;
   }

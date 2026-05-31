@@ -43,7 +43,7 @@ export function validate<T>(schema: z.ZodSchema<T>, data: unknown): ValidationRe
   }
 }
 
-export function validateOrThrow<T>(schema: z.ZodSchema<T>, data: unknown, fieldName?: string): T {
+export function validateOrThrow<T>(schema: z.ZodSchema<T>, data: unknown, _fieldName?: string): T {
   try {
     return schema.parse(data);
   } catch (error) {

@@ -1,4 +1,4 @@
-import type { LLMConfig, ChatMessage, ChatSession } from '../../types';
+import type { LLMConfig, ChatSession } from '../../types';
 import { AI_SYSTEM_PROMPT } from '../../constants';
 import { createLLMProvider } from './llmProvider';
 import * as aiStorage from './aiStorageService';
@@ -103,7 +103,7 @@ export class AgentOrchestrator {
   }
 
   async getOrCreateSession(): Promise<ChatSession> {
-    let sessions = await aiStorage.getSessions();
+    const sessions = await aiStorage.getSessions();
     if (sessions.length > 0) {
       return sessions[0];
     }

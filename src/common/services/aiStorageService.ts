@@ -2,8 +2,6 @@ import type { LLMConfig, ChatSession, ChatSessionWithMessages, ChatMessage } fro
 import { AI_STORAGE_KEYS } from '../../constants';
 import { secureStorage } from '../../utils/secureStorage';
 
-const DEVICE_ID_KEY = '_growthos_device_id';
-
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }

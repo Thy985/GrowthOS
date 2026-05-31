@@ -4,7 +4,7 @@ import { STORAGE_KEYS } from '../../constants';
 import type { User } from '../../types';
 import { tokenManager } from '../../utils/tokenManager';
 
-const isNative = Capacitor.isNativePlatform();
+const _isNative = Capacitor.isNativePlatform();
 
 const PBKDF2_ITERATIONS = 600000;
 

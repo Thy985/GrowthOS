@@ -210,7 +210,7 @@ describe('Throttler', () => {
 
 describe('memoize', () => {
   test('should memoize function results', () => {
-    const fn = jest.fn((a: number, b: number) => a + b);
+    const fn = jest.fn((a: number, b: number) => a + b) as (...args: unknown[]) => unknown;
     const memoized = memoize(fn);
     
     memoized(1, 2);
@@ -221,7 +221,7 @@ describe('memoize', () => {
   });
 
   test('should call function for different arguments', () => {
-    const fn = jest.fn((a: number, b: number) => a + b);
+    const fn = jest.fn((a: number, b: number) => a + b) as (...args: unknown[]) => unknown;
     const memoized = memoize(fn);
     
     memoized(1, 2);

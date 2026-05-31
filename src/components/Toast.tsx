@@ -101,16 +101,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = memo(({ ch
 ToastProvider.displayName = 'ToastProvider';
 
 export const toast = {
-  success: (message: string, duration?: number) => {
+  success: (message: string, _duration?: number) => {
     console.log(`[Toast Success] ${message}`);
   },
-  error: (message: string, duration?: number) => {
+  error: (message: string, _duration?: number) => {
     console.error(`[Toast Error] ${message}`);
   },
-  info: (message: string, duration?: number) => {
+  info: (message: string, _duration?: number) => {
     console.info(`[Toast Info] ${message}`);
   },
-  warning: (message: string, duration?: number) => {
+  warning: (message: string, _duration?: number) => {
     console.warn(`[Toast Warning] ${message}`);
   }
 };
