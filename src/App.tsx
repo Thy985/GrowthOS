@@ -23,6 +23,7 @@ import SyncPanel from './components/SyncPanel';
 import ConflictModal from './components/ConflictModal';
 import { initOfflineDB } from './utils/offlineStorage';
 import { useI18n } from './i18n/useI18n';
+import { performanceMonitor } from './utils/performanceMonitor';
 
 const Dashboard = lazy(() => import('./pages/dashboard'));
 // @ts-ignore - JS modules pending TS migration
@@ -73,6 +74,10 @@ const AppContent: React.FC = () => {
   const [conflictModalOpen, setConflictModalOpen] = React.useState(false);
 
   useKeyboardShortcuts([]);
+
+  useEffect(() => {
+    performanceMonitor.initialize();
+  }, []);
 
   useEffect(() => {
     dispatch(checkAuth());

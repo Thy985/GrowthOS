@@ -1,9 +1,65 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState, GrowthRecord, Mood } from '../../types';
 import { formatDate, getMoodColor, getMoodText, highlightSearchTerm, filterRecords } from '../../utils/recordUtils';
 import { useI18n } from '../../i18n/useI18n';
 import { MOOD_OPTIONS } from '../../constants';
+import { VirtualList } from '../../components/common/VirtualList';
+
+const VIRTUALIZATION_THRESHOLD = 100;
+const RECORD_ITEM_HEIGHT = 200;
+
+const RecordItem: React.FC<{ record: GrowthRecord; searchTerm: string }> = memo(({ record, searchTerm }) => {
+  const { t } = useI18n();
+  
+  return (
+    <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <span className={`inline-block px-2 py-1 text-xs rounded-full mb-2 ${getMoodColor(record.mood)}`}>
+            {getMoodText(record.mood)}
+          </span>
+          <p className="text-sm text-gray-500">{formatDate(record.createdAt)}</p>
+        </div>
+      </div>
+
+      {record.activity && (
+        <div className="mb-3">
+          <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.whatDidYouDo')}</h4>
+          <p className="text-gray-600">{highlightSearchTerm(record.activity, searchTerm)}</p>
+        </div>
+      )}
+
+      {record.learning && (
+        <div className="mb-3">
+          <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.whatDidYouLearn')}</h4>
+          <p className="text-gray-600">{highlightSearchTerm(record.learning, searchTerm)}</p>
+        </div>
+      )}
+
+      {record.reflection && (
+        <div className="mb-3">
+          <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.reflection')}</h4>
+          <p className="text-gray-600">{highlightSearchTerm(record.reflection, searchTerm)}</p>
+        </div>
+      )}
+
+      {record.tags && record.tags.length > 0 && (
+        <div>
+          <div className="flex flex-wrap gap-1">
+            {record.tags.map((tag: string) => (
+              <span key={tag} className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+RecordItem.displayName = 'RecordItem';
 
 const RecordList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,6 +72,12 @@ const RecordList: React.FC = () => {
   const filteredRecords = useMemo(() => {
     return filterRecords(records, searchTerm, selectedMoods, selectedTags, dateRange);
   }, [records, searchTerm, selectedMoods, selectedTags, dateRange]);
+
+  const useVirtualization = filteredRecords.length > VIRTUALIZATION_THRESHOLD;
+
+  const renderRecord = (record: GrowthRecord) => (
+    <RecordItem record={record} searchTerm={searchTerm} />
+  );
 
   const toggleMood = (mood: Mood) => {
     setSelectedMoods(prev =>
@@ -131,6 +193,11 @@ const RecordList: React.FC = () => {
 
       <div className="text-sm text-gray-600">
         {t('dashboard.recordsCount', { count: filteredRecords.length })}
+        {useVirtualization && (
+          <span className="ml-2 text-xs text-blue-600">
+            (已启用虚拟滚动优化)
+          </span>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -138,51 +205,19 @@ const RecordList: React.FC = () => {
           <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
             {t('common.noData')}
           </div>
+        ) : useVirtualization ? (
+          <VirtualList
+            items={filteredRecords}
+            height={600}
+            itemHeight={RECORD_ITEM_HEIGHT}
+            renderItem={renderRecord}
+            keyExtractor={(record) => record.id}
+            emptyMessage={t('common.noData')}
+            className="rounded-lg"
+          />
         ) : (
           filteredRecords.map((record: GrowthRecord) => (
-            <div key={record.id} className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <span className={`inline-block px-2 py-1 text-xs rounded-full mb-2 ${getMoodColor(record.mood)}`}>
-                    {getMoodText(record.mood)}
-                  </span>
-                  <p className="text-sm text-gray-500">{formatDate(record.createdAt)}</p>
-                </div>
-              </div>
-
-              {record.activity && (
-                <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.whatDidYouDo')}</h4>
-                  <p className="text-gray-600">{highlightSearchTerm(record.activity, searchTerm)}</p>
-                </div>
-              )}
-
-              {record.learning && (
-                <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.whatDidYouLearn')}</h4>
-                  <p className="text-gray-600">{highlightSearchTerm(record.learning, searchTerm)}</p>
-                </div>
-              )}
-
-              {record.reflection && (
-                <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.reflection')}</h4>
-                  <p className="text-gray-600">{highlightSearchTerm(record.reflection, searchTerm)}</p>
-                </div>
-              )}
-
-              {record.tags && record.tags.length > 0 && (
-                <div>
-                  <div className="flex flex-wrap gap-1">
-                    {record.tags.map((tag: string) => (
-                      <span key={tag} className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <RecordItem key={record.id} record={record} searchTerm={searchTerm} />
           ))
         )}
       </div>
@@ -190,4 +225,4 @@ const RecordList: React.FC = () => {
   );
 };
 
-export default RecordList;
+export default memo(RecordList);
