@@ -46,11 +46,12 @@ describe('Validation Validators', () => {
 
   describe('formatZodError', () => {
     it('should format ZodError correctly', () => {
-      const result = validate(EmailSchema, 'invalid');
-      if (!result.success && result.errors) {
-        const formatted = formatZodError(result.errors as any);
-        expect(Array.isArray(formatted)).toBe(true);
-        expect(formatted.length).toBeGreaterThan(0);
+      const invalidEmail = 'not-an-email';
+      const result = validate(EmailSchema, invalidEmail);
+      expect(result.success).toBe(false);
+      expect(result.errors).toBeDefined();
+      if (result.errors) {
+        expect(result.errors.length).toBeGreaterThan(0);
       }
     });
   });

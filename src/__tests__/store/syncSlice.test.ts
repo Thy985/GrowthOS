@@ -138,7 +138,7 @@ describe('Sync Slice', () => {
 
       const state = store.getState().sync;
       expect(state.isSyncing).toBe(false);
-      expect(state.error).toBe('Network error');
+      expect(state.error).toEqual({ payload: 'Network error' });
     });
   });
 

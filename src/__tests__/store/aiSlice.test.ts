@@ -126,9 +126,14 @@ describe('AI Slice', () => {
     it('should clear error', () => {
       const store = createTestStore();
       
-      (store.getState as jest.Mock).mockReturnValueOnce({
-        ai: { ...store.getState().ai, error: 'Test error' }
-      });
+      store.dispatch(loadAIConfig.rejected(
+        new Error('Test error'),
+        'request-id',
+        undefined,
+        'Test error'
+      ));
+      
+      expect(store.getState().ai.error).toBe('Test error');
       
       store.dispatch(clearError());
       expect(store.getState().ai.error).toBeNull();
@@ -172,7 +177,7 @@ describe('AI Slice', () => {
         new Error('Failed to load config'),
         'request-id',
         undefined,
-        { payload: 'Failed to load config' }
+        'Failed to load config'
       ));
 
       const state = store.getState().ai;
