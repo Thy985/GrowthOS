@@ -7,7 +7,7 @@ import reminderReducer from './slices/reminderSlice';
 import aiReducer from './slices/aiSlice';
 import syncReducer from './slices/syncSlice';
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
     growth: growthReducer,
     auth: authReducer,
@@ -16,9 +16,19 @@ const store = configureStore({
     reminder: reminderReducer,
     ai: aiReducer,
     sync: syncReducer
-  }
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+        ignoredPaths: ['growth.records']
+      }
+    })
 });
 
-export default store;
-export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>;
+
+export * from './slices/selectors';
+
+export default store;

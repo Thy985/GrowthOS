@@ -1,7 +1,8 @@
-import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import store, { AppDispatch } from './store';
+import store from './store';
+import { AppDispatch } from './store';
 import { loadData } from './store/slices/growthSlice';
 import { checkAuth } from './store/slices/authSlice';
 import { loadGoals } from './store/slices/goalSlice';
@@ -16,13 +17,13 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import { ChatWidget } from './components/ai/ChatWidget';
 import { ToastProvider } from './components/Toast';
+// @ts-ignore - JS modules pending TS migration
 import OfflineIndicator from './components/OfflineIndicator';
 import SyncPanel from './components/SyncPanel';
 import ConflictModal from './components/ConflictModal';
 import { initOfflineDB } from './utils/offlineStorage';
 import { useI18n } from './i18n/useI18n';
 
-// Lazy load components
 const Dashboard = lazy(() => import('./pages/dashboard'));
 // @ts-ignore - JS modules pending TS migration
 const GrowthTree = lazy(() => import('./pages/growth-tree'));
@@ -39,7 +40,13 @@ const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 // @ts-ignore - JS modules pending TS migration
 const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp'));
+// @ts-ignore - JS modules pending TS migration
 const AISettingsPage = lazy(() => import('./pages/ai/AISettingsPage'));
+
+const AppShortcuts: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  useKeyboardShortcuts([]);
+  return <>{children}</>;
+};
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
@@ -59,144 +66,87 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const AppContent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const { conflicts } = useSelector((state: RootState) => state.sync);
-  const navigate = useNavigate();
-  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
-  const [showSyncPanel, setShowSyncPanel] = useState(false);
-  const [selectedConflict, setSelectedConflict] = useState<unknown>(null);
   const { t } = useI18n();
 
-  useEffect(() => {
-    initOfflineDB().catch(console.error);
-  }, []);
+  const sync = useSelector((state: RootState) => state.sync);
+  const [syncPanelOpen, setSyncPanelOpen] = React.useState(false);
+  const [conflictModalOpen, setConflictModalOpen] = React.useState(false);
+
+  useKeyboardShortcuts([]);
 
   useEffect(() => {
     dispatch(checkAuth());
+    initOfflineDB().catch(console.error);
   }, [dispatch]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      const timer = setTimeout(() => {
-        dispatch(loadData());
-        dispatch(loadGoals());
-        dispatch(loadReminders());
-        dispatch(loadAIConfig());
-        dispatch(loadSyncStatus());
-      }, 500);
-
-      return () => clearTimeout(timer);
+      dispatch(loadData());
+      dispatch(loadGoals());
+      dispatch(loadReminders());
+      dispatch(loadAIConfig());
+      dispatch(loadSyncStatus());
     }
-  }, [dispatch, isAuthenticated]);
+  }, [isAuthenticated, dispatch]);
 
   useEffect(() => {
-    const handleOpenShortcuts = () => {
-      setShowShortcutsHelp(true);
-    };
-
-    window.addEventListener('openShortcutsHelp', handleOpenShortcuts);
-    return () => window.removeEventListener('openShortcutsHelp', handleOpenShortcuts);
-  }, []);
-
-  useEffect(() => {
-    if (conflicts.length > 0 && !selectedConflict) {
-      setSelectedConflict(conflicts[0]);
+    if (sync.conflicts.length > 0) {
+      setConflictModalOpen(true);
     }
-  }, [conflicts, selectedConflict]);
-
-  const shortcuts = useMemo(() => [
-    {
-      key: 'h',
-      callback: () => isAuthenticated && navigate('/'),
-    },
-    {
-      key: 'r',
-      callback: () => isAuthenticated && navigate('/records'),
-    },
-    {
-      key: 't',
-      callback: () => isAuthenticated && navigate('/growth-tree'),
-    },
-    {
-      key: 'a',
-      callback: () => isAuthenticated && navigate('/analytics'),
-    },
-    {
-      key: '?',
-      callback: () => setShowShortcutsHelp(!showShortcutsHelp),
-    },
-    {
-      key: 's',
-      ctrl: true,
-      callback: () => isAuthenticated && setShowSyncPanel(true),
-    },
-    {
-      key: 'Escape',
-      callback: () => {
-        setShowShortcutsHelp(false);
-        setShowSyncPanel(false);
-      },
-    },
-  ], [isAuthenticated, navigate, showShortcutsHelp]);
-
-  useKeyboardShortcuts(shortcuts);
+  }, [sync.conflicts.length]);
 
   return (
-    <>
-      <OfflineIndicator onOpenSyncPanel={() => setShowSyncPanel(true)} />
-
-      {isAuthenticated && <Navbar />}
-      <div className="main">
-        <ErrorBoundary>
-          <Suspense fallback={<div className="loading-container"><div className="loading" /><span>{t('common.loading')}</span></div>}>
-            {isAuthenticated && <Tutorial />}
-            <KeyboardShortcutsHelp
-              isOpen={showShortcutsHelp}
-              onClose={() => setShowShortcutsHelp(false)}
-            />
+    <Router>
+      <div className="app">
+        {isAuthenticated && <Navbar />}
+        <main className="main">
+          <Suspense fallback={
+            <div className="loading-container">
+              <div className="loading" />
+              <p>{t('common.loading')}</p>
+            </div>
+          }>
             <Routes>
-              <Route path="/" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/records" element={<ProtectedRoute><ErrorBoundary><RecordList /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/goals" element={<ProtectedRoute><ErrorBoundary><Goals /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/reminders" element={<ProtectedRoute><ErrorBoundary><Reminders /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/growth-tree" element={<ProtectedRoute><ErrorBoundary><GrowthTree /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><ErrorBoundary><Analytics /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/ai-settings" element={<ProtectedRoute><ErrorBoundary><AISettingsPage /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/login" element={<ErrorBoundary><Login /></ErrorBoundary>} />
-              <Route path="/register" element={<ErrorBoundary><Register /></ErrorBoundary>} />
-              <Route path="/auth" element={<Navigate to="/login" />} />
-              <Route path="*" element={<Navigate to="/login" />} />
+              <Route path="/auth" element={<Login />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/*" element={
+                <ProtectedRoute>
+                  <>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/records" element={<RecordList />} />
+                      <Route path="/goals" element={<Goals />} />
+                      <Route path="/reminders" element={<Reminders />} />
+                      <Route path="/growth-tree" element={<GrowthTree />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/ai-settings" element={<AISettingsPage />} />
+                      <Route path="*" element={<Navigate to="/" />} />
+                    </Routes>
+                    <ChatWidget />
+                    <OfflineIndicator />
+                    <SyncPanel isOpen={syncPanelOpen} onClose={() => setSyncPanelOpen(false)} />
+                    <ConflictModal conflict={null} onClose={() => setConflictModalOpen(false)} />
+                  </>
+                </ProtectedRoute>
+              } />
             </Routes>
           </Suspense>
-        </ErrorBoundary>
+        </main>
       </div>
-      {isAuthenticated && <ChatWidget />}
-
-      <SyncPanel
-        isOpen={showSyncPanel}
-        onClose={() => setShowSyncPanel(false)}
-      />
-
-      <ConflictModal
-        conflict={selectedConflict as any}
-        onClose={() => setSelectedConflict(null)}
-      />
-    </>
+    </Router>
   );
 };
 
 const App: React.FC = () => {
   return (
-    <ErrorBoundary>
-      <Provider store={store}>
-        <ToastProvider>
-          <Router>
-            <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
-              <AppContent />
-            </div>
-          </Router>
-        </ToastProvider>
-      </Provider>
-    </ErrorBoundary>
+    <Provider store={store}>
+      <ToastProvider>
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
+      </ToastProvider>
+    </Provider>
   );
 };
 
