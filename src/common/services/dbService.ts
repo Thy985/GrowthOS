@@ -2,16 +2,16 @@ import { Capacitor } from '@capacitor/core';
 
 interface CapacitorSQLiteInterface {
   createConnection(options: {
-    database: string;
-    encrypted?: boolean;
-    mode?: string;
-    version?: number;
-    readerVersion?: number;
-  }): Promise<void>;
+    database: string,
+    encrypted?: boolean,
+    mode?: string,
+    version?: number,
+    readerVersion?: number,
+  }): Promise<void>,
   retrieveConnection(database: string): Promise<{
-    execute(sql: string): Promise<void>;
-    close(): Promise<void>;
-  }>;
+    execute(sql: string): Promise<void>,
+    close(): Promise<void>,
+  }>,
 }
 
 let currentUserId: number | null = null;

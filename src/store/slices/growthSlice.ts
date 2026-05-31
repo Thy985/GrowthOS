@@ -1,9 +1,9 @@
-import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction, createSelector } from '@reduxjs/toolkit';
 import recordServiceV2 from '../../common/services/recordServiceV2';
 import growthTreeServiceV2 from '../../common/services/growthTreeServiceV2';
-import { GrowthState, GrowthRecord, Tag, Tree, GoalState, CreateRecordDTO } from '../../types';
+import { type GrowthState, type GrowthRecord, type Tag, type Tree, type GoalState, type CreateRecordDTO } from '../../types';
 import logger from '../../utils/logger';
-import { generateExportData, downloadBlob, ExportOptions } from '../../utils/exportUtils';
+import { generateExportData, downloadBlob, type ExportOptions } from '../../utils/exportUtils';
 
 const initialState: GrowthState = {
   records: [],
@@ -93,7 +93,7 @@ export const exportData = createAsyncThunk(
     try {
       logger.info('开始导出数据', { format: options.format, dataTypes: options.dataTypes });
       
-      const state = getState() as { growth: GrowthState; goal: GoalState };
+      const state = getState() as { growth: GrowthState, goal: GoalState };
       const { records, tags, trees } = state.growth;
       const { goals } = state.goal;
       

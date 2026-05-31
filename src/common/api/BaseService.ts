@@ -1,12 +1,12 @@
 import { 
   successResponse, 
   errorResponse, 
-  ApiResponse, 
+  type ApiResponse, 
   AppError, 
   ErrorFactory,
   isSuccess
 } from './ApiResponse';
-import { withRetry, deduplicator, withTimeout, RequestConfig } from './RequestUtils';
+import { withRetry, deduplicator, withTimeout, type RequestConfig } from './RequestUtils';
 import logger from '../../utils/logger';
 
 export abstract class BaseService {
@@ -134,18 +134,18 @@ export abstract class BaseService {
 }
 
 export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  cursor?: string;
+  page?: number,
+  limit?: number,
+  cursor?: string,
 }
 
 export interface PaginatedResult<T> {
-  items: T[];
-  total: number;
-  page: number;
-  limit: number;
-  hasMore: boolean;
-  nextCursor?: string;
+  items: T[],
+  total: number,
+  page: number,
+  limit: number,
+  hasMore: boolean,
+  nextCursor?: string,
 }
 
 export function createPaginationParams(params: PaginationParams): Required<PaginationParams> {

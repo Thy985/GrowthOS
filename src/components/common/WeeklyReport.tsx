@@ -14,11 +14,11 @@ import type { WeeklyReport } from '../../utils/weeklyReportGenerator';
 import Card from '../common/Card';
 
 interface WeeklyReportProps {
-  report: WeeklyReport;
-  onPreviousWeek?: () => void;
-  onNextWeek?: () => void;
-  onExport?: () => void;
-  isCurrentWeek?: boolean;
+  report: WeeklyReport,
+  onPreviousWeek?: () => void,
+  onNextWeek?: () => void,
+  onExport?: () => void,
+  isCurrentWeek?: boolean,
 }
 
 const WeeklyReport: React.FC<WeeklyReportProps> = memo(({

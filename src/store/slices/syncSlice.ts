@@ -1,26 +1,26 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import {
   checkPendingSync,
   triggerSync,
-  ConflictInfo
+  type ConflictInfo
 } from '../../utils/syncQueue';
 import { resolveConflict as resolveConflictStorage } from '../../utils/offlineStorage';
 import type { SyncQueueItem } from '../../utils/syncQueue';
 
 export interface SyncState {
-  isLoading: boolean;
-  isOnline: boolean;
-  isSyncing: boolean;
-  pendingCount: number;
-  queue: SyncQueueItem[];
-  conflicts: ConflictInfo[];
-  lastSyncTime: string | null;
+  isLoading: boolean,
+  isOnline: boolean,
+  isSyncing: boolean,
+  pendingCount: number,
+  queue: SyncQueueItem[],
+  conflicts: ConflictInfo[],
+  lastSyncTime: string | null,
   syncProgress: {
-    total: number;
-    completed: number;
-    current: SyncQueueItem | null;
-  };
-  error: string | null;
+    total: number,
+    completed: number,
+    current: SyncQueueItem | null,
+  },
+  error: string | null,
 }
 
 const initialState: SyncState = {
@@ -52,7 +52,7 @@ export const performSync = createAsyncThunk(
   async (_, { dispatch, rejectWithValue }) => {
     try {
       const result = await triggerSync();
-      dispatch(loadSyncStatus());
+      void dispatch(loadSyncStatus());
       return result;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : '同步失败');
@@ -64,10 +64,10 @@ export const resolveConflict = createAsyncThunk(
   'sync/resolveConflict',
   async (
     { entityType, entityId, resolution, mergedData }: {
-      entityType: string;
-      entityId: string;
-      resolution: 'local' | 'server' | 'merge';
-      mergedData?: Record<string, unknown>;
+      entityType: string,
+      entityId: string,
+      resolution: 'local' | 'server' | 'merge',
+      mergedData?: Record<string, unknown>,
     },
     { dispatch }
   ) => {
@@ -81,7 +81,7 @@ export const resolveConflict = createAsyncThunk(
 
     const store = storeMap[entityType] || 'records';
     await resolveConflictStorage(store, entityId, resolution, mergedData);
-    dispatch(loadSyncStatus());
+    void dispatch(loadSyncStatus());
 
     return { entityId };
   }
@@ -98,9 +98,9 @@ const syncSlice = createSlice({
       state.isSyncing = action.payload;
     },
     setSyncProgress: (state, action: PayloadAction<{
-      total: number;
-      completed: number;
-      current: SyncQueueItem | null;
+      total: number,
+      completed: number,
+      current: SyncQueueItem | null,
     }>) => {
       state.syncProgress = action.payload;
     },
@@ -111,9 +111,9 @@ const syncSlice = createSlice({
       state.error = null;
     },
     updateProgress: (state, action: PayloadAction<{
-      total: number;
-      completed: number;
-      current: SyncQueueItem | null;
+      total: number,
+      completed: number,
+      current: SyncQueueItem | null,
     }>) => {
       state.syncProgress = action.payload;
     },

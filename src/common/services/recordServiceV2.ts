@@ -41,12 +41,12 @@ export async function getRecordById(id: string): Promise<Record | null> {
 }
 
 export async function createRecord(data: {
-  date?: string;
-  mood?: string;
-  reflection?: string;
-  activity?: string;
-  learning?: string;
-  tags?: string[];
+  date?: string,
+  mood?: string,
+  reflection?: string,
+  activity?: string,
+  learning?: string,
+  tags?: string[],
 }): Promise<Record> {
   const records = await getRecordFromStorage();
   

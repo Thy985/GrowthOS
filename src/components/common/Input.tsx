@@ -3,15 +3,15 @@ import { AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
-  label?: string;
-  error?: string;
-  helperText?: string;
-  success?: string;
-  leftIcon?: ReactNode;
-  rightIcon?: ReactNode;
-  size?: 'small' | 'medium' | 'large';
-  className?: string;
-  containerClassName?: string;
+  label?: string,
+  error?: string,
+  helperText?: string,
+  success?: string,
+  leftIcon?: ReactNode,
+  rightIcon?: ReactNode,
+  size?: 'small' | 'medium' | 'large',
+  className?: string,
+  containerClassName?: string,
 }
 
 const Input = ({

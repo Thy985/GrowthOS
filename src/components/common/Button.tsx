@@ -5,15 +5,15 @@ type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost' | 
 type ButtonSize = 'small' | 'medium' | 'large';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  loading?: boolean;
-  leftIcon?: ReactNode;
-  rightIcon?: ReactNode;
-  className?: string;
+  children: ReactNode,
+  variant?: ButtonVariant,
+  size?: ButtonSize,
+  disabled?: boolean,
+  fullWidth?: boolean,
+  loading?: boolean,
+  leftIcon?: ReactNode,
+  rightIcon?: ReactNode,
+  className?: string,
 }
 
 const Button = ({

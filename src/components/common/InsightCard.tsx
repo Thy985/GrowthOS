@@ -13,8 +13,8 @@ import {
 import type { Insight } from '../../common/services/insightsService';
 
 interface InsightCardProps {
-  insight: Insight;
-  onDismiss?: (id: string) => void;
+  insight: Insight,
+  onDismiss?: (id: string) => void,
 }
 
 const InsightCard: React.FC<InsightCardProps> = memo(({ insight, onDismiss }) => {
@@ -67,7 +67,7 @@ const InsightCard: React.FC<InsightCardProps> = memo(({ insight, onDismiss }) =>
   };
 
   const getCategoryBadge = () => {
-    const categoryConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+    const categoryConfig: Record<string, { label: string, icon: React.ReactNode, color: string }> = {
       activity: { label: '活动', icon: <Target size={12} />, color: 'bg-blue-100 text-blue-700' },
       mood: { label: '心情', icon: <Heart size={12} />, color: 'bg-pink-100 text-pink-700' },
       learning: { label: '学习', icon: <Lightbulb size={12} />, color: 'bg-purple-100 text-purple-700' },

@@ -4,37 +4,37 @@ const MAX_RETRY_COUNT = 3;
 const RETRY_DELAYS = [1000, 2000, 5000];
 
 export interface SyncQueueItem {
-  id: string;
-  entityType: string;
-  entityId: string;
-  operation: 'create' | 'update' | 'delete';
-  payload: unknown;
-  createdAt: string;
-  retryCount: number;
+  id: string,
+  entityType: string,
+  entityId: string,
+  operation: 'create' | 'update' | 'delete',
+  payload: unknown,
+  createdAt: string,
+  retryCount: number,
 }
 
 export interface SyncResult {
-  success: boolean;
-  queueItemId: string;
-  hasConflict?: boolean;
-  serverData?: unknown;
-  error?: string;
-  serverVersion?: number;
+  success: boolean,
+  queueItemId: string,
+  hasConflict?: boolean,
+  serverData?: unknown,
+  error?: string,
+  serverVersion?: number,
 }
 
 export interface ConflictInfo {
-  entityType: string;
-  entityId: string;
-  localData: unknown;
-  serverData: unknown;
-  queueItem: SyncQueueItem;
+  entityType: string,
+  entityId: string,
+  localData: unknown,
+  serverData: unknown,
+  queueItem: SyncQueueItem,
 }
 
 export type SyncProgressCallback = (progress: {
-  total: number;
-  completed: number;
-  current: SyncQueueItem | null;
-  results: SyncResult[];
+  total: number,
+  completed: number,
+  current: SyncQueueItem | null,
+  results: SyncResult[],
 }) => void;
 
 class SyncQueueManager {
@@ -42,10 +42,10 @@ class SyncQueueManager {
   private progressCallbacks: Set<SyncProgressCallback> = new Set();
 
   private notifyProgress(progress: {
-    total: number;
-    completed: number;
-    current: SyncQueueItem | null;
-    results: SyncResult[];
+    total: number,
+    completed: number,
+    current: SyncQueueItem | null,
+    results: SyncResult[],
   }) {
     this.progressCallbacks.forEach(callback => {
       try {
@@ -88,11 +88,11 @@ class SyncQueueManager {
   }
 
   private async simulateServerSync(item: SyncQueueItem): Promise<{
-    success: boolean;
-    hasConflict?: boolean;
-    serverData?: Record<string, unknown>;
-    error?: string;
-    serverVersion?: number;
+    success: boolean,
+    hasConflict?: boolean,
+    serverData?: Record<string, unknown>,
+    error?: string,
+    serverVersion?: number,
   }> {
     await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -137,9 +137,9 @@ class SyncQueueManager {
   }
 
   async processQueue(onProgress?: SyncProgressCallback): Promise<{
-    results: SyncResult[];
-    conflicts: ConflictInfo[];
-    errors: string[];
+    results: SyncResult[],
+    conflicts: ConflictInfo[],
+    errors: string[],
   }> {
     if (this.isSyncing) {
       throw new Error('同步正在进行中');
@@ -279,16 +279,16 @@ class SyncQueueManager {
 export const syncQueueManager = new SyncQueueManager();
 
 export async function triggerSync(): Promise<{
-  results: SyncResult[];
-  conflicts: ConflictInfo[];
-  errors: string[];
+  results: SyncResult[],
+  conflicts: ConflictInfo[],
+  errors: string[],
 }> {
   return syncQueueManager.processQueue();
 }
 
 export async function checkPendingSync(): Promise<{
-  count: number;
-  queue: SyncQueueItem[];
+  count: number,
+  queue: SyncQueueItem[],
 }> {
   const [count, queue] = await Promise.all([
     getSyncQueueCount(),

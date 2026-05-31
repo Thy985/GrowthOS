@@ -18,8 +18,8 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { RootState } from '../types';
-import { AppDispatch } from '../store';
+import { type RootState } from '../types';
+import { type AppDispatch } from '../store';
 import { logout } from '../store/slices/authSlice';
 import { toggleTheme } from '../store/slices/themeSlice';
 import { useI18n } from '../i18n/useI18n';
@@ -38,7 +38,7 @@ const Navbar: React.FC = () => {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    void dispatch(logout());
   };
 
   const handleToggleTheme = () => {

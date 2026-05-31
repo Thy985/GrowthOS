@@ -5,14 +5,14 @@ import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 interface Toast {
-  id: string;
-  message: string;
-  type: ToastType;
-  duration?: number;
+  id: string,
+  message: string,
+  type: ToastType,
+  duration?: number,
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: ToastType, duration?: number) => void;
+  showToast: (message: string, type?: ToastType, duration?: number) => void,
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -35,7 +35,7 @@ const ToastIcon = ({ type }: { type: ToastType }) => {
   return icons[type];
 };
 
-const ToastItem = ({ toast, onClose }: { toast: Toast; onClose: () => void }) => {
+const ToastItem = ({ toast, onClose }: { toast: Toast, onClose: () => void }) => {
   const typeStyles = {
     success: {
       bg: 'bg-emerald-50',

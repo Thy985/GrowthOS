@@ -9,8 +9,8 @@ import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 
 interface FormErrors {
-  email?: string;
-  password?: string;
+  email?: string,
+  password?: string,
 }
 
 const Login: React.FC = () => {

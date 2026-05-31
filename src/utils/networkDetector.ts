@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 
 export interface NetworkStatus {
-  isOnline: boolean;
-  isSlowConnection: boolean;
-  effectiveType: string | null;
-  downlink: number | null;
+  isOnline: boolean,
+  isSlowConnection: boolean,
+  effectiveType: string | null,
+  downlink: number | null,
 }
 
 type NetworkCallback = (status: NetworkStatus) => void;
@@ -30,11 +30,11 @@ class NetworkDetector {
   private getConnectionInfo(): Partial<NetworkStatus> {
     const nav = navigator as Navigator & {
       connection?: {
-        effectiveType?: string;
-        downlink?: number;
-        addEventListener: (type: string, listener: () => void) => void;
-        removeEventListener: (type: string, listener: () => void) => void;
-      };
+        effectiveType?: string,
+        downlink?: number,
+        addEventListener: (type: string, listener: () => void) => void,
+        removeEventListener: (type: string, listener: () => void) => void,
+      },
     };
 
     const connection = nav.connection;
@@ -65,9 +65,9 @@ class NetworkDetector {
 
     const nav = navigator as Navigator & {
       connection?: {
-        addEventListener: (type: string, listener: () => void) => void;
-        removeEventListener: (type: string, listener: () => void) => void;
-      };
+        addEventListener: (type: string, listener: () => void) => void,
+        removeEventListener: (type: string, listener: () => void) => void,
+      },
     };
 
     const connection = nav.connection;
@@ -118,7 +118,7 @@ export function useIsOnline(): boolean {
   return status.isOnline;
 }
 
-export function useOfflineWarning(): { showWarning: boolean; message: string | null } {
+export function useOfflineWarning(): { showWarning: boolean, message: string | null } {
   const status = useNetworkStatus();
 
   const showWarning = !status.isOnline;

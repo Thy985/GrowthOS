@@ -1,16 +1,16 @@
-import { z, ZodError } from 'zod';
+import { type z, ZodError } from 'zod';
 import { ErrorFactory } from '../api/ApiResponse';
 
 export interface ValidationResult<T> {
-  success: boolean;
-  data?: T;
-  errors?: ValidationError[];
+  success: boolean,
+  data?: T,
+  errors?: ValidationError[],
 }
 
 export interface ValidationError {
-  field: string;
-  message: string;
-  code: string;
+  field: string,
+  message: string,
+  code: string,
 }
 
 export function formatZodError(error: ZodError): ValidationError[] {
@@ -90,8 +90,8 @@ export function validateField(
   value: unknown,
   fieldName: string,
   validations: Array<{
-    test: (val: unknown) => boolean;
-    message: string;
+    test: (val: unknown) => boolean,
+    message: string,
   }>
 ): ValidationError | null {
   for (const validation of validations) {

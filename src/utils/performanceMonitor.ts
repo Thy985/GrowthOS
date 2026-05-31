@@ -1,16 +1,16 @@
-import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP, Metric } from 'web-vitals';
+import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
 
 export interface PerformanceMetrics {
-  lcp: number;
-  fid: number;
-  cls: number;
-  fcp: number;
-  ttfb: number;
-  inp: number;
+  lcp: number,
+  fid: number,
+  cls: number,
+  fcp: number,
+  ttfb: number,
+  inp: number,
 }
 
 export interface MetricWithRating extends Metric {
-  rating: 'good' | 'needs-improvement' | 'poor';
+  rating: 'good' | 'needs-improvement' | 'poor',
 }
 
 type MetricCallback = (metric: MetricWithRating) => void;
@@ -172,7 +172,7 @@ export function measureSyncOperation<T>(
 }
 
 export function createTimingBoundary(name: string): {
-  end: () => number;
+  end: () => number,
 } {
   const startTime = performance.now();
   

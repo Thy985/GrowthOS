@@ -52,7 +52,7 @@ export const captureMessage = (message: string, level: Sentry.SeverityLevel = 'i
   }
 };
 
-export const setUserContext = (user: { id: string; email?: string; username?: string }) => {
+export const setUserContext = (user: { id: string, email?: string, username?: string }) => {
   if (import.meta.env.PROD) {
     Sentry.setUser({
       id: user.id,

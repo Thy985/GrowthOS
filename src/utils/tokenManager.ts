@@ -3,17 +3,17 @@ import { STORAGE_KEYS } from '../constants';
 import type { User } from '../types';
 
 export interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
+  accessToken: string,
+  refreshToken: string,
+  expiresAt: number,
 }
 
 export interface TokenPayload {
-  userId: string;
-  email: string;
-  type: 'access' | 'refresh';
-  iat: number;
-  exp: number;
+  userId: string,
+  email: string,
+  type: 'access' | 'refresh',
+  iat: number,
+  exp: number,
 }
 
 export class TokenManager {
@@ -26,7 +26,7 @@ export class TokenManager {
   private refreshSubscribers: Array<(token: string) => void> = [];
 
   private constructor() {
-    this.loadTokensFromStorage();
+    void this.loadTokensFromStorage();
   }
 
   static getInstance(): TokenManager {
@@ -81,7 +81,7 @@ export class TokenManager {
   }
 
   private async createToken(user: User, type: 'access' | 'refresh', expiresAt: number): Promise<string> {
-    const payload: Omit<TokenPayload, 'iat' | 'exp'> & { iat: number; exp: number } = {
+    const payload: Omit<TokenPayload, 'iat' | 'exp'> & { iat: number, exp: number } = {
       userId: user.id,
       email: user.email,
       type,
@@ -192,7 +192,7 @@ export class TokenManager {
 
   async clearTokens(): Promise<void> {
     try {
-      await secureStorage.removeItem(STORAGE_KEYS.TOKEN);
+      secureStorage.removeItem(STORAGE_KEYS.TOKEN);
       this.accessToken = null;
       this.refreshToken = null;
       this.expiresAt = 0;
@@ -205,7 +205,7 @@ export class TokenManager {
     this.refreshThreshold = minutes * 60 * 1000;
   }
 
-  getTokenInfo(): { isValid: boolean; expiresAt: Date | null; isExpiringSoon: boolean } {
+  getTokenInfo(): { isValid: boolean, expiresAt: Date | null, isExpiringSoon: boolean } {
     return {
       isValid: !this.isTokenExpired(),
       expiresAt: this.expiresAt ? new Date(this.expiresAt) : null,

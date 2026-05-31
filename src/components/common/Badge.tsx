@@ -5,13 +5,13 @@ type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'outl
 type BadgeSize = 'small' | 'medium' | 'large';
 
 interface BadgeProps {
-  children: ReactNode;
-  variant?: BadgeVariant;
-  size?: BadgeSize;
-  dot?: boolean;
-  removable?: boolean;
-  onRemove?: () => void;
-  className?: string;
+  children: ReactNode,
+  variant?: BadgeVariant,
+  size?: BadgeSize,
+  dot?: boolean,
+  removable?: boolean,
+  onRemove?: () => void,
+  className?: string,
 }
 
 const Badge = ({

@@ -63,9 +63,9 @@ export function stripHtml(html: string): string {
 }
 
 export function sanitizeHtml(html: string, options?: {
-  allowedTags?: string[];
-  allowedAttrs?: string[];
-  stripAll?: boolean;
+  allowedTags?: string[],
+  allowedAttrs?: string[],
+  stripAll?: boolean,
 }): string {
   const {
     allowedTags = [],
@@ -106,8 +106,8 @@ export function hasDangerousContent(text: string): boolean {
 }
 
 export function detectXSSAttempt(text: string): {
-  hasXSS: boolean;
-  risks: string[];
+  hasXSS: boolean,
+  risks: string[],
 } {
   const risks: string[] = [];
 
@@ -176,15 +176,15 @@ export function sanitizeFilename(filename: string): string {
 
 export class InputSanitizer {
   static sanitizeRecord(data: {
-    activity?: string;
-    learning?: string;
-    reflection?: string;
-    tags?: string[];
+    activity?: string,
+    learning?: string,
+    reflection?: string,
+    tags?: string[],
   }): {
-    activity?: string;
-    learning?: string;
-    reflection?: string;
-    tags?: string[];
+    activity?: string,
+    learning?: string,
+    reflection?: string,
+    tags?: string[],
   } {
     return {
       activity: data.activity ? sanitizeForStorage(data.activity) : undefined,

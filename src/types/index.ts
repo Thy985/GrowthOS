@@ -14,15 +14,15 @@ export type GoalStatus = 'active' | 'completed' | 'cancelled';
 
 // 记录类型 (重命名以避免与内置 Record 类型冲突)
 export interface GrowthRecord {
-  id: ID;
-  date?: string;
-  activity: string;
-  learning: string;
-  reflection: string;
-  mood: Mood;
-  tags: string[];
-  createdAt: string;
-  updatedAt?: string;
+  id: ID,
+  date?: string,
+  activity: string,
+  learning: string,
+  reflection: string,
+  mood: Mood,
+  tags: string[],
+  createdAt: string,
+  updatedAt?: string,
 }
 
 // 向后兼容别名（已禁用，以避免遮蔽内置 Record 类型）
@@ -33,185 +33,185 @@ export type Tag = string;
 
 // 技能树节点类型
 export interface TreeNode {
-  id: ID;
-  treeId: ID;
-  parentId: ID | null;
-  name: string;
-  type: 'skill' | 'habit' | 'knowledge';
-  mastery: number;
-  status: 'not_started' | 'in_progress' | 'completed';
-  startDate?: string;
-  createdAt: string;
-  updatedAt?: string;
+  id: ID,
+  treeId: ID,
+  parentId: ID | null,
+  name: string,
+  type: 'skill' | 'habit' | 'knowledge',
+  mastery: number,
+  status: 'not_started' | 'in_progress' | 'completed',
+  startDate?: string,
+  createdAt: string,
+  updatedAt?: string,
 }
 
 // 技能树
 export interface Tree {
-  id: ID;
-  userId?: ID;
-  name: string;
-  createdAt: string;
-  updatedAt?: string;
-  children?: TreeNode[];
+  id: ID,
+  userId?: ID,
+  name: string,
+  createdAt: string,
+  updatedAt?: string,
+  children?: TreeNode[],
 }
 
 // 用户类型
 export interface User {
-  id: ID;
-  email: string;
-  username?: string;
-  name?: string;
-  createdAt: string;
+  id: ID,
+  email: string,
+  username?: string,
+  name?: string,
+  createdAt: string,
 }
 
 // 认证状态类型
 export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  user: User | null,
+  isAuthenticated: boolean,
+  isLoading: boolean,
+  error: string | null,
 }
 
 // 主题状态类型
 export interface ThemeState {
-  isDarkMode: boolean;
+  isDarkMode: boolean,
 }
 
 // 成长状态类型
 export interface GrowthState {
-  records: GrowthRecord[];
-  tags: Tag[];
-  trees: Tree[];
-  isLoading: boolean;
-  error: string | null;
+  records: GrowthRecord[],
+  tags: Tag[],
+  trees: Tree[],
+  isLoading: boolean,
+  error: string | null,
 }
 
 // 目标类型
 export interface Goal {
-  id: ID;
-  title: string;
-  description: string;
-  targetValue: number;
-  currentValue: number;
-  startDate: string;
-  endDate: string;
-  status: GoalStatus;
-  createdAt: string;
-  updatedAt?: string;
+  id: ID,
+  title: string,
+  description: string,
+  targetValue: number,
+  currentValue: number,
+  startDate: string,
+  endDate: string,
+  status: GoalStatus,
+  createdAt: string,
+  updatedAt?: string,
 }
 
 // 目标状态类型
 export interface GoalState {
-  goals: Goal[];
-  isLoading: boolean;
-  error: string | null;
+  goals: Goal[],
+  isLoading: boolean,
+  error: string | null,
 }
 
 // 提醒类型
 export interface Reminder {
-  id: ID;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  goalId?: ID;
-  isCompleted: boolean;
-  createdAt: string;
-  updatedAt?: string;
+  id: ID,
+  title: string,
+  description: string,
+  date: string,
+  time: string,
+  goalId?: ID,
+  isCompleted: boolean,
+  createdAt: string,
+  updatedAt?: string,
 }
 
 // 提醒状态类型
 export interface ReminderState {
-  reminders: Reminder[];
-  isLoading: boolean;
-  error: string | null;
+  reminders: Reminder[],
+  isLoading: boolean,
+  error: string | null,
 }
 
 // 根状态类型
 export interface RootState {
-  auth: AuthState;
-  growth: GrowthState;
-  theme: ThemeState;
-  goal: GoalState;
-  reminder: ReminderState;
-  ai: AIState;
-  sync: SyncState;
+  auth: AuthState,
+  growth: GrowthState,
+  theme: ThemeState,
+  goal: GoalState,
+  reminder: ReminderState,
+  ai: AIState,
+  sync: SyncState,
 }
 
 // 服务层 DTO 类型
 export interface CreateRecordDTO {
-  date?: string;
-  activity?: string;
-  learning?: string;
-  reflection?: string;
-  mood?: Mood;
-  tags?: string[];
+  date?: string,
+  activity?: string,
+  learning?: string,
+  reflection?: string,
+  mood?: Mood,
+  tags?: string[],
 }
 
 export interface CreateGoalDTO {
-  title: string;
-  description?: string;
-  targetValue: number;
-  startDate: string;
-  endDate: string;
+  title: string,
+  description?: string,
+  targetValue: number,
+  startDate: string,
+  endDate: string,
 }
 
 export interface UpdateGoalDTO {
-  title?: string;
-  description?: string;
-  targetValue?: number;
-  currentValue?: number;
-  status?: GoalStatus;
+  title?: string,
+  description?: string,
+  targetValue?: number,
+  currentValue?: number,
+  status?: GoalStatus,
 }
 
 export interface CreateReminderDTO {
-  title: string;
-  description?: string;
-  date: string;
-  time: string;
-  goalId?: ID;
+  title: string,
+  description?: string,
+  date: string,
+  time: string,
+  goalId?: ID,
 }
 
 export interface UpdateReminderDTO {
-  title?: string;
-  description?: string;
-  date?: string;
-  time?: string;
-  isCompleted?: boolean;
+  title?: string,
+  description?: string,
+  date?: string,
+  time?: string,
+  isCompleted?: boolean,
 }
 
 // 徽章类型
 export interface Badge {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  condition: (stats: BadgeStats) => boolean;
+  id: string,
+  name: string,
+  icon: string,
+  description: string,
+  condition: (stats: BadgeStats) => boolean,
 }
 
 export interface BadgeStats {
-  totalRecords: number;
-  streak: number;
-  weeklyRecords: number;
-  weeklyChangePercent: number;
+  totalRecords: number,
+  streak: number,
+  weeklyRecords: number,
+  weeklyChangePercent: number,
 }
 
 // 统计类型
 export interface DashboardStats {
-  weeklyRecords: number;
-  totalRecords: number;
-  streak: number;
-  growthProgress: number;
-  weekChange: number;
-  weekChangePercent: number;
-  moodStats: { [key in Mood]: number };
+  weeklyRecords: number,
+  totalRecords: number,
+  streak: number,
+  growthProgress: number,
+  weekChange: number,
+  weekChangePercent: number,
+  moodStats: { [key in Mood]: number },
 }
 
 // 错误类型
 export interface AppError {
-  code: string;
-  message: string;
-  details?: unknown;
+  code: string,
+  message: string,
+  details?: unknown,
 }
 
 // === AI Agent 类型 ===
@@ -221,12 +221,12 @@ export type LLMProvider = 'openai' | 'anthropic' | 'deepseek' | 'custom';
 
 // LLM 配置
 export interface LLMConfig {
-  provider: LLMProvider;
-  apiKey: string;
-  baseUrl?: string;
-  model: string;
-  temperature: number;
-  maxTokens: number;
+  provider: LLMProvider,
+  apiKey: string,
+  baseUrl?: string,
+  model: string,
+  temperature: number,
+  maxTokens: number,
 }
 
 // 聊天消息角色
@@ -234,59 +234,59 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system' | 'tool';
 
 // 聊天消息
 export interface ChatMessage {
-  id: string;
-  role: ChatMessageRole;
-  content: string;
-  timestamp: string;
-  tokens?: number;
+  id: string,
+  role: ChatMessageRole,
+  content: string,
+  timestamp: string,
+  tokens?: number,
 }
 
 // 对话会话
 export interface ChatSession {
-  id: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  messageCount: number;
+  id: string,
+  title: string,
+  createdAt: string,
+  updatedAt: string,
+  messageCount: number,
 }
 
 // 完整会话（包含消息）
 export interface ChatSessionWithMessages extends ChatSession {
-  messages: ChatMessage[];
+  messages: ChatMessage[],
 }
 
 // 工具参数类型
 export interface ToolParameter {
-  name: string;
-  type: 'string' | 'number' | 'boolean';
-  required: boolean;
-  description: string;
+  name: string,
+  type: 'string' | 'number' | 'boolean',
+  required: boolean,
+  description: string,
 }
 
 // 工具定义
 export interface Tool {
-  id: string;
-  name: string;
-  description: string;
-  parameters: ToolParameter[];
+  id: string,
+  name: string,
+  description: string,
+  parameters: ToolParameter[],
 }
 
 // 工具调用结果
 export interface ToolCallResult {
-  toolName: string;
-  success: boolean;
-  data?: unknown;
-  error?: string;
+  toolName: string,
+  success: boolean,
+  data?: unknown,
+  error?: string,
 }
 
 // AI 状态
 export interface AIState {
-  config: LLMConfig | null;
-  currentSession: ChatSession | null;
-  sessions: ChatSession[];
-  messages: Record<string, ChatMessage[]>;
-  isLoading: boolean;
-  isStreaming: boolean;
-  streamingContent: string;
-  error: string | null;
+  config: LLMConfig | null,
+  currentSession: ChatSession | null,
+  sessions: ChatSession[],
+  messages: Record<string, ChatMessage[]>,
+  isLoading: boolean,
+  isStreaming: boolean,
+  streamingContent: string,
+  error: string | null,
 }

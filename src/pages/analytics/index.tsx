@@ -26,19 +26,19 @@ import {
 } from 'recharts';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../types';
-import { AppDispatch } from '../../store';
+import { type AppDispatch } from '../../store';
 import { exportData, importData } from '../../store/slices/growthSlice';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
 interface CustomTooltipProps {
-  active?: boolean;
+  active?: boolean,
   payload?: Array<{
-    name?: string;
-    value?: number;
-    color?: string;
-    payload?: Record<string, unknown>;
-  }>;
-  label?: string;
+    name?: string,
+    value?: number,
+    color?: string,
+    payload?: Record<string, unknown>,
+  }>,
+  label?: string,
 }
 
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
@@ -75,44 +75,44 @@ const moodLabels: Record<number, string> = {
 };
 
 interface RecordData {
-  createdAt: string;
-  mood: string;
-  activity?: string;
-  tags?: string[];
+  createdAt: string,
+  mood: string,
+  activity?: string,
+  tags?: string[],
 }
 
 interface GrowthState {
-  records: RecordData[];
+  records: RecordData[],
 }
 
 interface Stats {
-  weeklyRecords: number;
-  totalRecords: number;
-  averageMood: string;
+  weeklyRecords: number,
+  totalRecords: number,
+  averageMood: string,
 }
 
 type ExportFormat = 'json' | 'csv' | 'markdown';
 
 interface ChartDataResult {
-  dailyRecords: Array<{ date: string; count: number }>;
-  moodTrend: Array<{ day: string; mood: number; moodLabel: string }>;
-  activityDistribution: Array<{ name: string; value: number }>;
-  weeklyTrend: Array<{ week: string; records: number; avgMood: number }>;
-  skillsRadar: Array<{ subject: string; A: number; fullMark: number }>;
-  categoryBreakdown: Array<{ name: string; value: number }>;
-  studyTimeData: Array<{ date: string; hours: number }>;
-  scatterData: Array<{ x: number; y: number; z: number }>;
-  heatmapData: Array<{ week: string; activity: string; intensity: number }>;
+  dailyRecords: Array<{ date: string, count: number }>,
+  moodTrend: Array<{ day: string, mood: number, moodLabel: string }>,
+  activityDistribution: Array<{ name: string, value: number }>,
+  weeklyTrend: Array<{ week: string, records: number, avgMood: number }>,
+  skillsRadar: Array<{ subject: string, A: number, fullMark: number }>,
+  categoryBreakdown: Array<{ name: string, value: number }>,
+  studyTimeData: Array<{ date: string, hours: number }>,
+  scatterData: Array<{ x: number, y: number, z: number }>,
+  heatmapData: Array<{ week: string, activity: string, intensity: number }>,
 }
 
 const Analytics = () => {
-  const [importStatus, setImportStatus] = useState<{ success: boolean; message: string }>({ success: false, message: '' });
+  const [importStatus, setImportStatus] = useState<{ success: boolean, message: string }>({ success: false, message: '' });
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportOptions, setExportOptions] = useState<{
-    format: ExportFormat;
-    dataTypes: string[];
-    startDate: string;
-    endDate: string;
+    format: ExportFormat,
+    dataTypes: string[],
+    startDate: string,
+    endDate: string,
   }>({
     format: 'json',
     dataTypes: ['records', 'goals', 'tags', 'trees'] as string[],
@@ -164,7 +164,7 @@ const Analytics = () => {
 
   const processChartData = (records: RecordData[], timeRange: string): ChartDataResult => {
     const now = new Date();
-    const dailyData: Array<{ date: string; count: number }> = [];
+    const dailyData: Array<{ date: string, count: number }> = [];
     
     let days = 7;
     switch (timeRange) {
@@ -193,7 +193,7 @@ const Analytics = () => {
       });
     }
 
-    const moodData: Array<{ day: string; mood: number; moodLabel: string }> = [];
+    const moodData: Array<{ day: string, mood: number, moodLabel: string }> = [];
     records.slice(0, 10).reverse().forEach((record) => {
       const moodValue = getMoodValue(record.mood);
       
@@ -223,7 +223,7 @@ const Analytics = () => {
       value
     })).slice(0, 5);
 
-    const weeklyData: Array<{ week: string; records: number; avgMood: number }> = [];
+    const weeklyData: Array<{ week: string, records: number, avgMood: number }> = [];
     for (let i = 3; i >= 0; i--) {
       const weekStart = new Date(now);
       weekStart.setDate(weekStart.getDate() - i * 7);
@@ -272,7 +272,7 @@ const Analytics = () => {
       };
     });
 
-    const studyTimeData: Array<{ date: string; hours: number }> = [];
+    const studyTimeData: Array<{ date: string, hours: number }> = [];
     for (let i = 7; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
@@ -290,7 +290,7 @@ const Analytics = () => {
       z: record.tags?.length || 0
     }));
 
-    const heatmapData: Array<{ week: string; activity: string; intensity: number }> = [];
+    const heatmapData: Array<{ week: string, activity: string, intensity: number }> = [];
     const activities = ['编程', '阅读', '运动', '学习', '社交'];
     for (let week = 1; week <= 4; week++) {
       activities.forEach(activity => {
@@ -327,7 +327,7 @@ const Analytics = () => {
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        dispatch(importData(data));
+        void dispatch(importData(data));
         setImportStatus({ success: true, message: '数据导入成功！' });
         setTimeout(() => {
           setImportStatus({ success: false, message: '' });
@@ -497,7 +497,7 @@ const Analytics = () => {
                   cursor={{ strokeDasharray: '3 3' }} 
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
-                      const payloadData = payload[0].payload as { x: number; y: number; z: number };
+                      const payloadData = payload[0].payload as { x: number, y: number, z: number };
                       return (
                         <div className="bg-white p-3 rounded shadow-md border border-gray-200">
                           <p className="font-medium">情绪: {moodLabels[payloadData.x]}</p>
@@ -536,7 +536,7 @@ const Analytics = () => {
                 <Tooltip 
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
-                      const payloadData = payload[0].payload as { activity: string; week: string; intensity: number };
+                      const payloadData = payload[0].payload as { activity: string, week: string, intensity: number };
                       return (
                         <div className="bg-white p-3 rounded shadow-md border border-gray-200">
                           <p className="font-medium">{payloadData.activity}</p>
@@ -700,7 +700,7 @@ const Analytics = () => {
                       <button 
                         className="btn btn-primary flex-1"
                         onClick={() => {
-                          dispatch(exportData({
+                          void dispatch(exportData({
                             format: exportOptions.format,
                             dataTypes: exportOptions.dataTypes,
                             startDate: exportOptions.startDate ? new Date(exportOptions.startDate) : undefined,

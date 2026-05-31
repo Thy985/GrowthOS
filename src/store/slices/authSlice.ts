@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import authServiceV2 from '../../common/services/authServiceV2';
-import { AuthState, User } from '../../types';
+import { type AuthState, type User } from '../../types';
 import logger from '../../utils/logger';
 
 // 初始状态
@@ -12,7 +12,7 @@ const initialState: AuthState = {
 };
 
 // 登录的异步thunk
-export const login = createAsyncThunk('auth/login', async ({ email, password }: { email: string; password: string }) => {
+export const login = createAsyncThunk('auth/login', async ({ email, password }: { email: string, password: string }) => {
   try {
     logger.info('用户登录', { email });
     const { user } = await authServiceV2.login(email, password);
@@ -31,7 +31,7 @@ export const login = createAsyncThunk('auth/login', async ({ email, password }: 
 });
 
 // 注册的异步thunk
-export const register = createAsyncThunk('auth/register', async ({ name, email, password }: { name: string; email: string; password: string }) => {
+export const register = createAsyncThunk('auth/register', async ({ name, email, password }: { name: string, email: string, password: string }) => {
   try {
     logger.info('用户注册', { email });
     const { user } = await authServiceV2.register(email, password, name);

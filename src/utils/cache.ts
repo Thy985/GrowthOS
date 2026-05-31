@@ -1,12 +1,12 @@
 export interface CacheOptions {
-  ttl?: number;
-  namespace?: string;
+  ttl?: number,
+  namespace?: string,
 }
 
 export interface CacheEntry<T> {
-  value: T;
-  timestamp: number;
-  expiresAt: number;
+  value: T,
+  timestamp: number,
+  expiresAt: number,
 }
 
 export class MemoryCache {

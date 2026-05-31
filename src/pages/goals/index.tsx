@@ -1,25 +1,25 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../../types';
-import { AppDispatch } from '../../store';
+import { type AppDispatch } from '../../store';
 import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../utils/goalUtils';
 
 interface FormErrors {
-  title?: string;
-  description?: string;
-  targetValue?: string;
-  startDate?: string;
-  endDate?: string;
+  title?: string,
+  description?: string,
+  targetValue?: string,
+  startDate?: string,
+  endDate?: string,
 }
 
 interface FormData {
-  title: string;
-  description: string;
-  targetValue: string;
-  startDate: string;
-  endDate: string;
+  title: string,
+  description: string,
+  targetValue: string,
+  startDate: string,
+  endDate: string,
 }
 
 const Goals = () => {
@@ -40,7 +40,7 @@ const Goals = () => {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   
   useEffect(() => {
-    dispatch(loadGoals());
+    void dispatch(loadGoals());
   }, [dispatch]);
   
   useEffect(() => {
@@ -78,7 +78,7 @@ const Goals = () => {
       return;
     }
     
-    dispatch(addGoal({
+    void dispatch(addGoal({
       title: formData.title,
       description: formData.description,
       targetValue: Number(formData.targetValue),
@@ -118,7 +118,7 @@ const Goals = () => {
     }
     
     if (currentGoal) {
-      dispatch(updateGoal({
+      void dispatch(updateGoal({
         id: currentGoal.id,
         title: formData.title,
         description: formData.description,
@@ -141,14 +141,14 @@ const Goals = () => {
   
   const handleDeleteGoal = useCallback((goalId: string) => {
     if (window.confirm('确定要删除这个目标吗？')) {
-      dispatch(deleteGoal(goalId));
+      void dispatch(deleteGoal(goalId));
     }
   }, [dispatch]);
   
   const handleIncrementProgress = useCallback((goalId: string) => {
     const value = prompt('请输入要增加的进度值：');
     if (value && !isNaN(Number(value)) && Number(value) > 0) {
-      dispatch(incrementGoalProgress({ goalId, value: Number(value) }));
+      void dispatch(incrementGoalProgress({ goalId, value: Number(value) }));
     }
   }, [dispatch]);
   

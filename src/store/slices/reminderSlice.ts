@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import reminderServiceV2 from '../../common/services/reminderServiceV2';
-import { Reminder, ReminderState, CreateReminderDTO, UpdateReminderDTO } from '../../types';
+import { type Reminder, type ReminderState, type CreateReminderDTO, type UpdateReminderDTO } from '../../types';
 import logger from '../../utils/logger';
 
 const initialState: ReminderState = {
@@ -34,7 +34,7 @@ export const addReminder = createAsyncThunk('reminder/addReminder', async (remin
     });
     
     if ('Notification' in window) {
-      Notification.requestPermission().then(permission => {
+      void Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
           const reminderDate = new Date(`${reminder.date}T${reminder.time}`);
           const now = new Date();

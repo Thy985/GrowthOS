@@ -1,11 +1,11 @@
 import { AppError, ErrorFactory } from './ApiResponse';
 
 export interface RetryConfig {
-  maxRetries: number;
-  initialDelay: number;
-  maxDelay: number;
-  backoffMultiplier: number;
-  retryableErrors?: string[];
+  maxRetries: number,
+  initialDelay: number,
+  maxDelay: number,
+  backoffMultiplier: number,
+  retryableErrors?: string[],
 }
 
 export const DEFAULT_RETRY_CONFIG: RetryConfig = {
@@ -17,9 +17,9 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
 };
 
 export interface RequestConfig {
-  signal?: AbortSignal;
-  timeout?: number;
-  retry?: Partial<RetryConfig>;
+  signal?: AbortSignal,
+  timeout?: number,
+  retry?: Partial<RetryConfig>,
 }
 
 export async function withRetry<T>(
@@ -103,11 +103,11 @@ function sleep(ms: number): Promise<void> {
 
 export class RequestQueue {
   private queue: Array<{
-    id: string;
-    execute: () => Promise<unknown>;
-    priority?: number;
-    resolve: (value: unknown) => void;
-    reject: (error: unknown) => void;
+    id: string,
+    execute: () => Promise<unknown>,
+    priority?: number,
+    resolve: (value: unknown) => void,
+    reject: (error: unknown) => void,
   }> = [];
   private processing = false;
   private maxConcurrent: number;
@@ -118,7 +118,7 @@ export class RequestQueue {
     this.maxQueueSize = maxQueueSize;
   }
 
-  async add<T>(request: { id: string; execute: () => Promise<T>; priority?: number }): Promise<T> {
+  async add<T>(request: { id: string, execute: () => Promise<T>, priority?: number }): Promise<T> {
     if (this.queue.length >= this.maxQueueSize) {
       throw ErrorFactory.validation('Request queue is full');
     }
@@ -131,7 +131,7 @@ export class RequestQueue {
       });
       
       this.queue.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-      this.process();
+      void this.process();
     });
   }
 

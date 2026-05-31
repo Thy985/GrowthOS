@@ -127,14 +127,14 @@ const calculateBadges = (stats: ReturnType<typeof calculateStats>) => {
 };
 
 interface StatCardProps {
-  title: string;
-  value: string | number;
-  change?: number;
-  changeText?: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  iconColor: string;
-  delay?: number;
+  title: string,
+  value: string | number,
+  change?: number,
+  changeText?: string,
+  icon: React.ReactNode,
+  iconBg: string,
+  iconColor: string,
+  delay?: number,
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, change, changeText, icon, iconBg, iconColor, delay = 0 }) => (
@@ -228,7 +228,7 @@ const Dashboard = () => {
         tags: [...new Set([...extractTags(formData.activity), ...extractTags(formData.learning)])]
       };
       
-      dispatch(addRecord(newRecord));
+      void dispatch(addRecord(newRecord));
       
       setSuccessMessage(t('dashboard.recordSaved'));
       setTimeout(() => setSuccessMessage(''), 3000);

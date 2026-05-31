@@ -1,18 +1,18 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import Button from './common/Button';
 import { captureException } from '../utils/sentry';
 
 interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  level?: 'page' | 'component';
+  children: ReactNode,
+  fallback?: ReactNode,
+  onError?: (error: Error, errorInfo: ErrorInfo) => void,
+  level?: 'page' | 'component',
 }
 
 interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
+  hasError: boolean,
+  error: Error | null,
+  errorInfo: ErrorInfo | null,
 }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {

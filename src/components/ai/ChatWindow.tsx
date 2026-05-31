@@ -7,7 +7,7 @@ import { loadAIConfig, sendMessage, clearStreaming } from '../../store/slices/ai
 import * as aiStorage from '../../common/services/aiStorageService';
 
 interface MessageBubbleProps {
-  msg: ChatMessage;
+  msg: ChatMessage,
 }
 
 const MessageBubble = memo<MessageBubbleProps>(({ msg }) => {
@@ -43,7 +43,7 @@ export const ChatWindow: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    dispatch(loadAIConfig());
+    void dispatch(loadAIConfig());
   }, [dispatch]);
 
   const loadMessages = useCallback(async () => {
@@ -54,7 +54,7 @@ export const ChatWindow: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   }, [currentSession]);
 
   useEffect(() => {
-    loadMessages();
+    void loadMessages();
   }, [loadMessages]);
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export const ChatWindow: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      void handleSend();
     }
   }, [handleSend]);
 

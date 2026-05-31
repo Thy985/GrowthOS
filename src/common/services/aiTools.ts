@@ -43,7 +43,7 @@ const calculateBadgeStats = (records: GrowthRecord[], _goals: Goal[]): BadgeStat
 
 // 工具执行器接口
 interface ToolExecutor {
-  execute(params: Record<string, unknown>): Promise<unknown>;
+  execute(params: Record<string, unknown>): Promise<unknown>,
 }
 
 // 获取技能树
@@ -56,7 +56,7 @@ const getGrowthTreesTool: ToolExecutor = {
 
 // 获取记录
 const getRecordsTool: ToolExecutor = {
-  async execute(params: { limit?: number; startDate?: string; endDate?: string }) {
+  async execute(params: { limit?: number, startDate?: string, endDate?: string }) {
     const allRecords = await getRecords();
     let filtered = [...allRecords];
     

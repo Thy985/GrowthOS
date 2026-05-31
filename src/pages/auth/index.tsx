@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../types';
-import { AppDispatch } from '../../store';
+import { type AppDispatch } from '../../store';
 import { login, register } from '../../store/slices/authSlice';
 
 interface FormErrors {
-  username?: string;
-  password?: string;
-  confirmPassword?: string;
+  username?: string,
+  password?: string,
+  confirmPassword?: string,
 }
 
 const Auth = () => {
@@ -55,9 +55,9 @@ const Auth = () => {
     }
 
     if (isLogin) {
-      dispatch(login({ email: username, password }));
+      void dispatch(login({ email: username, password }));
     } else {
-      dispatch(register({ name: username, email: username, password }));
+      void dispatch(register({ name: username, email: username, password }));
     }
   };
 

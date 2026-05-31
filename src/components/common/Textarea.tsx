@@ -1,12 +1,12 @@
 import type { TextareaHTMLAttributes } from 'react';
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
-  className?: string;
-  containerClassName?: string;
-  rows?: number;
+  label?: string,
+  error?: string,
+  helperText?: string,
+  className?: string,
+  containerClassName?: string,
+  rows?: number,
 }
 
 const Textarea = ({

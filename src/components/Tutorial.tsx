@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import secureStorage from '../utils/secureStorage';
 
 interface TutorialStep {
-  title: string;
-  content: string;
-  icon: string;
+  title: string,
+  content: string,
+  icon: string,
 }
 
 const Tutorial = () => {
@@ -52,7 +52,7 @@ const Tutorial = () => {
   }, []);
 
   const completeTutorial = () => {
-    secureStorage.setItem('growthos-tutorial-seen', true);
+    void secureStorage.setItem('growthos-tutorial-seen', true);
     setShowTutorial(false);
   };
 

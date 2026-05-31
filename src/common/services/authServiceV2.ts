@@ -10,7 +10,7 @@ const MIN_PASSWORD_LENGTH = 8;
 async function hashPassword(
   password: string, 
   salt?: Uint8Array
-): Promise<{ hash: string; salt: string }> {
+): Promise<{ hash: string, salt: string }> {
   const actualSalt = salt || crypto.getRandomValues(new Uint8Array(16));
   const saltBase64 = btoa(String.fromCharCode(...actualSalt));
   
@@ -68,12 +68,12 @@ function generateId(): string {
 }
 
 interface StoredUser {
-  id: string;
-  email: string;
-  name?: string;
-  passwordHash: string;
-  passwordSalt: string;
-  createdAt: string;
+  id: string,
+  email: string,
+  name?: string,
+  passwordHash: string,
+  passwordSalt: string,
+  createdAt: string,
 }
 
 async function loadUsersFromStorage(): Promise<StoredUser[]> {
@@ -97,7 +97,7 @@ export async function register(
   email: string, 
   password: string, 
   name?: string
-): Promise<{ user: User; token: string; refreshToken?: string }> {
+): Promise<{ user: User, token: string, refreshToken?: string }> {
   const users = await loadUsersFromStorage();
   
   const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
@@ -147,7 +147,7 @@ export async function register(
 export async function login(
   email: string, 
   password: string
-): Promise<{ user: User; token: string; refreshToken?: string }> {
+): Promise<{ user: User, token: string, refreshToken?: string }> {
   const users = await loadUsersFromStorage();
   const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
   
@@ -180,7 +180,7 @@ export async function login(
 
 export async function logout(): Promise<void> {
   await tokenManager.clearTokens();
-  await secureStorage.removeItem(STORAGE_KEYS.USER);
+  void secureStorage.removeItem(STORAGE_KEYS.USER);
 }
 
 export async function getCurrentUserInfo(): Promise<User | null> {

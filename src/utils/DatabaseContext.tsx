@@ -1,114 +1,114 @@
 import React, { createContext, useContext, useRef, useEffect, useState, useCallback } from 'react';
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 
 export type SyncStatus = 'synced' | 'pending' | 'conflict';
 
 export interface BaseEntity {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  userId?: number;
+  id: string,
+  createdAt: string,
+  updatedAt: string,
+  userId?: number,
 }
 
 export interface SyncedEntity<T> extends BaseEntity {
-  data: T;
-  syncStatus: SyncStatus;
-  localVersion: number;
-  serverVersion?: number;
+  data: T,
+  syncStatus: SyncStatus,
+  localVersion: number,
+  serverVersion?: number,
 }
 
 export interface SyncQueueItem {
-  id: string;
-  operation: 'create' | 'update' | 'delete';
-  entityType: 'record' | 'goal' | 'reminder' | 'tree' | 'treeNode';
-  entityId: string;
-  payload: unknown;
-  timestamp: string;
-  retryCount: number;
+  id: string,
+  operation: 'create' | 'update' | 'delete',
+  entityType: 'record' | 'goal' | 'reminder' | 'tree' | 'treeNode',
+  entityId: string,
+  payload: unknown,
+  timestamp: string,
+  retryCount: number,
 }
 
 export interface SyncMeta {
-  lastSyncTime: string | null;
-  serverVersions: Record<string, number>;
+  lastSyncTime: string | null,
+  serverVersions: Record<string, number>,
 }
 
 export interface ConflictInfo {
-  entityType: string;
-  entityId: string;
-  localData: unknown;
-  serverData: unknown;
-  queueItem: SyncQueueItem;
+  entityType: string,
+  entityId: string,
+  localData: unknown,
+  serverData: unknown,
+  queueItem: SyncQueueItem,
 }
 
 export interface SyncState {
-  isOnline: boolean;
-  isSyncing: boolean;
-  pendingCount: number;
-  queue: SyncQueueItem[];
-  conflicts: ConflictInfo[];
-  lastSyncTime: string | null;
+  isOnline: boolean,
+  isSyncing: boolean,
+  pendingCount: number,
+  queue: SyncQueueItem[],
+  conflicts: ConflictInfo[],
+  lastSyncTime: string | null,
   syncProgress: {
-    total: number;
-    completed: number;
-    current: SyncQueueItem | null;
-  };
-  error: string | null;
+    total: number,
+    completed: number,
+    current: SyncQueueItem | null,
+  },
+  error: string | null,
 }
 
 interface GrowthOSDB extends DBSchema {
   records: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-updated': string,
+    },
+  },
   goals: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-updated': string,
+    },
+  },
   reminders: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-updated': string,
+    },
+  },
   growthTrees: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-updated': string,
+    },
+  },
   treeNodes: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-tree': string;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-tree': string,
+      'by-updated': string,
+    },
+  },
   syncQueue: {
-    key: string;
-    value: SyncQueueItem;
+    key: string,
+    value: SyncQueueItem,
     indexes: {
-      'by-timestamp': string;
-      'by-entity': [string, string];
-    };
-  };
+      'by-timestamp': string,
+      'by-entity': [string, string],
+    },
+  },
   syncMeta: {
-    key: string;
-    value: SyncMeta;
-  };
+    key: string,
+    value: SyncMeta,
+  },
 }
 
 const DB_NAME = 'growthos-offline';
@@ -121,46 +121,46 @@ function generateId(): string {
 }
 
 interface DatabaseContextValue {
-  db: IDBPDatabase<GrowthOSDB> | null;
-  isReady: boolean;
-  error: string | null;
-  initDatabase: () => Promise<IDBPDatabase<GrowthOSDB>>;
+  db: IDBPDatabase<GrowthOSDB> | null,
+  isReady: boolean,
+  error: string | null,
+  initDatabase: () => Promise<IDBPDatabase<GrowthOSDB>>,
   createEntity: <T extends BaseEntity>(
     store: EntityStore,
     data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>,
     userId?: number
-  ) => Promise<SyncedEntity<T>>;
+  ) => Promise<SyncedEntity<T>>,
   updateEntity: <T extends BaseEntity>(
     store: EntityStore,
     id: string,
     updates: Partial<Omit<T, 'id' | 'createdAt'>>
-  ) => Promise<SyncedEntity<T> | null>;
-  deleteEntity: (store: EntityStore, id: string) => Promise<boolean>;
-  getEntity: <T>(store: EntityStore, id: string) => Promise<SyncedEntity<T> | null>;
-  getAllEntities: <T>(store: EntityStore) => Promise<SyncedEntity<T>[]>;
-  getPendingEntities: <T>(store: EntityStore) => Promise<SyncedEntity<T>[]>;
-  getConflictEntities: <T>(store: EntityStore) => Promise<SyncedEntity<T>[]>;
-  markAsSynced: (store: EntityStore, id: string, serverVersion: number) => Promise<void>;
-  markAsConflict: (store: EntityStore, id: string, serverData: unknown) => Promise<void>;
+  ) => Promise<SyncedEntity<T> | null>,
+  deleteEntity: (store: EntityStore, id: string) => Promise<boolean>,
+  getEntity: <T>(store: EntityStore, id: string) => Promise<SyncedEntity<T> | null>,
+  getAllEntities: <T>(store: EntityStore) => Promise<SyncedEntity<T>[]>,
+  getPendingEntities: <T>(store: EntityStore) => Promise<SyncedEntity<T>[]>,
+  getConflictEntities: <T>(store: EntityStore) => Promise<SyncedEntity<T>[]>,
+  markAsSynced: (store: EntityStore, id: string, serverVersion: number) => Promise<void>,
+  markAsConflict: (store: EntityStore, id: string, serverData: unknown) => Promise<void>,
   resolveConflict: (
     store: EntityStore,
     id: string,
     resolution: 'local' | 'server' | 'merge',
     mergedData?: unknown
-  ) => Promise<void>;
-  getAllSyncQueue: () => Promise<SyncQueueItem[]>;
-  getSyncQueueCount: () => Promise<number>;
-  removeSyncQueueItem: (id: string) => Promise<void>;
-  clearSyncQueue: () => Promise<void>;
-  updateSyncQueueRetry: (id: string) => Promise<void>;
-  getSyncMeta: () => Promise<SyncMeta>;
-  updateSyncMeta: (meta: Partial<SyncMeta>) => Promise<void>;
+  ) => Promise<void>,
+  getAllSyncQueue: () => Promise<SyncQueueItem[]>,
+  getSyncQueueCount: () => Promise<number>,
+  removeSyncQueueItem: (id: string) => Promise<void>,
+  clearSyncQueue: () => Promise<void>,
+  updateSyncQueueRetry: (id: string) => Promise<void>,
+  getSyncMeta: () => Promise<SyncMeta>,
+  updateSyncMeta: (meta: Partial<SyncMeta>) => Promise<void>,
 }
 
 const DatabaseContext = createContext<DatabaseContextValue | null>(null);
 
 interface DatabaseProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode,
 }
 
 async function createDatabase(): Promise<IDBPDatabase<GrowthOSDB>> {

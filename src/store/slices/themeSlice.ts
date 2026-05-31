@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ThemeState } from '../../types';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { type ThemeState } from '../../types';
 
 // 从localStorage读取初始主题
 const getInitialTheme = (): boolean => {

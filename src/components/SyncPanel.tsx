@@ -3,13 +3,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { loadSyncStatus, performSync } from '../store/slices/syncSlice';
 import { useNetworkStatus } from '../utils/networkDetector';
 import { useI18n } from '../i18n/useI18n';
-import { AppDispatch } from '../store';
+import { type AppDispatch } from '../store';
 import type { RootState } from '../types';
 import type { SyncQueueItem } from '../utils/syncQueue';
 
 interface SyncPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean,
+  onClose: () => void,
 }
 
 const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
@@ -35,7 +35,7 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      dispatch(loadSyncStatus());
+      void dispatch(loadSyncStatus());
     }
   }, [isOpen, dispatch]);
 
@@ -67,7 +67,7 @@ const SyncPanel: React.FC<SyncPanelProps> = memo(({ isOpen, onClose }) => {
   }, []);
 
   const getPayloadPreview = useCallback((item: SyncQueueItem) => {
-    const payload = item.payload as { title?: string; name?: string; content?: string } || {};
+    const payload = item.payload as { title?: string, name?: string, content?: string } || {};
     if (payload.title) return payload.title;
     if (payload.name) return payload.name;
     if (payload.content) return payload.content.substring(0, 50);

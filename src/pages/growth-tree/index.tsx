@@ -1,15 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../types';
-import ReactFlow, { Controls, Background, BackgroundVariant, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType, Node, Edge } from 'reactflow';
+import ReactFlow, { Controls, Background, BackgroundVariant, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType, type Node, type Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { secureStorage } from '../../utils/secureStorage';
 import logger from '../../utils/logger';
 
 interface NodeFormData {
-  label: string;
-  description: string;
+  label: string,
+  description: string,
 }
 
 const GrowthTree = () => {
@@ -23,7 +23,7 @@ const GrowthTree = () => {
   const [nodeFormData, setNodeFormData] = useState<NodeFormData>({ label: '', description: '' });
   
   useEffect(() => {
-    (async () => {
+    void (async () => {
       try {
         const savedNodes = await secureStorage.getItem<Node[]>('growth-tree-nodes');
         const savedEdges = await secureStorage.getItem<Edge[]>('growth-tree-edges');
@@ -69,7 +69,7 @@ const GrowthTree = () => {
   
   useEffect(() => {
     if (nodes.length > 0 || edges.length > 0) {
-      (async () => {
+      void (async () => {
         try {
           await secureStorage.setItem('growth-tree-nodes', nodes);
           await secureStorage.setItem('growth-tree-edges', edges);

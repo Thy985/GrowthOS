@@ -25,17 +25,17 @@ export class AgentError extends Error {
 }
 
 export interface AgentStatus {
-  state: AgentState;
-  lastError?: string;
-  lastUpdate: string;
-  isReady: boolean;
+  state: AgentState,
+  lastError?: string,
+  lastUpdate: string,
+  isReady: boolean,
 }
 
 export interface RetryConfig {
-  maxRetries: number;
-  initialDelay: number;
-  maxDelay: number;
-  backoffMultiplier: number;
+  maxRetries: number,
+  initialDelay: number,
+  maxDelay: number,
+  backoffMultiplier: number,
 }
 
 const DEFAULT_RETRY_CONFIG: RetryConfig = {
@@ -178,8 +178,8 @@ export class AgentOrchestrator {
     content: string,
     onChunk?: (chunk: string) => void,
     options: {
-      timeout?: number;
-      retryConfig?: RetryConfig;
+      timeout?: number,
+      retryConfig?: RetryConfig,
     } = {}
   ): Promise<string> {
     if (!this.config) {
@@ -274,16 +274,16 @@ export class AgentOrchestrator {
   }
   
   async getSmartSuggestions(): Promise<Array<{
-    title: string;
-    description: string;
-    type: 'record' | 'goal' | 'tree' | 'general';
+    title: string,
+    description: string,
+    type: 'record' | 'goal' | 'tree' | 'general',
   }>> {
     try {
       const result = await this._withRetry(
         () => executeTool('suggestNextStep'),
         { ...DEFAULT_RETRY_CONFIG, maxRetries: 1 },
         '获取建议'
-      ) as { success: boolean; data: Array<{ title: string; description: string; type: 'record' | 'goal' | 'tree' | 'general' }> };
+      ) as { success: boolean, data: Array<{ title: string, description: string, type: 'record' | 'goal' | 'tree' | 'general' }> };
       if (result.success && result.data.length > 0) {
         return result.data;
       }
@@ -295,17 +295,17 @@ export class AgentOrchestrator {
 }
 
 interface AgentContextValue {
-  agent: AgentOrchestrator;
-  status: AgentStatus;
-  isReady: boolean;
-  isLoading: boolean;
-  error: string | null;
+  agent: AgentOrchestrator,
+  status: AgentStatus,
+  isReady: boolean,
+  isLoading: boolean,
+  error: string | null,
 }
 
 const AgentContext = createContext<AgentContextValue | null>(null);
 
 interface AgentProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode,
 }
 
 export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
@@ -330,7 +330,7 @@ export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
       }
     };
 
-    initAgent();
+    void initAgent();
 
     return () => {
       agentInstance?.cancel();

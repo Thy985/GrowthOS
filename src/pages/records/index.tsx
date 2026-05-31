@@ -1,6 +1,6 @@
 import React, { useState, useMemo, memo } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState, GrowthRecord, Mood } from '../../types';
+import { type RootState, type GrowthRecord, type Mood } from '../../types';
 import { formatDate, getMoodColor, getMoodText, highlightSearchTerm, filterRecords } from '../../utils/recordUtils';
 import { useI18n } from '../../i18n/useI18n';
 import { MOOD_OPTIONS } from '../../constants';
@@ -9,7 +9,7 @@ import { VirtualList } from '../../components/common/VirtualList';
 const VIRTUALIZATION_THRESHOLD = 100;
 const RECORD_ITEM_HEIGHT = 200;
 
-const RecordItem: React.FC<{ record: GrowthRecord; searchTerm: string }> = memo(({ record, searchTerm }) => {
+const RecordItem: React.FC<{ record: GrowthRecord, searchTerm: string }> = memo(({ record, searchTerm }) => {
   const { t } = useI18n();
   
   return (

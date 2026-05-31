@@ -1,13 +1,13 @@
 import { Badge } from './common';
 
 interface KeyboardShortcutsHelpProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean,
+  onClose: () => void,
 }
 
 interface Shortcut {
-  keys: string[];
-  description: string;
+  keys: string[],
+  description: string,
 }
 
 const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ isOpen, onClose }) => {

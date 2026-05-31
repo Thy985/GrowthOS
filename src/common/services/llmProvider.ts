@@ -2,8 +2,8 @@ import type { LLMConfig, ChatMessage } from '../../types';
 
 // Provider 接口
 export interface LLMProvider {
-  config: LLMConfig;
-  chat(messages: ChatMessage[], onChunk?: (chunk: string) => void): Promise<string>;
+  config: LLMConfig,
+  chat(messages: ChatMessage[], onChunk?: (chunk: string) => void): Promise<string>,
 }
 
 // 基础 Provider 类

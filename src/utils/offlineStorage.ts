@@ -1,19 +1,19 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 
 export type SyncStatus = 'synced' | 'pending' | 'conflict';
 
 export interface BaseEntity {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  userId?: number;
+  id: string,
+  createdAt: string,
+  updatedAt: string,
+  userId?: number,
 }
 
 export interface SyncedEntity<T> extends BaseEntity {
-  data: T;
-  syncStatus: SyncStatus;
-  localVersion: number;
-  serverVersion?: number;
+  data: T,
+  syncStatus: SyncStatus,
+  localVersion: number,
+  serverVersion?: number,
 }
 
 export type SyncOperation = 'create' | 'update' | 'delete';
@@ -21,107 +21,107 @@ export type EntityType = 'record' | 'goal' | 'reminder' | 'tree' | 'treeNode';
 export type Resolution = 'local' | 'server' | 'merge';
 
 export interface SyncPayload {
-  id: string;
-  operation: SyncOperation;
-  entityType: EntityType;
-  entityId: string;
-  data?: Record<string, unknown>;
+  id: string,
+  operation: SyncOperation,
+  entityType: EntityType,
+  entityId: string,
+  data?: Record<string, unknown>,
 }
 
 export interface SyncQueueItem {
-  id: string;
-  operation: SyncOperation;
-  entityType: EntityType;
-  entityId: string;
-  payload: SyncPayload;
-  timestamp: string;
-  retryCount: number;
+  id: string,
+  operation: SyncOperation,
+  entityType: EntityType,
+  entityId: string,
+  payload: SyncPayload,
+  timestamp: string,
+  retryCount: number,
 }
 
 export interface SyncMeta {
-  lastSyncTime: string | null;
-  serverVersions: Record<string, number>;
+  lastSyncTime: string | null,
+  serverVersions: Record<string, number>,
 }
 
 export interface ConflictInfo {
-  entityType: EntityType;
-  entityId: string;
-  localData: Record<string, unknown>;
-  serverData: Record<string, unknown>;
-  queueItem: SyncQueueItem;
+  entityType: EntityType,
+  entityId: string,
+  localData: Record<string, unknown>,
+  serverData: Record<string, unknown>,
+  queueItem: SyncQueueItem,
 }
 
 export interface SyncProgress {
-  total: number;
-  completed: number;
-  current: SyncQueueItem | null;
+  total: number,
+  completed: number,
+  current: SyncQueueItem | null,
 }
 
 export interface SyncState {
-  isOnline: boolean;
-  isSyncing: boolean;
-  pendingCount: number;
-  queue: SyncQueueItem[];
-  conflicts: ConflictInfo[];
-  lastSyncTime: string | null;
-  syncProgress: SyncProgress;
-  error: string | null;
+  isOnline: boolean,
+  isSyncing: boolean,
+  pendingCount: number,
+  queue: SyncQueueItem[],
+  conflicts: ConflictInfo[],
+  lastSyncTime: string | null,
+  syncProgress: SyncProgress,
+  error: string | null,
 }
 
 interface GrowthOSDB extends DBSchema {
   records: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-updated': string,
+    },
+  },
   goals: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-updated': string,
+    },
+  },
   reminders: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-updated': string,
+    },
+  },
   growthTrees: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-updated': string,
+    },
+  },
   treeNodes: {
-    key: string;
-    value: SyncedEntity<Record<string, unknown>>;
+    key: string,
+    value: SyncedEntity<Record<string, unknown>>,
     indexes: {
-      'by-status': SyncStatus;
-      'by-tree': string;
-      'by-updated': string;
-    };
-  };
+      'by-status': SyncStatus,
+      'by-tree': string,
+      'by-updated': string,
+    },
+  },
   syncQueue: {
-    key: string;
-    value: SyncQueueItem;
+    key: string,
+    value: SyncQueueItem,
     indexes: {
-      'by-timestamp': string;
-      'by-entity': [string, string];
-    };
-  };
+      'by-timestamp': string,
+      'by-entity': [string, string],
+    },
+  },
   syncMeta: {
-    key: string;
-    value: SyncMeta;
-  };
+    key: string,
+    value: SyncMeta,
+  },
 }
 
 const DB_NAME = 'growthos-offline';

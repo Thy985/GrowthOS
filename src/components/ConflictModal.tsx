@@ -2,18 +2,18 @@ import React, { memo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { resolveConflict as resolveConflictAction, removeConflict } from '../store/slices/syncSlice';
 import { useI18n } from '../i18n/useI18n';
-import { AppDispatch } from '../store';
+import { type AppDispatch } from '../store';
 
 interface ConflictData {
-  entityType: string;
-  entityId: string;
-  localData?: Record<string, unknown>;
-  serverData?: Record<string, unknown>;
+  entityType: string,
+  entityId: string,
+  localData?: Record<string, unknown>,
+  serverData?: Record<string, unknown>,
 }
 
 interface ConflictModalProps {
-  conflict: ConflictData | null;
-  onClose: () => void;
+  conflict: ConflictData | null,
+  onClose: () => void,
 }
 
 const ConflictModal: React.FC<ConflictModalProps> = memo(({ conflict, onClose }) => {

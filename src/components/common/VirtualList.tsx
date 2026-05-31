@@ -3,16 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader, MessageSquare } from 'lucide-react';
 
 interface VirtualListProps<T> {
-  items: T[];
-  height: number;
-  itemHeight: number;
-  renderItem: (item: T, index: number) => React.ReactNode;
-  keyExtractor: (item: T) => string;
-  emptyMessage?: string;
-  loading?: boolean;
-  className?: string;
-  overscanCount?: number;
-  width?: string | number;
+  items: T[],
+  height: number,
+  itemHeight: number,
+  renderItem: (item: T, index: number) => React.ReactNode,
+  keyExtractor: (item: T) => string,
+  emptyMessage?: string,
+  loading?: boolean,
+  className?: string,
+  overscanCount?: number,
+  width?: string | number,
 }
 
 function VirtualListInner<T>({
@@ -82,11 +82,11 @@ export const VirtualList = memo(VirtualListInner) as <T>(
 ) => JSX.Element;
 
 interface EmptyStateProps {
-  icon?: React.ReactNode;
-  title: string;
-  description?: string;
-  action?: React.ReactNode;
-  className?: string;
+  icon?: React.ReactNode,
+  title: string,
+  description?: string,
+  action?: React.ReactNode,
+  className?: string,
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -121,9 +121,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 };
 
 interface LoadingStateProps {
-  message?: string;
-  size?: 'small' | 'medium' | 'large';
-  className?: string;
+  message?: string,
+  size?: 'small' | 'medium' | 'large',
+  className?: string,
 }
 
 export const LoadingState: React.FC<LoadingStateProps> = ({

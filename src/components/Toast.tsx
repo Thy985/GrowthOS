@@ -3,16 +3,16 @@ import React, { createContext, useContext, useState, useCallback, memo } from 'r
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface Toast {
-  id: string;
-  type: ToastType;
-  message: string;
-  duration?: number;
+  id: string,
+  type: ToastType,
+  message: string,
+  duration?: number,
 }
 
 interface ToastContextValue {
-  toasts: Toast[];
-  showToast: (message: string, type?: ToastType, duration?: number) => void;
-  hideToast: (id: string) => void;
+  toasts: Toast[],
+  showToast: (message: string, type?: ToastType, duration?: number) => void,
+  hideToast: (id: string) => void,
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -26,8 +26,8 @@ export const useToast = () => {
 };
 
 const ToastItem = memo<{
-  toast: Toast;
-  onClose: () => void;
+  toast: Toast,
+  onClose: () => void,
 }>(({ toast, onClose }) => {
   const typeStyles: Record<ToastType, string> = {
     success: 'bg-green-500',

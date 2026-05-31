@@ -1,11 +1,11 @@
-import { useState, ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 
 interface NodeDetailsState {
-  name: string;
-  mastery: number;
-  status: string;
-  startDate: string;
-  lastUpdate: string;
+  name: string,
+  mastery: number,
+  status: string,
+  startDate: string,
+  lastUpdate: string,
 }
 
 const NodeDetails: React.FC = () => {

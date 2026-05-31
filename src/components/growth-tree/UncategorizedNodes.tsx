@@ -1,7 +1,7 @@
 interface UncategorizedNode {
-  id: number;
-  name: string;
-  status: 'normal' | 'wilting' | 'wilted';
+  id: number,
+  name: string,
+  status: 'normal' | 'wilting' | 'wilted',
 }
 
 const UncategorizedNodes: React.FC = () => {

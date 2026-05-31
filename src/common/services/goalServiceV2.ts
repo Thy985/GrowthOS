@@ -47,11 +47,11 @@ export async function getGoalById(id: string): Promise<Goal | null> {
 }
 
 export async function createGoal(data: {
-  title: string;
-  description?: string;
-  target_value: number;
-  start_date: string;
-  end_date: string;
+  title: string,
+  description?: string,
+  target_value: number,
+  start_date: string,
+  end_date: string,
 }): Promise<Goal> {
   const goals = await getGoalFromStorage();
   

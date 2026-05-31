@@ -3,11 +3,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNetworkStatus } from '../utils/networkDetector';
 import { performSync } from '../store/slices/syncSlice';
 import { useI18n } from '../i18n/useI18n';
-import { AppDispatch } from '../store';
+import { type AppDispatch } from '../store';
 import type { RootState } from '../types';
 
 interface OfflineIndicatorProps {
-  onOpenSyncPanel?: () => void;
+  onOpenSyncPanel?: () => void,
 }
 
 const OfflineIndicator: React.FC<OfflineIndicatorProps> = memo(({ onOpenSyncPanel }) => {
@@ -20,7 +20,7 @@ const OfflineIndicator: React.FC<OfflineIndicatorProps> = memo(({ onOpenSyncPane
     if (onOpenSyncPanel) {
       onOpenSyncPanel();
     } else {
-      dispatch(performSync());
+      void dispatch(performSync());
     }
   };
 

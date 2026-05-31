@@ -11,17 +11,17 @@ export type ErrorCode =
   | 'UNKNOWN_ERROR';
 
 export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: ApiError;
+  success: boolean,
+  data?: T,
+  error?: ApiError,
 }
 
 export interface ApiError {
-  code: ErrorCode;
-  message: string;
-  details?: Record<string, unknown>;
-  timestamp: string;
-  requestId?: string;
+  code: ErrorCode,
+  message: string,
+  details?: Record<string, unknown>,
+  timestamp: string,
+  requestId?: string,
 }
 
 export class AppError extends Error {
@@ -135,6 +135,6 @@ export function isSuccess<T>(response: ApiResponse<T>): response is ApiResponse<
   return response.success && response.data !== undefined;
 }
 
-export function isError<T>(response: ApiResponse<T>): response is { success: false; error: ApiError } {
+export function isError<T>(response: ApiResponse<T>): response is { success: false, error: ApiError } {
   return !response.success && 'error' in response && response.error !== undefined;
 }

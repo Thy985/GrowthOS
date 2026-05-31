@@ -104,11 +104,11 @@ describe('Sync Slice', () => {
       expect(store.getState().sync.isLoading).toBe(true);
     });
 
-    it('should handle loadSyncStatus.fulfilled', async () => {
+    it('should handle loadSyncStatus.fulfilled', () => {
       const store = createTestStore();
-      const mockQueue: Array<{ id: string; operation: 'create' | 'update' | 'delete'; entityType: string; entityId: string; payload: unknown; createdAt: string; retryCount: number }> = [];
+      const mockQueue: Array<{ id: string, operation: 'create' | 'update' | 'delete', entityType: string, entityId: string, payload: unknown, createdAt: string, retryCount: number }> = [];
 
-      await store.dispatch(loadSyncStatus.fulfilled(
+      store.dispatch(loadSyncStatus.fulfilled(
         { count: 1, queue: mockQueue },
         'request-id'
       ));
@@ -126,10 +126,10 @@ describe('Sync Slice', () => {
       expect(store.getState().sync.isSyncing).toBe(true);
     });
 
-    it('should handle performSync.rejected', async () => {
+    it('should handle performSync.rejected', () => {
       const store = createTestStore();
 
-      await store.dispatch(performSync.rejected(
+      store.dispatch(performSync.rejected(
         new Error('Network error'),
         'request-id',
         undefined,

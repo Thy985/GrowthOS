@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { AIState, LLMConfig, ChatSession, ChatMessage } from '../../types';
 import * as aiStorage from '../../common/services/aiStorageService';
 import { getAgent } from '../../common/services/agentOrchestrator';
@@ -55,7 +55,7 @@ export const loadSessionMessages = createAsyncThunk(
 export const sendMessage = createAsyncThunk(
   'ai/sendMessage',
   async (
-    { sessionId, content }: { sessionId: string; content: string },
+    { sessionId, content }: { sessionId: string, content: string },
     { rejectWithValue, dispatch }
   ) => {
     try {

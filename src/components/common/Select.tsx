@@ -1,17 +1,17 @@
 import type { SelectHTMLAttributes } from 'react';
 
 interface SelectOption {
-  value: string;
-  label: string;
+  value: string,
+  label: string,
 }
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
-  options?: SelectOption[];
-  className?: string;
-  containerClassName?: string;
+  label?: string,
+  error?: string,
+  helperText?: string,
+  options?: SelectOption[],
+  className?: string,
+  containerClassName?: string,
 }
 
 const Select = ({

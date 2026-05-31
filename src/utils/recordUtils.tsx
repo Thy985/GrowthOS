@@ -1,5 +1,5 @@
 import React from 'react';
-import { GrowthRecord, Mood } from '../types';
+import { type GrowthRecord, type Mood } from '../types';
 import { MOOD_OPTIONS } from '../constants';
 import i18n from '../i18n';
 
@@ -103,7 +103,7 @@ export const filterRecords = (
   searchTerm: string,
   selectedMoods: Mood[],
   selectedTags: string[],
-  dateRange: { start: string; end: string }
+  dateRange: { start: string, end: string }
 ): GrowthRecord[] => {
   let filtered = records;
   

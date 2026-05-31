@@ -1,16 +1,16 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 
 interface CardProps {
-  children: ReactNode;
-  title?: string;
-  subtitle?: string;
-  headerAction?: ReactNode;
-  footer?: ReactNode;
-  noPadding?: boolean;
-  hoverable?: boolean;
-  className?: string;
-  onClick?: () => void;
+  children: ReactNode,
+  title?: string,
+  subtitle?: string,
+  headerAction?: ReactNode,
+  footer?: ReactNode,
+  noPadding?: boolean,
+  hoverable?: boolean,
+  className?: string,
+  onClick?: () => void,
 }
 
 const Card = ({

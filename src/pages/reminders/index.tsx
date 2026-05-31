@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../types';
-import { AppDispatch } from '../../store';
+import { type AppDispatch } from '../../store';
 import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
 interface FormData {
-  title: string;
-  description: string;
-  date: string;
-  time: string;
+  title: string,
+  description: string,
+  date: string,
+  time: string,
 }
 
 const Reminders = () => {
@@ -26,7 +26,7 @@ const Reminders = () => {
   });
 
   useEffect(() => {
-    dispatch(loadReminders());
+    void dispatch(loadReminders());
   }, [dispatch]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -40,14 +40,14 @@ const Reminders = () => {
   const handleAddReminder = useCallback(() => {
     if (formData.title && formData.date && formData.time) {
       if (editingReminder) {
-        dispatch(updateReminder({
+        void dispatch(updateReminder({
           ...editingReminder,
           ...formData,
           updatedAt: new Date().toISOString()
         }));
         setEditingReminder(null);
       } else {
-        dispatch(addReminder({
+        void dispatch(addReminder({
           title: formData.title,
           description: formData.description,
           date: formData.date,
@@ -72,12 +72,12 @@ const Reminders = () => {
 
   const handleDeleteReminder = (reminderId: string) => {
     if (window.confirm('确定要删除这个提醒吗？')) {
-      dispatch(deleteReminder(reminderId));
+      void dispatch(deleteReminder(reminderId));
     }
   };
 
   const handleCompleteReminder = (reminderId: string) => {
-    dispatch(completeReminder(reminderId));
+    void dispatch(completeReminder(reminderId));
   };
 
   const pendingReminders = reminders.filter(reminder => !reminder.isCompleted);

@@ -31,7 +31,7 @@ i18n
     react: {
       useSuspense: false
     }
-  });
+  }).catch(console.error);
 
 export default i18n;
 export type { TFunction, I18n };

@@ -30,7 +30,7 @@ export const useI18n = () => {
    * @param lang - 语言代码 ('zh-CN' | 'en-US')
    */
   const changeLanguage = (lang: 'zh-CN' | 'en-US') => {
-    i18n.changeLanguage(lang);
+    void i18n.changeLanguage(lang);
   };
 
   /**
@@ -99,7 +99,7 @@ export const formatRelativeTime = (date: Date | string): string => {
   const months = Math.floor(days / 30);
   const years = Math.floor(days / 365);
 
-  const translations: Record<string, { zh: string; en: string }> = {
+  const translations: Record<string, { zh: string, en: string }> = {
     year: { zh: '年', en: 'year' },
     years: { zh: '年', en: 'years' },
     month: { zh: '月', en: 'month' },

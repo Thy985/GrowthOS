@@ -1,62 +1,62 @@
 import type { GrowthRecord, Goal } from '../types';
 
 export interface WeeklyReport {
-  weekNumber: number;
-  year: number;
-  startDate: string;
-  endDate: string;
+  weekNumber: number,
+  year: number,
+  startDate: string,
+  endDate: string,
   summary: {
-    totalRecords: number;
-    totalActivities: number;
-    totalLearnings: number;
-    avgMoodScore: number;
-    moodDistribution: Record<string, number>;
-    tagsUsed: string[];
-  };
-  dailyBreakdown: DailyRecord[];
-  achievements: Achievement[];
-  insights: Insight[];
-  goalsProgress: GoalProgress[];
-  recommendations: Recommendation[];
+    totalRecords: number,
+    totalActivities: number,
+    totalLearnings: number,
+    avgMoodScore: number,
+    moodDistribution: Record<string, number>,
+    tagsUsed: string[],
+  },
+  dailyBreakdown: DailyRecord[],
+  achievements: Achievement[],
+  insights: Insight[],
+  goalsProgress: GoalProgress[],
+  recommendations: Recommendation[],
 }
 
 export interface DailyRecord {
-  date: string;
-  dayOfWeek: string;
-  records: GrowthRecord[];
-  mood: string;
-  activities: string[];
-  tags: string[];
+  date: string,
+  dayOfWeek: string,
+  records: GrowthRecord[],
+  mood: string,
+  activities: string[],
+  tags: string[],
 }
 
 export interface Achievement {
-  type: 'streak' | 'milestone' | 'consistency' | 'mood';
-  title: string;
-  description: string;
-  icon: string;
+  type: 'streak' | 'milestone' | 'consistency' | 'mood',
+  title: string,
+  description: string,
+  icon: string,
 }
 
 export interface Insight {
-  type: 'pattern' | 'trend' | 'recommendation' | 'achievement';
-  title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
+  type: 'pattern' | 'trend' | 'recommendation' | 'achievement',
+  title: string,
+  description: string,
+  priority: 'high' | 'medium' | 'low',
 }
 
 export interface GoalProgress {
-  goal: Goal;
-  progress: number;
-  weeklyProgress: number;
-  isOnTrack: boolean;
-  daysRemaining: number;
+  goal: Goal,
+  progress: number,
+  weeklyProgress: number,
+  isOnTrack: boolean,
+  daysRemaining: number,
 }
 
 export interface Recommendation {
-  category: 'activity' | 'learning' | 'habit' | 'social';
-  title: string;
-  description: string;
-  action: string;
-  priority: 'high' | 'medium' | 'low';
+  category: 'activity' | 'learning' | 'habit' | 'social',
+  title: string,
+  description: string,
+  action: string,
+  priority: 'high' | 'medium' | 'low',
 }
 
 export class WeeklyReportGenerator {
@@ -66,7 +66,7 @@ export class WeeklyReportGenerator {
     return Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
   }
 
-  static getWeekDateRange(date: Date = new Date()): { start: Date; end: Date } {
+  static getWeekDateRange(date: Date = new Date()): { start: Date, end: Date } {
     const dayOfWeek = date.getDay();
     const start = new Date(date);
     start.setDate(date.getDate() - dayOfWeek);

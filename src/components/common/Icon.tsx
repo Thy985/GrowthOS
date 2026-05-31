@@ -499,8 +499,8 @@ const iconMap = {
 export type IconName = keyof typeof iconMap;
 
 export interface IconProps extends Omit<LucideProps, 'ref'> {
-  name: IconName;
-  size?: number | string;
+  name: IconName,
+  size?: number | string,
 }
 
 export const Icon: FC<IconProps> = ({ name, size = 20, ...props }) => {

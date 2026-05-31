@@ -1,0 +1,30 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-commit hooks..."
+
+# Run type check
+echo "Running TypeScript type check..."
+npm run type-check --silent
+if [ $? -ne 0 ]; then
+  echo "Type check failed. Please fix the errors before committing."
+  exit 1
+fi
+
+# Run lint
+echo "Running ESLint..."
+npm run lint --silent
+if [ $? -ne 0 ]; then
+  echo "Lint check failed. Please fix the errors before committing."
+  exit 1
+fi
+
+# Run tests
+echo "Running tests..."
+npm run test --silent -- --passWithNoTests
+if [ $? -ne 0 ]; then
+  echo "Tests failed. Please fix the errors before committing."
+  exit 1
+fi
+
+echo "All pre-commit checks passed!"

@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 
 export interface KeyboardShortcutsShortcut {
-  key: string;
-  ctrl?: boolean;
-  shift?: boolean;
-  alt?: boolean;
-  meta?: boolean;
-  callback: () => void;
+  key: string,
+  ctrl?: boolean,
+  shift?: boolean,
+  alt?: boolean,
+  meta?: boolean,
+  callback: () => void,
 }
 
 const useKeyboardShortcuts = (shortcuts: KeyboardShortcutsShortcut[]) => {

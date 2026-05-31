@@ -11,7 +11,7 @@ import { loadAIConfig } from './store/slices/aiSlice';
 import { loadSyncStatus } from './store/slices/syncSlice';
 import { initOfflineDB } from './utils/offlineStorage';
 import { performanceMonitor } from './utils/performanceMonitor';
-import useKeyboardShortcuts, { KeyboardShortcutsShortcut } from './hooks/useKeyboardShortcuts';
+import useKeyboardShortcuts, { type KeyboardShortcutsShortcut } from './hooks/useKeyboardShortcuts';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import { ChatWidget } from './components/ai/ChatWidget';
@@ -39,7 +39,7 @@ const LoadingFallback: React.FC = () => (
 );
 
 interface ProtectedLayoutProps {
-  children: React.ReactNode;
+  children: React.ReactNode,
 }
 
 const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
@@ -104,17 +104,17 @@ const AppContent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(checkAuth());
+    void dispatch(checkAuth());
     initOfflineDB().catch(console.error);
   }, [dispatch]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      dispatch(loadData());
-      dispatch(loadGoals());
-      dispatch(loadReminders());
-      dispatch(loadAIConfig());
-      dispatch(loadSyncStatus());
+      void dispatch(loadData());
+      void dispatch(loadGoals());
+      void dispatch(loadReminders());
+      void dispatch(loadAIConfig());
+      void dispatch(loadSyncStatus());
     }
   }, [isAuthenticated, dispatch]);
 

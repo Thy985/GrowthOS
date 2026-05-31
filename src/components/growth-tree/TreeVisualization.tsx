@@ -5,24 +5,24 @@ import ReactFlow, {
   BackgroundVariant,
   Controls, 
   MiniMap,
-  Node,
-  Edge
+  type Node,
+  type Edge
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 interface TreeNode {
-  id: string;
-  name: string;
-  type: 'skill' | 'cognition' | 'habit' | 'life' | string;
-  children?: TreeNode[];
+  id: string,
+  name: string,
+  type: 'skill' | 'cognition' | 'habit' | 'life' | string,
+  children?: TreeNode[],
 }
 
 interface TreeVisualizationProps {
-  treeData?: TreeNode;
+  treeData?: TreeNode,
 }
 
 interface ReactFlowNodeData {
-  label: string;
+  label: string,
 }
 
 const TreeVisualization: React.FC<TreeVisualizationProps> = ({ treeData }) => {

@@ -1,23 +1,23 @@
 import type { GrowthRecord, Goal } from '../../types';
 
 export interface Insight {
-  id: string;
-  type: 'pattern' | 'trend' | 'recommendation' | 'achievement' | 'warning';
-  title: string;
-  description: string;
-  priority: 'high' | 'medium' | 'low';
-  category: 'activity' | 'mood' | 'learning' | 'goal' | 'habit';
-  data?: any;
-  createdAt: Date;
+  id: string,
+  type: 'pattern' | 'trend' | 'recommendation' | 'achievement' | 'warning',
+  title: string,
+  description: string,
+  priority: 'high' | 'medium' | 'low',
+  category: 'activity' | 'mood' | 'learning' | 'goal' | 'habit',
+  data?: any,
+  createdAt: Date,
 }
 
 export interface PatternAnalysis {
-  mostActiveDay: string | null;
-  mostActiveTime: string | null;
-  commonTags: string[];
-  moodTrend: 'improving' | 'stable' | 'declining';
-  avgRecordsPerWeek: number;
-  consistencyScore: number;
+  mostActiveDay: string | null,
+  mostActiveTime: string | null,
+  commonTags: string[],
+  moodTrend: 'improving' | 'stable' | 'declining',
+  avgRecordsPerWeek: number,
+  consistencyScore: number,
 }
 
 export class InsightsService {
@@ -295,7 +295,7 @@ export class InsightsService {
     });
   }
 
-  static getStreakInfo(records: GrowthRecord[]): { current: number; longest: number } {
+  static getStreakInfo(records: GrowthRecord[]): { current: number, longest: number } {
     if (records.length === 0) return { current: 0, longest: 0 };
     
     const sortedDates = [...new Set(

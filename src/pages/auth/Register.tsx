@@ -9,15 +9,15 @@ import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 
 interface FormErrors {
-  name?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
+  name?: string,
+  email?: string,
+  password?: string,
+  confirmPassword?: string,
 }
 
 interface PasswordRequirement {
-  label: string;
-  met: boolean;
+  label: string,
+  met: boolean,
 }
 
 const Register: React.FC = () => {

@@ -6,9 +6,7 @@ import aiReducer, {
   clearStreaming,
   clearError,
   loadAIConfig,
-  saveAIConfig,
   createSession,
-  sendMessage,
 } from '../../store/slices/aiSlice';
 import type { ChatSession, ChatMessage, LLMConfig } from '../../types';
 
@@ -156,7 +154,7 @@ describe('AI Slice', () => {
         maxTokens: 1000,
       };
 
-      await store.dispatch(loadAIConfig.fulfilled(
+      store.dispatch(loadAIConfig.fulfilled(
         { config, sessions: [] },
         'request-id'
       ));
@@ -167,10 +165,10 @@ describe('AI Slice', () => {
       expect(state.sessions).toEqual([]);
     });
 
-    it('should handle loadAIConfig.rejected', async () => {
+    it('should handle loadAIConfig.rejected', () => {
       const store = createTestStore();
 
-      await store.dispatch(loadAIConfig.rejected(
+      store.dispatch(loadAIConfig.rejected(
         new Error('Failed to load config'),
         'request-id',
         undefined,
@@ -192,7 +190,7 @@ describe('AI Slice', () => {
         messageCount: 0,
       };
 
-      await store.dispatch(createSession.fulfilled(session, 'request-id', 'New Session'));
+      store.dispatch(createSession.fulfilled(session, 'request-id', 'New Session'));
 
       const state = store.getState().ai;
       expect(state.sessions).toContainEqual(session);

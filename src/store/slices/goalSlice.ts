@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import goalServiceV2 from '../../common/services/goalServiceV2';
-import { Goal, GoalState, CreateGoalDTO, UpdateGoalDTO } from '../../types';
+import { type Goal, type GoalState, type CreateGoalDTO, type UpdateGoalDTO } from '../../types';
 import logger from '../../utils/logger';
 
 const initialState: GoalState = {
@@ -76,7 +76,7 @@ export const deleteGoal = createAsyncThunk('goal/deleteGoal', async (goalId: str
 
 export const incrementGoalProgress = createAsyncThunk(
   'goal/incrementGoalProgress', 
-  async ({ goalId, value }: { goalId: string; value: number }, { getState }) => {
+  async ({ goalId, value }: { goalId: string, value: number }, { getState }) => {
     try {
       logger.info('增加目标进度', { goalId, value });
       

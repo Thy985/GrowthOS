@@ -4,10 +4,10 @@ import type { GrowthRecord, Goal } from '../types';
  * 导出选项接口
  */
 export interface ExportOptions {
-  format: 'json' | 'csv' | 'markdown';
-  dataTypes: string[];
-  startDate?: Date;
-  endDate?: Date;
+  format: 'json' | 'csv' | 'markdown',
+  dataTypes: string[],
+  startDate?: Date,
+  endDate?: Date,
 }
 
 /**
@@ -142,10 +142,10 @@ export const generateJSON = (
 export const generateExportData = (
   options: ExportOptions,
   data: {
-    records: GrowthRecord[];
-    tags: string[];
-    trees: unknown[];
-    goals: Goal[];
+    records: GrowthRecord[],
+    tags: string[],
+    trees: unknown[],
+    goals: Goal[],
   }
 ) => {
   let fileName = `growth-data-${new Date().toISOString().split('T')[0]}`;
