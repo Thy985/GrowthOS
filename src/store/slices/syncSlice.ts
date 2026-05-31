@@ -80,7 +80,6 @@ export const resolveConflict = createAsyncThunk(
     };
 
     const store = storeMap[entityType] || 'records';
-    // @ts-expect-error - resolveConflictStorage 类型签名不匹配
     await resolveConflictStorage(store, entityId, resolution, mergedData);
     dispatch(loadSyncStatus());
 

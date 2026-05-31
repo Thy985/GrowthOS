@@ -1,7 +1,6 @@
 import React from 'react';
 import { GrowthRecord, Mood } from '../types';
 import { MOOD_OPTIONS } from '../constants';
-// @ts-expect-error - i18n 模块没有类型声明
 import i18n from '../i18n';
 
 // 计算连续记录天数
