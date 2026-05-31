@@ -1,4 +1,14 @@
-import React from 'react';
+import { ReactNode } from 'react';
+
+type BadgeVariant = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline';
+type BadgeSize = 'small' | 'medium' | 'large';
+
+interface BadgeProps {
+  children: ReactNode;
+  variant?: BadgeVariant;
+  size?: BadgeSize;
+  className?: string;
+}
 
 const Badge = ({
   children,
@@ -6,9 +16,8 @@ const Badge = ({
   size = 'medium',
   className = '',
   ...props
-}) => {
-  // 变体样式
-  const variantClasses = {
+}: BadgeProps) => {
+  const variantClasses: Record<BadgeVariant, string> = {
     default: 'bg-gray-100 text-gray-700',
     primary: 'bg-green-100 text-green-800',
     secondary: 'bg-blue-100 text-blue-800',
@@ -18,8 +27,7 @@ const Badge = ({
     outline: 'border border-gray-300 text-gray-700 bg-transparent'
   };
 
-  // 尺寸样式
-  const sizeClasses = {
+  const sizeClasses: Record<BadgeSize, string> = {
     small: 'px-2 py-0.5 text-xs',
     medium: 'px-2.5 py-1 text-xs',
     large: 'px-3 py-1.5 text-sm'
