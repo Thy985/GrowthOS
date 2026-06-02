@@ -1,157 +1,132 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import authServiceV2 from '../../common/services/authServiceV2';
-import { type AuthState, type User } from '../../types';
-import logger from '../../utils/logger';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { AuthState, User } from '../../types';
+import { authService } from '../../common/services/authService';
 
-// 初始状态
 const initialState: AuthState = {
   user: null,
+  token: localStorage.getItem('token'),
+  isAuthenticated: false,
   isLoading: false,
   error: null,
-  isAuthenticated: false
 };
 
-// 登录的异步thunk
-export const login = createAsyncThunk('auth/login', async ({ email, password }: { email: string, password: string }) => {
-  try {
-    logger.info('用户登录', { email });
-    const { user } = await authServiceV2.login(email, password);
-    const userData: User = {
-      id: user.id,
-      name: user.name || user.email,
-      email: user.email,
-      createdAt: user.createdAt
-    };
-    logger.info('登录成功', { email });
-    return userData;
-  } catch (error: unknown) {
-    logger.error('登录异常', error instanceof Error ? error : undefined, { email });
-    throw error;
-  }
-});
-
-// 注册的异步thunk
-export const register = createAsyncThunk('auth/register', async ({ name, email, password }: { name: string, email: string, password: string }) => {
-  try {
-    logger.info('用户注册', { email });
-    const { user } = await authServiceV2.register(email, password, name);
-    const userData: User = {
-      id: user.id,
-      name: user.name || user.email,
-      email: user.email,
-      createdAt: user.createdAt
-    };
-    logger.info('注册成功', { email });
-    return userData;
-  } catch (error: unknown) {
-    logger.error('注册异常', error instanceof Error ? error : undefined, { email });
-    throw error;
-  }
-});
-
-// 登出
-export const logout = createAsyncThunk('auth/logout', async () => {
-  try {
-    logger.info('用户登出');
-    await authServiceV2.logout();
-    logger.info('登出成功');
-    return true;
-  } catch (error) {
-    logger.error('登出异常', error instanceof Error ? error : undefined);
-    throw error;
-  }
-});
-
-// 检查认证状态
-export const checkAuth = createAsyncThunk('auth/checkAuth', async () => {
-  try {
-    logger.info('检查认证状态');
-    const user = await authServiceV2.getCurrentUserInfo();
-    if (user) {
-      const userData: User = {
-        id: user.id,
-        name: user.name || user.email,
-        email: user.email,
-        createdAt: user.createdAt
-      };
-      logger.info('认证状态检查完成', { isAuthenticated: true, email: user.email });
-      return userData;
+export const login = createAsyncThunk(
+  'auth/login',
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await authService.login(credentials);
+      localStorage.setItem('token', response.token);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
     }
-    logger.info('认证状态检查完成', { isAuthenticated: false });
-    return null;
-  } catch (error) {
-    logger.error('认证状态检查异常', error instanceof Error ? error : undefined);
-    throw error;
   }
+);
+
+export const register = createAsyncThunk(
+  'auth/register',
+  async (data: { email: string; password: string; name: string }, { rejectWithValue }) => {
+    try {
+      const response = await authService.register(data);
+      localStorage.setItem('token', response.token);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const logout = createAsyncThunk('auth/logout', async () => {
+  localStorage.removeItem('token');
+  await authService.logout();
 });
 
-// 创建auth slice
+export const refreshToken = createAsyncThunk(
+  'auth/refreshToken',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await authService.refreshToken();
+      localStorage.setItem('token', response.token);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+    },
     clearError: (state) => {
       state.error = null;
-    }
+    },
+    checkAuth: (state) => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        state.token = token;
+        state.isAuthenticated = true;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
-      // 登录
       .addCase(login.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(login.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
         state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || '登录失败';
+        state.error = action.payload as string;
       })
-      // 注册
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(register.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
         state.isAuthenticated = true;
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || '注册失败';
-      })
-      // 登出
-      .addCase(logout.pending, (state) => {
-        state.isLoading = true;
+        state.error = action.payload as string;
       })
       .addCase(logout.fulfilled, (state) => {
-        state.isLoading = false;
         state.user = null;
+        state.token = null;
         state.isAuthenticated = false;
       })
-      .addCase(logout.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || '登出失败';
-      })
-      // 检查认证状态
-      .addCase(checkAuth.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(checkAuth.fulfilled, (state, action: PayloadAction<User | null>) => {
-        state.isLoading = false;
-        state.user = action.payload;
-        state.isAuthenticated = !!action.payload;
-      })
-      .addCase(checkAuth.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || '检查认证状态失败';
+      .addCase(refreshToken.fulfilled, (state, action) => {
+        state.token = action.payload.token;
       });
-  }
+  },
 });
 
-export const { clearError } = authSlice.actions;
+export const { setUser, clearError, checkAuth } = authSlice.actions;
+export const useAuth = () => {
+  const dispatch = useAuthDispatch();
+  const auth = useAuthSelector();
+  return {
+    ...auth,
+    login: (credentials: { email: string; password: string }) =>
+      dispatch(login(credentials)),
+    register: (data: { email: string; password: string; name: string }) =>
+      dispatch(register(data)),
+    logout: () => dispatch(logout()),
+    checkAuth: () => dispatch(checkAuth()),
+    clearError: () => dispatch(clearError()),
+  };
+};
 export default authSlice.reducer;

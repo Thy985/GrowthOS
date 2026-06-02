@@ -1,270 +1,166 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, Reminder } from '../../types';
-import { type AppDispatch } from '../../store';
-import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice';
-import ErrorBoundary from '../../components/ErrorBoundary';
+import { useTranslation } from 'react-i18next';
+import { fetchReminders, addReminder, updateReminder, deleteReminder } from '../../store/slices/reminderSlice';
+import { RootState } from '../../store';
 
-interface FormData {
-  title: string,
-  description: string,
-  date: string,
-  time: string,
-}
-
-const Reminders = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { reminders, isLoading, error } = useSelector((state: RootState) => state.reminder);
-  
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
-  const [formData, setFormData] = useState<FormData>({
+const Reminders: React.FC = () => {
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const reminders = useSelector((state: RootState) => state.reminders.reminders);
+  const isLoading = useSelector((state: RootState) => state.reminders.isLoading);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: '',
-    time: ''
+    time: '',
+    repeat: 'none' as 'none' | 'daily' | 'weekly',
   });
 
   useEffect(() => {
-    void dispatch(loadReminders());
+    dispatch(fetchReminders());
   }, [dispatch]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    dispatch(addReminder({
+      title: formData.title,
+      description: formData.description,
+      time: formData.time,
+      repeat: formData.repeat,
+      completed: false,
     }));
+    setFormData({ title: '', description: '', time: '', repeat: 'none' });
+    setShowForm(false);
   };
 
-  const handleAddReminder = useCallback(() => {
-    if (formData.title && formData.date && formData.time) {
-      if (editingReminder) {
-        void dispatch(updateReminder({
-          ...editingReminder,
-          ...formData,
-          updatedAt: new Date().toISOString()
-        }));
-        setEditingReminder(null);
-      } else {
-        void dispatch(addReminder({
-          title: formData.title,
-          description: formData.description,
-          date: formData.date,
-          time: formData.time
-        }));
-      }
-      setFormData({ title: '', description: '', date: '', time: '' });
-      setShowAddModal(false);
-    }
-  }, [dispatch, formData, editingReminder]);
-
-  const handleEditReminder = (reminder: Reminder) => {
-    setEditingReminder(reminder);
-    setFormData({
-      title: reminder.title,
-      description: reminder.description,
-      date: reminder.date,
-      time: reminder.time
-    });
-    setShowAddModal(true);
+  const handleToggle = (id: string, completed: boolean) => {
+    dispatch(updateReminder({ id, updates: { completed: !completed } }));
   };
 
-  const handleDeleteReminder = (reminderId: string) => {
-    if (window.confirm('确定要删除这个提醒吗？')) {
-      void dispatch(deleteReminder(reminderId));
+  const handleDelete = (id: string) => {
+    if (window.confirm(t('reminders.confirmDelete', '确定要删除这个提醒吗？'))) {
+      dispatch(deleteReminder(id));
     }
   };
-
-  const handleCompleteReminder = (reminderId: string) => {
-    void dispatch(completeReminder(reminderId));
-  };
-
-  const pendingReminders = reminders.filter(reminder => !reminder.isCompleted);
-  const completedReminders = reminders.filter(reminder => reminder.isCompleted);
 
   return (
-    <ErrorBoundary>
-      <div className="reminders-page">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="page-title">提醒</h1>
-          <button 
-            className="btn btn-primary"
-            onClick={() => {
-              setEditingReminder(null);
-              setFormData({ title: '', description: '', date: '', time: '' });
-              setShowAddModal(true);
-            }}
-          >
-            添加提醒
-          </button>
+    <div className="main">
+      <div className="header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="heading-1">{t('reminders.title', '提醒')}</h1>
+          <p className="body-large text-secondary">{t('reminders.subtitle', '管理您的日常提醒')}</p>
         </div>
+        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+          {showForm ? t('common.cancel', '取消') : t('reminders.addReminder', '添加提醒')}
+        </button>
+      </div>
 
-        {error && (
-          <div className="error-message mb-6">
-            {error}
-          </div>
-        )}
-
-        {pendingReminders.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-medium mb-4">待完成</h2>
-            <div className="space-y-4">
-              {pendingReminders.map(reminder => (
-                <div key={reminder.id} className="reminder-card">
-                  <div className="flex items-start">
-                    <input 
-                      type="checkbox" 
-                      className="mt-1 mr-3"
-                      onChange={() => handleCompleteReminder(reminder.id)}
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium">{reminder.title}</h3>
-                        <div className="text-sm text-gray-500">
-                          {reminder.date} {reminder.time}
-                        </div>
-                      </div>
-                      {reminder.description && (
-                        <p className="text-sm text-gray-600 mt-1">{reminder.description}</p>
-                      )}
-                    </div>
-                    <div className="flex space-x-2">
-                      <button 
-                        className="btn btn-sm btn-outline"
-                        onClick={() => handleEditReminder(reminder)}
-                      >
-                        编辑
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDeleteReminder(reminder.id)}
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+      {showForm && (
+        <div className="card" style={{ padding: '24px', marginBottom: '24px' }}>
+          <h3 className="heading-4" style={{ marginBottom: '16px' }}>{t('reminders.newReminder', '新提醒')}</h3>
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                {t('reminders.title', '标题')}
+              </label>
+              <input
+                type="text"
+                className="input"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder={t('reminders.titlePlaceholder', '提醒标题')}
+                required
+              />
             </div>
-          </div>
-        )}
-
-        {completedReminders.length > 0 && (
-          <div>
-            <h2 className="text-lg font-medium mb-4">已完成</h2>
-            <div className="space-y-4">
-              {completedReminders.map(reminder => (
-                <div key={reminder.id} className="reminder-card completed">
-                  <div className="flex items-start">
-                    <input 
-                      type="checkbox" 
-                      className="mt-1 mr-3" 
-                      checked
-                      onChange={() => {}}
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium line-through">{reminder.title}</h3>
-                        <div className="text-sm text-gray-500">
-                          {reminder.date} {reminder.time}
-                        </div>
-                      </div>
-                      {reminder.description && (
-                        <p className="text-sm text-gray-600 mt-1 line-through">{reminder.description}</p>
-                      )}
-                    </div>
-                    <button 
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDeleteReminder(reminder.id)}
-                    >
-                      删除
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                {t('reminders.description', '描述')}
+              </label>
+              <textarea
+                className="input"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder={t('reminders.descriptionPlaceholder', '提醒描述')}
+                rows={2}
+              />
             </div>
-          </div>
-        )}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                {t('reminders.time', '时间')}
+              </label>
+              <input
+                type="time"
+                className="input"
+                value={formData.time}
+                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={isLoading}>
+              {t('reminders.create', '创建提醒')}
+            </button>
+          </form>
+        </div>
+      )}
 
-        {reminders.length === 0 && !isLoading && (
+      <div className="card" style={{ padding: '24px' }}>
+        <h3 className="heading-4" style={{ marginBottom: '16px' }}>{t('reminders.allReminders', '所有提醒')}</h3>
+        {reminders.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {reminders.map((reminder) => (
+              <div
+                key={reminder.id}
+                style={{
+                  padding: '16px',
+                  background: reminder.completed ? 'var(--color-gray-50)' : 'var(--color-surface)',
+                  borderRadius: '12px',
+                  border: '1px solid var(--color-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={reminder.completed}
+                  onChange={() => handleToggle(reminder.id, reminder.completed)}
+                  style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                />
+                <div style={{ flex: 1 }}>
+                  <h4 style={{
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    marginBottom: '4px',
+                    textDecoration: reminder.completed ? 'line-through' : 'none',
+                    color: reminder.completed ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
+                  }}>
+                    {reminder.title}
+                  </h4>
+                  {reminder.description && (
+                    <p className="body-small" style={{ marginBottom: '4px' }}>{reminder.description}</p>
+                  )}
+                  <span className="caption">{reminder.time}</span>
+                </div>
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => handleDelete(reminder.id)}
+                  style={{ color: 'var(--color-error)' }}
+                >
+                  {t('common.delete', '删除')}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
           <div className="empty-state">
-            <p>暂无提醒，点击&ldquo;添加提醒&rdquo;按钮创建第一个提醒</p>
-          </div>
-        )}
-
-        {showAddModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h2 className="modal-title">{editingReminder ? '编辑提醒' : '添加提醒'}</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">标题</label>
-                  <input 
-                    type="text" 
-                    name="title" 
-                    className="input w-full"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder="请输入提醒标题"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">描述</label>
-                  <textarea 
-                    name="description" 
-                    className="input w-full" 
-                    rows={3}
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="请输入提醒描述"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">日期</label>
-                    <input 
-                      type="date" 
-                      name="date" 
-                      className="input w-full"
-                      value={formData.date}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">时间</label>
-                    <input 
-                      type="time" 
-                      name="time" 
-                      className="input w-full"
-                      value={formData.time}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button 
-                  className="btn btn-outline"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setEditingReminder(null);
-                  }}
-                >
-                  取消
-                </button>
-                <button 
-                  className="btn btn-primary"
-                  onClick={handleAddReminder}
-                >
-                  {editingReminder ? '更新' : '添加'}
-                </button>
-              </div>
-            </div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>⏰</div>
+            <h3 className="heading-4">{t('reminders.noReminders', '暂无提醒')}</h3>
+            <p className="body-small">{t('reminders.noRemindersDescription', '点击上方按钮添加您的第一个提醒')}</p>
           </div>
         )}
       </div>
-    </ErrorBoundary>
+    </div>
   );
 };
 

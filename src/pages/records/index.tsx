@@ -1,228 +1,159 @@
-import React, { useState, useMemo, memo } from 'react';
-import { useSelector } from 'react-redux';
-import { type RootState, type GrowthRecord, type Mood } from '../../types';
-import { formatDate, getMoodColor, getMoodText, highlightSearchTerm, filterRecords } from '../../utils/recordUtils';
-import { useI18n } from '../../i18n/useI18n';
-import { MOOD_OPTIONS } from '../../constants';
-import { VirtualList } from '../../components/common/VirtualList';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
+import { fetchRecords, addRecord, deleteRecord } from '../../store/slices/growthSlice';
+import { RootState } from '../../store';
+import { GrowthRecord, MoodType } from '../../types';
 
-const VIRTUALIZATION_THRESHOLD = 100;
-const RECORD_ITEM_HEIGHT = 200;
+const Records: React.FC = () => {
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const records = useSelector((state: RootState) => state.growth.records);
+  const isLoading = useSelector((state: RootState) => state.growth.isLoading);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    content: '',
+    category: 'learning',
+    mood: 'okay' as MoodType,
+    tags: [] as string[],
+  });
 
-const RecordItem: React.FC<{ record: GrowthRecord, searchTerm: string }> = memo(({ record, searchTerm }) => {
-  const { t } = useI18n();
-  
-  return (
-    <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <span className={`inline-block px-2 py-1 text-xs rounded-full mb-2 ${getMoodColor(record.mood)}`}>
-            {getMoodText(record.mood)}
-          </span>
-          <p className="text-sm text-gray-500">{formatDate(record.createdAt)}</p>
-        </div>
-      </div>
+  useEffect(() => {
+    dispatch(fetchRecords());
+  }, [dispatch]);
 
-      {record.activity && (
-        <div className="mb-3">
-          <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.whatDidYouDo')}</h4>
-          <p className="text-gray-600">{highlightSearchTerm(record.activity, searchTerm)}</p>
-        </div>
-      )}
-
-      {record.learning && (
-        <div className="mb-3">
-          <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.whatDidYouLearn')}</h4>
-          <p className="text-gray-600">{highlightSearchTerm(record.learning, searchTerm)}</p>
-        </div>
-      )}
-
-      {record.reflection && (
-        <div className="mb-3">
-          <h4 className="text-sm font-medium text-gray-700 mb-1">{t('dashboard.reflection')}</h4>
-          <p className="text-gray-600">{highlightSearchTerm(record.reflection, searchTerm)}</p>
-        </div>
-      )}
-
-      {record.tags && record.tags.length > 0 && (
-        <div>
-          <div className="flex flex-wrap gap-1">
-            {record.tags.map((tag: string) => (
-              <span key={tag} className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-                #{tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
-
-RecordItem.displayName = 'RecordItem';
-
-const RecordList: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMoods, setSelectedMoods] = useState<Mood[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  const { records, tags } = useSelector((state: RootState) => state.growth);
-  const { t } = useI18n();
-
-  const filteredRecords = useMemo(() => {
-    return filterRecords(records, searchTerm, selectedMoods, selectedTags, dateRange);
-  }, [records, searchTerm, selectedMoods, selectedTags, dateRange]);
-
-  const useVirtualization = filteredRecords.length > VIRTUALIZATION_THRESHOLD;
-
-  const renderRecord = (record: GrowthRecord) => (
-    <RecordItem record={record} searchTerm={searchTerm} />
-  );
-
-  const toggleMood = (mood: Mood) => {
-    setSelectedMoods(prev =>
-      prev.includes(mood)
-        ? prev.filter(m => m !== mood)
-        : [...prev, mood]
-    );
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    dispatch(addRecord({
+      content: formData.content,
+      category: formData.category,
+      mood: formData.mood,
+      tags: formData.tags,
+    }));
+    setFormData({ content: '', category: 'learning', mood: 'okay', tags: [] });
+    setShowForm(false);
   };
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
+  const handleDelete = (id: string) => {
+    if (window.confirm(t('records.confirmDelete', '确定要删除这条记录吗？'))) {
+      dispatch(deleteRecord(id));
+    }
   };
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedMoods([]);
-    setSelectedTags([]);
-    setDateRange({ start: '', end: '' });
+  const getMoodEmoji = (mood: MoodType) => {
+    switch (mood) {
+      case 'great': return '😊';
+      case 'okay': return '😐';
+      case 'not-good': return '😔';
+      default: return '😐';
+    }
   };
-
-  const hasActiveFilters = searchTerm || selectedMoods.length > 0 || selectedTags.length > 0 || dateRange.start || dateRange.end;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">{t('records.title')}</h1>
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors w-full sm:w-auto"
-          >
-            {t('records.clearFilters')}
-          </button>
-        )}
+    <div className="main">
+      <div className="header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="heading-1">{t('records.title', '记录')}</h1>
+          <p className="body-large text-secondary">{t('records.subtitle', '记录您的成长瞬间')}</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+          {showForm ? t('common.cancel', '取消') : t('records.addRecord', '添加记录')}
+        </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder={t('records.searchRecords')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.startDate')}</label>
-            <input
-              type="date"
-              value={dateRange.start}
-              onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.endDate')}</label>
-            <input
-              type="date"
-              value={dateRange.end}
-              onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">{t('records.filterByMood')}</h3>
-          <div className="flex flex-wrap gap-2">
-            {MOOD_OPTIONS.map((mood) => (
-              <button
-                key={mood.value}
-                onClick={() => toggleMood(mood.value)}
-                className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                  selectedMoods.includes(mood.value)
-                    ? `${getMoodColor(mood.value)} border-2 border-current`
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {getMoodText(mood.value)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {tags.length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">{t('records.filterByTags')}</h3>
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                    selectedTags.includes(tag)
-                      ? 'bg-green-100 text-green-800 border-2 border-green-500'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  #{tag}
-                </button>
-              ))}
+      {showForm && (
+        <div className="card" style={{ padding: '24px', marginBottom: '24px' }}>
+          <h3 className="heading-4" style={{ marginBottom: '16px' }}>{t('records.newRecord', '新记录')}</h3>
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                {t('records.content', '内容')}
+              </label>
+              <textarea
+                className="input"
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                placeholder={t('records.contentPlaceholder', '今天发生了什么？')}
+                rows={4}
+                required
+              />
             </div>
-          </div>
-        )}
-      </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                {t('records.mood', '心情')}
+              </label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {(['great', 'okay', 'not-good'] as MoodType[]).map((mood) => (
+                  <button
+                    key={mood}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, mood })}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: formData.mood === mood ? '2px solid var(--color-primary-500)' : '1px solid var(--color-border)',
+                      background: formData.mood === mood ? 'var(--color-primary-50)' : 'white',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {getMoodEmoji(mood)} {t(`mood.${mood}`, mood)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={isLoading}>
+              {t('records.save', '保存')}
+            </button>
+          </form>
+        </div>
+      )}
 
-      <div className="text-sm text-gray-600">
-        {t('dashboard.recordsCount', { count: filteredRecords.length })}
-        {useVirtualization && (
-          <span className="ml-2 text-xs text-blue-600">
-            (已启用虚拟滚动优化)
-          </span>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        {filteredRecords.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-            {t('common.noData')}
+      <div className="card" style={{ padding: '24px' }}>
+        <h3 className="heading-4" style={{ marginBottom: '16px' }}>{t('records.allRecords', '所有记录')}</h3>
+        {records.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {records.map((record) => (
+              <div
+                key={record.id}
+                style={{
+                  padding: '16px',
+                  background: 'var(--color-gray-50)',
+                  borderRadius: '12px',
+                  border: '1px solid var(--color-border)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '20px' }}>{getMoodEmoji(record.mood)}</span>
+                      <span className="badge badge-info">{record.category}</span>
+                    </div>
+                    <p style={{ fontSize: '15px', marginBottom: '8px' }}>{record.content}</p>
+                    <span className="caption">
+                      {new Date(record.createdAt).toLocaleDateString()} {new Date(record.createdAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => handleDelete(record.id)}
+                    style={{ color: 'var(--color-error)' }}
+                  >
+                    {t('common.delete', '删除')}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ) : useVirtualization ? (
-          <VirtualList
-            items={filteredRecords}
-            height={600}
-            itemHeight={RECORD_ITEM_HEIGHT}
-            renderItem={renderRecord}
-            keyExtractor={(record) => record.id}
-            emptyMessage={t('common.noData')}
-            className="rounded-lg"
-          />
         ) : (
-          filteredRecords.map((record: GrowthRecord) => (
-            <RecordItem key={record.id} record={record} searchTerm={searchTerm} />
-          ))
+          <div className="empty-state">
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>📝</div>
+            <h3 className="heading-4">{t('records.noRecords', '暂无记录')}</h3>
+            <p className="body-small">{t('records.noRecordsDescription', '点击上方按钮添加您的第一条记录')}</p>
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-export default memo(RecordList);
+export default Records;

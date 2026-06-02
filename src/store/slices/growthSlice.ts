@@ -1,205 +1,183 @@
-import { createSlice, createAsyncThunk, type PayloadAction, createSelector } from '@reduxjs/toolkit';
-import recordServiceV2 from '../../common/services/recordServiceV2';
-import growthTreeServiceV2 from '../../common/services/growthTreeServiceV2';
-import { type GrowthState, type GrowthRecord, type Tag, type Tree, type GoalState, type CreateRecordDTO } from '../../types';
-import logger from '../../utils/logger';
-import { generateExportData, downloadBlob, type ExportOptions } from '../../utils/exportUtils';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { GrowthState, GrowthRecord, MoodType } from '../../types';
+import { growthService } from '../../common/services/growthService';
 
 const initialState: GrowthState = {
   records: [],
-  tags: [],
-  trees: [],
   isLoading: false,
-  error: null
+  error: null,
+  currentFilter: 'all',
+  searchQuery: '',
 };
 
-export const loadData = createAsyncThunk('growth/loadData', async () => {
-  try {
-    logger.info('加载成长数据');
-    
-    const records = await recordServiceV2.getRecords();
-    const tags = await recordServiceV2.getTags();
-    const trees = await growthTreeServiceV2.getGrowthTrees();
-    
-    logger.info('成长数据加载完成', { recordsCount: records.length, tagsCount: tags.length, treesCount: trees.length });
-    return { records, tags, trees };
-  } catch (error) {
-    logger.error('加载成长数据异常', error instanceof Error ? error : undefined);
-    throw error;
-  }
-});
-
-export const addRecord = createAsyncThunk('growth/addRecord', async (record: CreateRecordDTO) => {
-  try {
-    logger.info('添加成长记录', { activity: record.activity, learning: record.learning, tags: record.tags });
-    
-    const newRecord = await recordServiceV2.createRecord({
-      date: record.date || new Date().toISOString().split('T')[0],
-      mood: record.mood,
-      reflection: record.reflection,
-      activity: record.activity || '',
-      learning: record.learning || '',
-      tags: record.tags
-    });
-    
-    const updatedTags = await recordServiceV2.getTags();
-    
-    logger.info('成长记录添加成功', { recordId: newRecord.id, tagsCount: updatedTags.length });
-    return { record: newRecord, tags: updatedTags };
-  } catch (error) {
-    logger.error('添加成长记录异常', error instanceof Error ? error : undefined, { activity: record.activity, learning: record.learning });
-    throw error;
-  }
-});
-
-export const searchRecords = createSelector(
-  [(state: GrowthState) => state.records, (_state: GrowthState, searchTerm: string) => searchTerm],
-  (records, searchTerm) => {
-    const searchLower = searchTerm.toLowerCase();
-    return records.filter(record => {
-      return (
-        (record.activity && record.activity.toLowerCase().includes(searchLower)) ||
-        (record.learning && record.learning.toLowerCase().includes(searchLower)) ||
-        (record.reflection && record.reflection.toLowerCase().includes(searchLower)) ||
-        (record.tags && record.tags.some(tag => tag.toLowerCase().includes(searchLower)))
-      );
-    });
-  }
-);
-
-export const filterRecordsByMood = createSelector(
-  [(state: GrowthState) => state.records, (_state: GrowthState, mood: GrowthRecord['mood']) => mood],
-  (records, mood) => {
-    return records.filter(record => record.mood === mood);
-  }
-);
-
-export const filterRecordsByTags = createSelector(
-  [(state: GrowthState) => state.records, (_state: GrowthState, tags: Tag[]) => tags],
-  (records, tags) => {
-    return records.filter(record => {
-      if (!record.tags || record.tags.length === 0) return false;
-      return tags.some(tag => record.tags.includes(tag));
-    });
-  }
-);
-
-export const exportData = createAsyncThunk(
-  'growth/exportData', 
-  async (
-    options: ExportOptions, 
-    { getState }
-  ) => {
+export const fetchRecords = createAsyncThunk(
+  'growth/fetchRecords',
+  async (_, { rejectWithValue }) => {
     try {
-      logger.info('开始导出数据', { format: options.format, dataTypes: options.dataTypes });
-      
-      const state = getState() as { growth: GrowthState, goal: GoalState };
-      const { records, tags, trees } = state.growth;
-      const { goals } = state.goal;
-      
-      // 生成导出数据
-      const { fileName, blob } = generateExportData(options, {
-        records,
-        tags,
-        trees,
-        goals
-      });
-      
-      // 触发下载
-      downloadBlob(blob, fileName);
-      
-      logger.info('数据导出成功', { fileName });
-      return { success: true, message: '数据导出成功' };
+      const records = await growthService.getRecords();
+      return records;
     } catch (error) {
-      logger.error('导出数据异常', error instanceof Error ? error : undefined);
-      throw error;
+      return rejectWithValue(error);
     }
   }
 );
 
-export const importData = createAsyncThunk('growth/importData', async (data: Partial<GrowthState>) => {
-  try {
-    if (data.records && Array.isArray(data.records)) {
-      for (const record of data.records) {
-        await recordServiceV2.createRecord({
-          activity: record.activity,
-          learning: record.learning,
-          reflection: record.reflection,
-          mood: record.mood,
-          tags: record.tags,
-          date: record.date
-        });
-      }
+export const addRecord = createAsyncThunk(
+  'growth/addRecord',
+  async (record: Omit<GrowthRecord, 'id' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+    try {
+      const newRecord = await growthService.createRecord(record);
+      return newRecord;
+    } catch (error) {
+      return rejectWithValue(error);
     }
-    return data;
-  } catch (error) {
-    logger.error('导入数据异常', error instanceof Error ? error : undefined);
-    throw error;
   }
-});
+);
+
+export const updateRecord = createAsyncThunk(
+  'growth/updateRecord',
+  async ({ id, updates }: { id: string; updates: Partial<GrowthRecord> }, { rejectWithValue }) => {
+    try {
+      const updatedRecord = await growthService.updateRecord(id, updates);
+      return updatedRecord;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteRecord = createAsyncThunk(
+  'growth/deleteRecord',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await growthService.deleteRecord(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 
 const growthSlice = createSlice({
   name: 'growth',
   initialState,
   reducers: {
-    setRecords: (state, action: PayloadAction<GrowthRecord[]>) => {
-      state.records = action.payload;
+    setFilter: (state, action: PayloadAction<string>) => {
+      state.currentFilter = action.payload;
     },
-    setTags: (state, action: PayloadAction<Tag[]>) => {
-      state.tags = action.payload;
-    },
-    setTrees: (state, action: PayloadAction<Tree[]>) => {
-      state.trees = action.payload;
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
     },
     clearError: (state) => {
       state.error = null;
-    }
+    },
+    optimisticAddRecord: (state, action: PayloadAction<GrowthRecord>) => {
+      state.records.unshift(action.payload);
+    },
+    optimisticUpdateRecord: (state, action: PayloadAction<GrowthRecord>) => {
+      const index = state.records.findIndex((r) => r.id === action.payload.id);
+      if (index !== -1) {
+        state.records[index] = action.payload;
+      }
+    },
+    optimisticDeleteRecord: (state, action: PayloadAction<string>) => {
+      state.records = state.records.filter((r) => r.id !== action.payload);
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loadData.pending, (state) => {
+      .addCase(fetchRecords.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(loadData.fulfilled, (state, action) => {
+      .addCase(fetchRecords.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.records = action.payload.records;
-        state.tags = action.payload.tags;
-        state.trees = action.payload.trees;
+        state.records = action.payload;
       })
-      .addCase(loadData.rejected, (state, action) => {
+      .addCase(fetchRecords.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || '加载数据失败';
+        state.error = action.payload as string;
       })
       .addCase(addRecord.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
       })
       .addCase(addRecord.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.records = [action.payload.record, ...state.records];
-        state.tags = action.payload.tags;
+        state.records = state.records.filter((r) => r.id !== action.payload.id);
+        state.records.unshift(action.payload);
       })
       .addCase(addRecord.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || '添加记录失败';
+        state.error = action.payload as string;
       })
-      .addCase(importData.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
+      .addCase(updateRecord.fulfilled, (state, action) => {
+        const index = state.records.findIndex((r) => r.id === action.payload.id);
+        if (index !== -1) {
+          state.records[index] = action.payload;
+        }
       })
-      .addCase(importData.fulfilled, (state, action) => {
-        state.isLoading = false;
-        if (action.payload.records) state.records = action.payload.records;
-        if (action.payload.tags) state.tags = action.payload.tags;
-        if (action.payload.trees) state.trees = action.payload.trees;
-      })
-      .addCase(importData.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || '导入数据失败';
+      .addCase(deleteRecord.fulfilled, (state, action) => {
+        state.records = state.records.filter((r) => r.id !== action.payload);
       });
-  }
+  },
 });
 
-export const { setRecords, setTags, setTrees, clearError } = growthSlice.actions;
-export default growthSlice.reducer;
+export const {
+  setFilter,
+  setSearchQuery,
+  clearError,
+  optimisticAddRecord,
+  optimisticUpdateRecord,
+  optimisticDeleteRecord,
+} = growthSlice.actions;
+
+export const selectGrowthRecords = (state: { growth: GrowthState }) => state.growth.records;
+export const selectGrowthLoading = (state: { growth: GrowthState }) => state.growth.isLoading;
+export const selectGrowthError = (state: { growth: GrowthState }) => state.growth.error;
+export const selectCurrentFilter = (state: { growth: GrowthState }) => state.growth.currentFilter;
+export const selectSearchQuery = (state: { growth: GrowthState }) => state.growth.searchQuery;
+
+export const useGrowth = () => {
+  const records = useSelector(selectGrowthRecords);
+  const isLoading = useGrowthLoading();
+  const error = useGrowthError();
+  const currentFilter = useCurrentFilter();
+  const searchQuery = useSearchQuery();
+
+  const filteredRecords = records.filter((record) => {
+    const matchesFilter = currentFilter === 'all' || record.category === currentFilter;
+    const matchesSearch = record.content.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const moodStats = records.reduce((acc, record) => {
+    if (record.mood) {
+      acc[record.mood] = (acc[record.mood] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<MoodType, number>);
+
+  const categoryStats = records.reduce((acc, record) => {
+    acc[record.category] = (acc[record.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return {
+    records: filteredRecords,
+    allRecords: records,
+    isLoading,
+    error,
+    currentFilter,
+    searchQuery,
+    moodStats,
+    categoryStats,
+    fetchRecords: () => dispatch(fetchRecords()),
+    addRecord: (record: Omit<GrowthRecord, 'id' | 'createdAt' | 'updatedAt'>) =>
+      dispatch(addRecord(record)),
+    updateRecord: (id: string, updates: Partial<GrowthRecord>) =>
+      dispatch(updateRecord({ id, updates })),
+    deleteRecord: (id: string) => dispatch(deleteRecord(id)),
+    setFilter: (filter: string) => dispatch(setFilter(filter)),
+    setSearchQuery: (query: string) => dispatch(setSearchQuery(query)),
+  };
+};

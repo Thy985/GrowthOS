@@ -1,186 +1,96 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import reminderServiceV2 from '../../common/services/reminderServiceV2';
-import { type Reminder, type ReminderState, type CreateReminderDTO, type UpdateReminderDTO } from '../../types';
-import logger from '../../utils/logger';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { ReminderState, Reminder } from '../../types';
+import { reminderService } from '../../common/services/reminderService';
 
 const initialState: ReminderState = {
   reminders: [],
   isLoading: false,
-  error: null
+  error: null,
 };
 
-export const loadReminders = createAsyncThunk('reminder/loadReminders', async () => {
-  try {
-    logger.info('加载提醒数据');
-    const reminders = await reminderServiceV2.getReminders();
-    logger.info('提醒数据加载完成', { remindersCount: reminders.length });
-    return reminders;
-  } catch (error) {
-    logger.error('加载提醒数据异常', error instanceof Error ? error : undefined);
-    throw error;
-  }
-});
-
-export const addReminder = createAsyncThunk('reminder/addReminder', async (reminder: CreateReminderDTO) => {
-  try {
-    logger.info('添加提醒', { title: reminder.title, date: reminder.date, time: reminder.time });
-    
-    const newReminder = await reminderServiceV2.createReminder({
-      title: reminder.title,
-      description: reminder.description || '',
-      date: reminder.date,
-      time: reminder.time,
-      goalId: reminder.goalId
-    });
-    
-    if ('Notification' in window) {
-      void Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          const reminderDate = new Date(`${reminder.date}T${reminder.time}`);
-          const now = new Date();
-          const timeUntilReminder = reminderDate.getTime() - now.getTime();
-          
-          if (timeUntilReminder > 0) {
-            setTimeout(() => {
-              new Notification(reminder.title, {
-                body: reminder.description,
-                icon: '/favicon.ico'
-              });
-            }, timeUntilReminder);
-          }
-        }
-      });
+export const fetchReminders = createAsyncThunk(
+  'reminders/fetchReminders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const reminders = await reminderService.getReminders();
+      return reminders;
+    } catch (error) {
+      return rejectWithValue(error);
     }
-    
-    logger.info('提醒添加成功', { reminderId: newReminder.id });
-    return newReminder;
-  } catch (error) {
-    logger.error('添加提醒异常', error instanceof Error ? error : undefined, { title: reminder.title, date: reminder.date, time: reminder.time });
-    throw error;
   }
-});
+);
 
-export const updateReminder = createAsyncThunk('reminder/updateReminder', async (reminder: Reminder) => {
-  try {
-    logger.info('更新提醒', { reminderId: reminder.id, title: reminder.title });
-    
-    const updates: UpdateReminderDTO = {
-      title: reminder.title,
-      description: reminder.description,
-      date: reminder.date,
-      time: reminder.time,
-      isCompleted: reminder.isCompleted
-    };
-    
-    const updatedReminder = await reminderServiceV2.updateReminder(reminder.id, updates);
-    
-    logger.info('提醒更新成功', { reminderId: reminder.id });
-    return updatedReminder;
-  } catch (error) {
-    logger.error('更新提醒异常', error instanceof Error ? error : undefined, { reminderId: reminder.id });
-    throw error;
+export const addReminder = createAsyncThunk(
+  'reminders/addReminder',
+  async (reminder: Omit<Reminder, 'id' | 'createdAt'>, { rejectWithValue }) => {
+    try {
+      const newReminder = await reminderService.createReminder(reminder);
+      return newReminder;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
   }
-});
+);
 
-export const deleteReminder = createAsyncThunk('reminder/deleteReminder', async (reminderId: string) => {
-  try {
-    logger.info('删除提醒', { reminderId });
-    await reminderServiceV2.deleteReminder(reminderId);
-    logger.info('提醒删除成功', { reminderId });
-    return reminderId;
-  } catch (error) {
-    logger.error('删除提醒异常', error instanceof Error ? error : undefined, { reminderId });
-    throw error;
+export const updateReminder = createAsyncThunk(
+  'reminders/updateReminder',
+  async ({ id, updates }: { id: string; updates: Partial<Reminder> }, { rejectWithValue }) => {
+    try {
+      const updatedReminder = await reminderService.updateReminder(id, updates);
+      return updatedReminder;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
   }
-});
+);
 
-export const completeReminder = createAsyncThunk('reminder/completeReminder', async (reminderId: string) => {
-  try {
-    logger.info('标记提醒为已完成', { reminderId });
-    const updatedReminder = await reminderServiceV2.completeReminder(reminderId);
-    logger.info('提醒标记成功', { reminderId });
-    return updatedReminder;
-  } catch (error) {
-    logger.error('标记提醒异常', error instanceof Error ? error : undefined, { reminderId });
-    throw error;
+export const deleteReminder = createAsyncThunk(
+  'reminders/deleteReminder',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await reminderService.deleteReminder(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
   }
-});
+);
 
 const reminderSlice = createSlice({
-  name: 'reminder',
+  name: 'reminders',
   initialState,
   reducers: {
     clearError: (state) => {
       state.error = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loadReminders.pending, (state) => {
+      .addCase(fetchReminders.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(loadReminders.fulfilled, (state, action: PayloadAction<Reminder[]>) => {
+      .addCase(fetchReminders.fulfilled, (state, action) => {
         state.isLoading = false;
         state.reminders = action.payload;
       })
-      .addCase(loadReminders.rejected, (state, action) => {
+      .addCase(fetchReminders.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || '加载提醒失败';
+        state.error = action.payload as string;
       })
-      .addCase(addReminder.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
+      .addCase(addReminder.fulfilled, (state, action) => {
+        state.reminders.push(action.payload);
       })
-      .addCase(addReminder.fulfilled, (state, action: PayloadAction<Reminder>) => {
-        state.isLoading = false;
-        state.reminders = [action.payload, ...state.reminders];
+      .addCase(updateReminder.fulfilled, (state, action) => {
+        const index = state.reminders.findIndex((r) => r.id === action.payload.id);
+        if (index !== -1) {
+          state.reminders[index] = action.payload;
+        }
       })
-      .addCase(addReminder.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || '添加提醒失败';
-      })
-      .addCase(updateReminder.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(updateReminder.fulfilled, (state, action: PayloadAction<Reminder>) => {
-        state.isLoading = false;
-        state.reminders = state.reminders.map(r => 
-          r.id === action.payload.id ? action.payload : r
-        );
-      })
-      .addCase(updateReminder.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || '更新提醒失败';
-      })
-      .addCase(deleteReminder.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteReminder.fulfilled, (state, action: PayloadAction<string>) => {
-        state.isLoading = false;
-        state.reminders = state.reminders.filter(r => r.id !== action.payload);
-      })
-      .addCase(deleteReminder.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || '删除提醒失败';
-      })
-      .addCase(completeReminder.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(completeReminder.fulfilled, (state, action: PayloadAction<Reminder>) => {
-        state.isLoading = false;
-        state.reminders = state.reminders.map(r => 
-          r.id === action.payload.id ? action.payload : r
-        );
-      })
-      .addCase(completeReminder.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || '标记提醒失败';
+      .addCase(deleteReminder.fulfilled, (state, action) => {
+        state.reminders = state.reminders.filter((r) => r.id !== action.payload);
       });
-  }
+  },
 });
 
 export const { clearError } = reminderSlice.actions;

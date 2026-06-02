@@ -1,58 +1,61 @@
-import { Badge } from './common';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface KeyboardShortcutsHelpProps {
-  isOpen: boolean,
-  onClose: () => void,
+  onClose: () => void;
 }
 
-interface Shortcut {
-  keys: string[],
-  description: string,
-}
+const shortcuts = [
+  { key: 'Ctrl + /', description: '显示/隐藏快捷键帮助' },
+  { key: 'Ctrl + T', description: '切换主题' },
+  { key: 'Ctrl + H', description: '显示教程' },
+  { key: 'Ctrl + N', description: '新建记录' },
+  { key: 'Escape', description: '关闭弹窗' },
+  { key: 'Ctrl + K', description: '搜索' },
+  { key: 'Ctrl + D', description: '导航到仪表板' },
+  { key: 'Ctrl + R', description: '导航到记录' },
+  { key: 'Ctrl + G', description: '导航到目标' },
+];
 
-const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  const shortcuts: Shortcut[] = [
-    { keys: ['H'], description: '回到首页' },
-    { keys: ['R'], description: '查看记录列表' },
-    { keys: ['T'], description: '查看成长树' },
-    { keys: ['A'], description: '查看数据分析' },
-    { keys: ['?'], description: '显示/隐藏快捷键帮助' },
-    { keys: ['Ctrl', 'K'], description: '快速搜索' },
-    { keys: ['Esc'], description: '关闭弹窗' },
-  ];
+const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }) => {
+  const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">键盘快捷键</h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
-            ×
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          {shortcuts.map((shortcut, index) => (
-            <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-              <span className="text-gray-700">{shortcut.description}</span>
-              <div className="flex gap-2">
-                {shortcut.keys.map((key, i) => (
-                  <Badge key={i} variant="outline" size="small">
-                    <kbd className="font-mono">{key}</kbd>
-                  </Badge>
-                ))}
-              </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <h2 className="modal-title">{t('keyboardShortcuts.title', '键盘快捷键')}</h2>
+        <div className="shortcuts-list">
+          {shortcuts.map((shortcut) => (
+            <div
+              key={shortcut.key}
+              className="shortcut-item"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 0',
+                borderBottom: '1px solid var(--color-border)',
+              }}
+            >
+              <span>{shortcut.description}</span>
+              <kbd
+                style={{
+                  padding: '4px 8px',
+                  background: 'var(--color-gray-100)',
+                  borderRadius: '4px',
+                  fontFamily: 'monospace',
+                  fontSize: '12px',
+                }}
+              >
+                {shortcut.key}
+              </kbd>
             </div>
           ))}
         </div>
-        
-        <div className="mt-6 text-sm text-gray-500">
-          提示：在输入框中使用快捷键无效
+        <div className="modal-actions">
+          <button className="btn btn-primary" onClick={onClose}>
+            {t('common.close', '关闭')}
+          </button>
         </div>
       </div>
     </div>
