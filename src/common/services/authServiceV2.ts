@@ -94,10 +94,9 @@ async function saveUsersToStorage(users: StoredUser[]): Promise<void> {
 }
 
 export async function register(
-  email: string, 
-  password: string, 
-  name?: string
+  data: { email: string; password: string; name?: string }
 ): Promise<{ user: User, token: string, refreshToken?: string }> {
+  const { email, password, name } = data;
   const users = await loadUsersFromStorage();
   
   const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());

@@ -51,33 +51,33 @@ describe('themeSlice', () => {
   describe('setTheme', () => {
     test('should set dark mode', () => {
       const initialState = { isDarkMode: false };
-      const result = themeReducer(initialState, setTheme(true));
+      const result = themeReducer(initialState, setTheme('dark'));
       expect(result.isDarkMode).toBe(true);
       expect(localStorage.getItem('theme')).toBe('dark');
     });
 
     test('should set light mode', () => {
       const darkState = { isDarkMode: true };
-      const result = themeReducer(darkState, setTheme(false));
+      const result = themeReducer(darkState, setTheme('light'));
       expect(result.isDarkMode).toBe(false);
       expect(localStorage.getItem('theme')).toBe('light');
     });
 
     test('should persist theme change to localStorage', () => {
       const initialState = { isDarkMode: false };
-      themeReducer(initialState, setTheme(true));
+      themeReducer(initialState, setTheme('dark'));
       expect(localStorage.getItem('theme')).toBe('dark');
-      
-      themeReducer({ isDarkMode: true }, setTheme(false));
+
+      themeReducer({ isDarkMode: true }, setTheme('light'));
       expect(localStorage.getItem('theme')).toBe('light');
     });
 
     test('should handle setting same theme', () => {
       const initialState = { isDarkMode: false };
-      themeReducer(initialState, setTheme(false));
+      themeReducer(initialState, setTheme('light'));
       expect(localStorage.getItem('theme')).toBe('light');
-      
-      const result = themeReducer({ isDarkMode: true }, setTheme(true));
+
+      const result = themeReducer({ isDarkMode: true }, setTheme('dark'));
       expect(result.isDarkMode).toBe(true);
       expect(localStorage.getItem('theme')).toBe('dark');
     });

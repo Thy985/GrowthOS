@@ -1,10 +1,11 @@
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import { configure } from '@testing-library/react';
 
 configure({
   testIdAttribute: 'data-testid',
 });
 
+declare const global: typeof globalThis;
 global.fetch = jest.fn(() =>
   Promise.resolve({
     json: () => Promise.resolve({}),
@@ -14,7 +15,7 @@ global.fetch = jest.fn(() =>
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
+  value: jest.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -26,11 +27,11 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-window.scrollTo = jest.fn();
+(window as any).scrollTo = jest.fn();
 
 const originalError = console.error;
 beforeAll(() => {
-  console.error = (...args) => {
+  console.error = (...args: unknown[]) => {
     if (
       typeof args[0] === 'string' &&
       args[0].includes('Warning: ReactDOM.render is no longer supported')

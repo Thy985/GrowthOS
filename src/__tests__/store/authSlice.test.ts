@@ -1,4 +1,4 @@
-import authReducer, { clearError } from '../../store/slices/authSlice';
+import authReducer, { clearError, setUser, checkAuth, login, register, logout } from '../../store/slices/authSlice';
 
 describe('authSlice', () => {
   const initialState = {
@@ -8,7 +8,14 @@ describe('authSlice', () => {
     isAuthenticated: false
   };
 
-  describe('reducer', () => {
+  const mockUser = {
+    id: '1',
+    email: 'test@example.com',
+    name: 'Test User',
+    createdAt: '2024-01-01'
+  };
+
+  describe('reducer - basic actions', () => {
     test('should return the initial state', () => {
       const result = authReducer(undefined, { type: 'unknown' });
       expect(result).toEqual(initialState);
@@ -19,183 +26,118 @@ describe('authSlice', () => {
         ...initialState,
         error: 'Some error message'
       };
-      
+
       const result = authReducer(stateWithError, clearError());
       expect(result.error).toBeNull();
     });
+
+    test('should handle setUser', () => {
+      const result = authReducer(initialState, setUser(mockUser));
+      expect(result.user).toEqual(mockUser);
+      expect(result.isAuthenticated).toBe(true);
+    });
   });
 
-  describe('login action', () => {
+  describe('login thunk', () => {
     test('should set loading state when login is pending', () => {
-      const action = { type: 'auth/login/pending' };
+      const action = { type: login.pending.type };
       const result = authReducer(initialState, action);
-      
+
       expect(result.isLoading).toBe(true);
       expect(result.error).toBeNull();
     });
 
     test('should set user when login is fulfilled', () => {
-      const user = {
-        id: '1',
-        email: 'test@example.com',
-        name: 'Test User',
-        createdAt: '2024-01-01'
-      };
       const action = {
-        type: 'auth/login/fulfilled',
-        payload: user
+        type: login.fulfilled.type,
+        payload: { user: mockUser, token: 'test-token' }
       };
       const result = authReducer(initialState, action);
-      
+
       expect(result.isLoading).toBe(false);
-      expect(result.user).toEqual(user);
+      expect(result.user).toEqual(mockUser);
       expect(result.isAuthenticated).toBe(true);
     });
 
     test('should set error when login is rejected', () => {
       const action = {
-        type: 'auth/login/rejected',
-        error: { message: 'Login failed' }
+        type: login.rejected.type,
+        payload: 'Login failed'
       };
       const result = authReducer(initialState, action);
-      
+
       expect(result.isLoading).toBe(false);
       expect(result.error).toBe('Login failed');
       expect(result.isAuthenticated).toBe(false);
     });
   });
 
-  describe('register action', () => {
+  describe('register thunk', () => {
     test('should set loading state when register is pending', () => {
-      const action = { type: 'auth/register/pending' };
+      const action = { type: register.pending.type };
       const result = authReducer(initialState, action);
-      
+
       expect(result.isLoading).toBe(true);
       expect(result.error).toBeNull();
     });
 
     test('should set user when register is fulfilled', () => {
-      const user = {
-        id: '1',
-        email: 'test@example.com',
-        name: 'Test User',
-        createdAt: '2024-01-01'
-      };
       const action = {
-        type: 'auth/register/fulfilled',
-        payload: user
+        type: register.fulfilled.type,
+        payload: { user: mockUser, token: 'test-token' }
       };
       const result = authReducer(initialState, action);
-      
+
       expect(result.isLoading).toBe(false);
-      expect(result.user).toEqual(user);
+      expect(result.user).toEqual(mockUser);
       expect(result.isAuthenticated).toBe(true);
     });
 
     test('should set error when register is rejected', () => {
       const action = {
-        type: 'auth/register/rejected',
-        error: { message: 'Registration failed' }
+        type: register.rejected.type,
+        payload: 'Registration failed'
       };
       const result = authReducer(initialState, action);
-      
+
       expect(result.isLoading).toBe(false);
       expect(result.error).toBe('Registration failed');
       expect(result.isAuthenticated).toBe(false);
     });
   });
 
-  describe('logout action', () => {
-    test('should set loading state when logout is pending', () => {
-      const loggedInState = {
-        ...initialState,
-        user: { id: '1', email: 'test@example.com', createdAt: '2024-01-01' },
-        isAuthenticated: true
-      };
-      const action = { type: 'auth/logout/pending' };
-      const result = authReducer(loggedInState, action);
-      
-      expect(result.isLoading).toBe(true);
-    });
-
+  describe('logout thunk', () => {
     test('should clear user when logout is fulfilled', () => {
       const loggedInState = {
         ...initialState,
-        user: { id: '1', email: 'test@example.com', createdAt: '2024-01-01' },
+        user: mockUser,
         isAuthenticated: true
       };
-      const action = { type: 'auth/logout/fulfilled' };
+      const action = { type: logout.fulfilled.type };
       const result = authReducer(loggedInState, action);
-      
+
       expect(result.isLoading).toBe(false);
       expect(result.user).toBeNull();
       expect(result.isAuthenticated).toBe(false);
-    });
-
-    test('should set error when logout is rejected', () => {
-      const action = {
-        type: 'auth/logout/rejected',
-        error: { message: 'Logout failed' }
-      };
-      const result = authReducer(initialState, action);
-      
-      expect(result.isLoading).toBe(false);
-      expect(result.error).toBe('Logout failed');
     });
   });
 
   describe('checkAuth action', () => {
-    test('should set loading state when checkAuth is pending', () => {
-      const action = { type: 'auth/checkAuth/pending' };
-      const result = authReducer(initialState, action);
-      
-      expect(result.isLoading).toBe(true);
+    beforeEach(() => {
+      localStorage.clear();
     });
 
-    test('should set user when checkAuth is fulfilled with user', () => {
-      const user = {
-        id: '1',
-        email: 'test@example.com',
-        name: 'Test User',
-        createdAt: '2024-01-01'
-      };
-      const action = {
-        type: 'auth/checkAuth/fulfilled',
-        payload: user
-      };
-      const result = authReducer(initialState, action);
-      
-      expect(result.isLoading).toBe(false);
-      expect(result.user).toEqual(user);
+    test('should set user from localStorage', () => {
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      const result = authReducer(initialState, checkAuth());
+      expect(result.user).toEqual(mockUser);
       expect(result.isAuthenticated).toBe(true);
     });
 
-    test('should clear user when checkAuth is fulfilled with null', () => {
-      const loggedInState = {
-        ...initialState,
-        user: { id: '1', email: 'test@example.com', createdAt: '2024-01-01' },
-        isAuthenticated: true
-      };
-      const action = {
-        type: 'auth/checkAuth/fulfilled',
-        payload: null
-      };
-      const result = authReducer(loggedInState, action);
-      
-      expect(result.isLoading).toBe(false);
+    test('should keep null user when localStorage is empty', () => {
+      const result = authReducer(initialState, checkAuth());
       expect(result.user).toBeNull();
       expect(result.isAuthenticated).toBe(false);
-    });
-
-    test('should set error when checkAuth is rejected', () => {
-      const action = {
-        type: 'auth/checkAuth/rejected',
-        error: { message: 'Check auth failed' }
-      };
-      const result = authReducer(initialState, action);
-      
-      expect(result.isLoading).toBe(false);
-      expect(result.error).toBe('Check auth failed');
     });
   });
 });

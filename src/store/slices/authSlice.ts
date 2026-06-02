@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { type AuthState } from '../../types';
+import { type AppDispatch } from '../index';
 import authServiceV2 from '../../common/services/authServiceV2';
 
 const initialState: AuthState = {
@@ -14,7 +15,7 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string, password: string }, { rejectWithValue }) => {
     try {
-      const response = await authServiceV2.login(credentials);
+      const response = await authServiceV2.login(credentials.email, credentials.password);
       return response;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : '登录失败');
@@ -103,7 +104,7 @@ const authSlice = createSlice({
 export const { setUser, clearError, checkAuth } = authSlice.actions;
 
 export const useAuth = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const auth = useSelector((state: { auth: AuthState }) => state.auth);
 
   return {
