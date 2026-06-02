@@ -1,5 +1,5 @@
 import React from 'react';
-import { Record } from '../types';
+import { type Record } from '../types';
 
 // 格式化日期
 export const formatDate = (dateStr: string): string => {
@@ -58,7 +58,7 @@ export const filterRecords = (
   searchTerm: string,
   selectedMoods: string[],
   selectedTags: string[],
-  dateRange: { start: string; end: string }
+  dateRange: { start: string, end: string }
 ): Record[] => {
   let filtered = records;
   

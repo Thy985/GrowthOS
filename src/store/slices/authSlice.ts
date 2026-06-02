@@ -1,10 +1,10 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { AuthState, User } from '../../types';
-import { authService } from '../../common/services/authService';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { useDispatch, useSelector } from 'react-redux';
+import { AuthState } from '../../types';
+import authServiceV2 from '../../common/services/authServiceV2';
 
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('token'),
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -12,44 +12,40 @@ const initialState: AuthState = {
 
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+  async (credentials: { email: string, password: string }, { rejectWithValue }) => {
     try {
-      const response = await authService.login(credentials);
-      localStorage.setItem('token', response.token);
+      const response = await authServiceV2.login(credentials);
       return response;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error instanceof Error ? error.message : '登录失败');
     }
   }
 );
 
 export const register = createAsyncThunk(
   'auth/register',
-  async (data: { email: string; password: string; name: string }, { rejectWithValue }) => {
+  async (data: { email: string, password: string, name: string }, { rejectWithValue }) => {
     try {
-      const response = await authService.register(data);
-      localStorage.setItem('token', response.token);
+      const response = await authServiceV2.register(data);
       return response;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error instanceof Error ? error.message : '注册失败');
     }
   }
 );
 
 export const logout = createAsyncThunk('auth/logout', async () => {
-  localStorage.removeItem('token');
-  await authService.logout();
+  await authServiceV2.logout();
 });
 
 export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await authService.refreshToken();
-      localStorage.setItem('token', response.token);
+      const response = await authServiceV2.refreshToken();
       return response;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error instanceof Error ? error.message : '刷新token失败');
     }
   }
 );
@@ -58,7 +54,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<User>) => {
+    setUser: (state, action) => {
       state.user = action.payload;
       state.isAuthenticated = true;
     },
@@ -66,10 +62,15 @@ const authSlice = createSlice({
       state.error = null;
     },
     checkAuth: (state) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        state.token = token;
-        state.isAuthenticated = true;
+      const user = localStorage.getItem('user');
+      if (user) {
+        try {
+          state.user = JSON.parse(user);
+          state.isAuthenticated = true;
+        } catch {
+          state.user = null;
+          state.isAuthenticated = false;
+        }
       }
     },
   },
@@ -82,8 +83,8 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
         state.isAuthenticated = true;
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -96,8 +97,8 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
         state.isAuthenticated = true;
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
@@ -105,28 +106,32 @@ const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
-        state.token = null;
         state.isAuthenticated = false;
+        localStorage.removeItem('user');
       })
       .addCase(refreshToken.fulfilled, (state, action) => {
-        state.token = action.payload.token;
+        state.user = action.payload.user;
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       });
   },
 });
 
 export const { setUser, clearError, checkAuth } = authSlice.actions;
+
 export const useAuth = () => {
-  const dispatch = useAuthDispatch();
-  const auth = useAuthSelector();
+  const dispatch = useDispatch();
+  const auth = useSelector((state: { auth: AuthState }) => state.auth);
+
   return {
     ...auth,
-    login: (credentials: { email: string; password: string }) =>
+    login: (credentials: { email: string, password: string }) =>
       dispatch(login(credentials)),
-    register: (data: { email: string; password: string; name: string }) =>
+    register: (data: { email: string, password: string, name: string }) =>
       dispatch(register(data)),
     logout: () => dispatch(logout()),
     checkAuth: () => dispatch(checkAuth()),
     clearError: () => dispatch(clearError()),
   };
 };
+
 export default authSlice.reducer;

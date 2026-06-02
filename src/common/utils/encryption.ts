@@ -14,15 +14,12 @@ class EncryptionUtil {
     
     // 尝试从 process.env 获取环境变量（Node.js 环境，如测试）
     if (typeof process !== 'undefined' && process.env) {
-      encryptionKey = process.env.VITE_ENCRYPTION_KEY || encryptionKey;
-      encryptionIV = process.env.VITE_ENCRYPTION_IV || encryptionIV;
-    } else {
-      // 浏览器环境中，使用默认值
-      // 注意：在生产环境中，应该使用环境变量来设置加密密钥
+      encryptionKey = (process.env as Record<string, string>).VITE_ENCRYPTION_KEY || encryptionKey;
+      encryptionIV = (process.env as Record<string, string>).VITE_ENCRYPTION_IV || encryptionIV;
     }
     
     this.key = CryptoJS.enc.Utf8.parse(encryptionKey);
-    this.iv = CryptoJS.enc.Utf8.parse(encryptionIV); // 初始化向量
+    this.iv = CryptoJS.enc.Utf8.parse(encryptionIV);
   }
 
   // 使用AES-256-CBC加密

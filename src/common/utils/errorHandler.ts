@@ -1,4 +1,4 @@
-import React, { ComponentType, ErrorInfo, ReactNode } from 'react';
+import React, { type ComponentType, type ErrorInfo } from 'react';
 import logger from './logger';
 
 // 错误处理工具
@@ -41,7 +41,7 @@ const errorHandler = {
     
     if (errors && typeof errors === 'object') {
       // 提取第一个错误信息
-      const firstError = Object.values(errors)[0];
+      const firstError = Object.values(errors)[0] as string | undefined;
       return firstError || fallbackMessage;
     }
     
@@ -74,7 +74,7 @@ const errorHandler = {
   
   // 生成错误边界组件
   createErrorBoundary<P extends object>(Component: ComponentType<P>, fallbackComponent: ComponentType<{ error: Error }>): ComponentType<P> {
-    return class ErrorBoundary extends React.Component<P, { hasError: boolean; error: Error | null }> {
+    return class ErrorBoundary extends React.Component<P, { hasError: boolean, error: Error | null }> {
       constructor(props: P) {
         super(props);
         this.state = { hasError: false, error: null };

@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { RootState } from '../../store';
+import { type RootState } from '../../store';
 
 const Analytics: React.FC = () => {
   const { t } = useTranslation();

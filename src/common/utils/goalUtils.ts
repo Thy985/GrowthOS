@@ -1,4 +1,4 @@
-import { Goal } from '../types';
+import { type Goal } from '../types';
 
 // 计算进度百分比
 export const calculateProgress = (current: number, target: number): number => {
@@ -26,11 +26,11 @@ export const getGoalStatusText = (status: Goal['status']): string => {
 
 // 验证目标表单
 export const validateGoalForm = (formData: {
-  title: string;
-  description: string;
-  targetValue: string;
-  startDate: string;
-  endDate: string;
+  title: string,
+  description: string,
+  targetValue: string,
+  startDate: string,
+  endDate: string,
 }): Record<string, string> => {
   const errors: Record<string, string> = {};
   if (!formData.title.trim()) {

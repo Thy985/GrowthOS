@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface TutorialProps {
-  onClose: () => void;
+  onClose: () => void,
 }
 
 const tutorialSteps = [

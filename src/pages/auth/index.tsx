@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, register } from '../../store/slices/authSlice';
-import { RootState } from '../../store';
+import type { RootState, AppDispatch } from '../../store';
 
 const Auth: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -16,9 +16,9 @@ const Auth: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin) {
-      dispatch(login({ email, password }));
+      void dispatch(login({ email, password }));
     } else {
-      dispatch(register({ email, password, name }));
+      void dispatch(register({ email, password, name }));
     }
   };
 

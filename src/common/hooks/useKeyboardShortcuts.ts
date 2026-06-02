@@ -1,12 +1,12 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 interface Shortcut {
-  key: string;
-  ctrl?: boolean;
-  shift?: boolean;
-  alt?: boolean;
-  meta?: boolean;
-  callback: () => void;
+  key: string,
+  ctrl?: boolean,
+  shift?: boolean,
+  alt?: boolean,
+  meta?: boolean,
+  callback: () => void,
 }
 
 const useKeyboardShortcuts = (shortcuts: Shortcut[]) => {

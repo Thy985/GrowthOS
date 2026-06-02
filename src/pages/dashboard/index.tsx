@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { fetchRecords } from '../../store/slices/growthSlice';
 import { fetchGoals } from '../../store/slices/goalSlice';
 import { fetchReminders } from '../../store/slices/reminderSlice';
-import { RootState } from '../../store';
+import { type RootState } from '../../store';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();

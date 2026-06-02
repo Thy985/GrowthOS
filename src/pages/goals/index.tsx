@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchGoals, addGoal, updateGoal, deleteGoal } from '../../store/slices/goalSlice';
-import { RootState } from '../../store';
-import { Goal } from '../../types';
+import { type RootState } from '../../store';
+import { type Goal } from '../../types';
 
 const Goals: React.FC = () => {
   const { t } = useTranslation();

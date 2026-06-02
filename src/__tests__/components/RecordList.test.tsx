@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import RecordList from '../../pages/records/index.tsx';
 import growthReducer from '../../store/slices/growthSlice.ts';
-import { Record, Tag } from '../../common/types/index.ts';
+import { type Record, type Tag } from '../../common/types/index.ts';
 
 // 模拟的测试数据
 const mockRecords: Record[] = [

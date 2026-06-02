@@ -132,8 +132,8 @@ export interface RootState {
   auth: AuthState,
   growth: GrowthState,
   theme: ThemeState,
-  goal: GoalState,
-  reminder: ReminderState,
+  goals: GoalState,
+  reminders: ReminderState,
   ai: AIState,
   sync: SyncState,
 }

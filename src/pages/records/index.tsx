@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchRecords, addRecord, deleteRecord } from '../../store/slices/growthSlice';
-import { RootState } from '../../store';
-import { GrowthRecord, MoodType } from '../../types';
+import { type RootState } from '../../store';
 
 const Records: React.FC = () => {
   const { t } = useTranslation();

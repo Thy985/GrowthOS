@@ -1,23 +1,23 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 import secureStorage from '../utils/secureStorage';
 
 // 用户类型定义
 interface User {
-  id: number;
-  username: string;
-  token: string;
-  role?: 'admin' | 'user'; // 添加角色字段，用于权限控制
+  id: number,
+  username: string,
+  token: string,
+  role?: 'admin' | 'user', // 添加角色字段，用于权限控制
 }
 
 // AuthContext类型定义
 interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-  login: (username: string, password: string) => boolean;
-  register: (username: string, password: string) => boolean;
-  logout: () => void;
-  hasPermission: (requiredRole: 'admin' | 'user') => boolean;
+  user: User | null,
+  isLoading: boolean,
+  error: string | null,
+  login: (username: string, password: string) => boolean,
+  register: (username: string, password: string) => boolean,
+  logout: () => void,
+  hasPermission: (requiredRole: 'admin' | 'user') => boolean,
 }
 
 // 创建Context
@@ -34,7 +34,7 @@ export const useAuth = (): AuthContextType => {
 
 // Provider组件
 interface AuthProviderProps {
-  children: ReactNode;
+  children: ReactNode,
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {

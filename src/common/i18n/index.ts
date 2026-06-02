@@ -5,7 +5,7 @@ import enUS from './en-US.json';
 
 // 检测用户的浏览器语言
 const detectUserLanguage = (): string => {
-  const userLanguage = navigator.language || navigator.userLanguage;
+  const userLanguage = navigator.language;
   if (userLanguage.startsWith('zh')) {
     return 'zh-CN';
   }
@@ -13,7 +13,7 @@ const detectUserLanguage = (): string => {
 };
 
 // 初始化i18next
-i18n
+void i18n
   .use(initReactI18next)
   .init({
     resources: {

@@ -1,6 +1,7 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { ReminderState, Reminder } from '../../types';
-import { reminderService } from '../../common/services/reminderService';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { useDispatch, useSelector } from 'react-redux';
+import { type ReminderState, type Reminder } from '../../types';
+import reminderServiceV2 from '../../common/services/reminderServiceV2';
 
 const initialState: ReminderState = {
   reminders: [],
@@ -12,10 +13,10 @@ export const fetchReminders = createAsyncThunk(
   'reminders/fetchReminders',
   async (_, { rejectWithValue }) => {
     try {
-      const reminders = await reminderService.getReminders();
+      const reminders = await reminderServiceV2.getReminders();
       return reminders;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error instanceof Error ? error.message : '获取提醒失败');
     }
   }
 );
@@ -24,22 +25,22 @@ export const addReminder = createAsyncThunk(
   'reminders/addReminder',
   async (reminder: Omit<Reminder, 'id' | 'createdAt'>, { rejectWithValue }) => {
     try {
-      const newReminder = await reminderService.createReminder(reminder);
+      const newReminder = await reminderServiceV2.createReminder(reminder);
       return newReminder;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error instanceof Error ? error.message : '创建提醒失败');
     }
   }
 );
 
 export const updateReminder = createAsyncThunk(
   'reminders/updateReminder',
-  async ({ id, updates }: { id: string; updates: Partial<Reminder> }, { rejectWithValue }) => {
+  async ({ id, updates }: { id: string, updates: Partial<Reminder> }, { rejectWithValue }) => {
     try {
-      const updatedReminder = await reminderService.updateReminder(id, updates);
+      const updatedReminder = await reminderServiceV2.updateReminder(id, updates);
       return updatedReminder;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error instanceof Error ? error.message : '更新提醒失败');
     }
   }
 );
@@ -48,10 +49,10 @@ export const deleteReminder = createAsyncThunk(
   'reminders/deleteReminder',
   async (id: string, { rejectWithValue }) => {
     try {
-      await reminderService.deleteReminder(id);
+      await reminderServiceV2.deleteReminder(id);
       return id;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error instanceof Error ? error.message : '删除提醒失败');
     }
   }
 );
@@ -94,4 +95,20 @@ const reminderSlice = createSlice({
 });
 
 export const { clearError } = reminderSlice.actions;
+
+export const useReminders = () => {
+  const dispatch = useDispatch();
+  const { reminders, isLoading, error } = useSelector((state: { reminders: ReminderState }) => state.reminders);
+
+  return {
+    reminders,
+    isLoading,
+    error,
+    fetchReminders: () => dispatch(fetchReminders()),
+    addReminder: (reminder: Omit<Reminder, 'id' | 'createdAt'>) => dispatch(addReminder(reminder)),
+    updateReminder: (id: string, updates: Partial<Reminder>) => dispatch(updateReminder({ id, updates })),
+    deleteReminder: (id: string) => dispatch(deleteReminder(id)),
+  };
+};
+
 export default reminderSlice.reducer;

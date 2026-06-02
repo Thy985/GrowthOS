@@ -21,8 +21,8 @@ import { useTheme } from './store/slices/themeSlice';
 import { useAuth } from './store/slices/authSlice';
 
 function AppContent() {
-  const { t } = useTranslation();
-  const { theme } = useTheme();
+  const { t: _t } = useTranslation();
+  const { isDarkMode: _isDarkMode } = useTheme();
   const { isAuthenticated, checkAuth } = useAuth();
   const [showTutorial, setShowTutorial] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);

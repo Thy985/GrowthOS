@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchReminders, addReminder, updateReminder, deleteReminder } from '../../store/slices/reminderSlice';
-import { RootState } from '../../store';
+import { type RootState } from '../../store';
 
 const Reminders: React.FC = () => {
   const { t } = useTranslation();
