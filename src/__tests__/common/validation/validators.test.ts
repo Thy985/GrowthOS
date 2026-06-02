@@ -1,4 +1,4 @@
-import { validate, formatZodError, validateOrThrow } from '../../../common/validation/validators';
+import { validate, validateOrThrow } from '../../../common/validation/validators';
 import { EmailSchema, PasswordSchema } from '../../../common/validation/schemas';
 
 describe('Validation Validators', () => {

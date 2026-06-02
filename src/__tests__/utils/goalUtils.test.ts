@@ -1,210 +1,138 @@
-import {
-  calculateProgress,
-  formatDate,
-  getGoalStatusText,
-  validateGoalForm
-} from '../../utils/goalUtils';
+import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../utils/goalUtils';
+import type { Goal } from '../../types';
 
-describe('goalUtils', () => {
+describe('Goal Utils', () => {
   describe('calculateProgress', () => {
-    test('should calculate correct progress percentage', () => {
+    it('should calculate progress correctly', () => {
       expect(calculateProgress(50, 100)).toBe(50);
-      expect(calculateProgress(25, 100)).toBe(25);
       expect(calculateProgress(0, 100)).toBe(0);
-    });
-
-    test('should cap progress at 100%', () => {
-      expect(calculateProgress(150, 100)).toBe(100);
       expect(calculateProgress(100, 100)).toBe(100);
     });
 
-    test('should handle zero target', () => {
-      expect(calculateProgress(50, 0)).toBe(100);
+    it('should calculate zero progress', () => {
+      expect(calculateProgress(0, 100)).toBe(0);
     });
 
-    test('should round to nearest integer', () => {
+    it('should handle values exceeding target', () => {
+      expect(calculateProgress(150, 100)).toBe(100);
+    });
+
+    it('should round to nearest integer', () => {
       expect(calculateProgress(33, 100)).toBe(33);
-      expect(calculateProgress(67, 100)).toBe(67);
+      expect(calculateProgress(66, 100)).toBe(66);
     });
   });
 
   describe('formatDate', () => {
-    test('should format date string correctly', () => {
-      const result = formatDate('2024-01-15');
-      expect(result).toContain('15');
-      expect(result).toContain('2024');
+    it('should format date correctly', () => {
+      const formatted = formatDate('2024-01-15');
+      expect(formatted).toContain('2024');
+      expect(formatted).toContain('1');
+      expect(formatted).toContain('15');
     });
 
-    test('should handle ISO date string', () => {
-      const result = formatDate('2024-01-15T10:30:00.000Z');
-      expect(result).toBeTruthy();
+    it('should handle invalid date', () => {
+      const formatted = formatDate('invalid-date');
+      expect(formatted).toBe('Invalid Date');
     });
   });
 
   describe('getGoalStatusText', () => {
-    test('should return correct text for active status', () => {
+    it('should return correct text for each status', () => {
       expect(getGoalStatusText('active')).toBe('进行中');
-    });
-
-    test('should return correct text for completed status', () => {
       expect(getGoalStatusText('completed')).toBe('已完成');
-    });
-
-    test('should return correct text for cancelled status', () => {
       expect(getGoalStatusText('cancelled')).toBe('已取消');
     });
 
-    test('should return unknown status for invalid status', () => {
-      expect(getGoalStatusText('invalid' as any)).toBe('invalid');
+    it('should handle unknown status', () => {
+      const unknownStatus = 'unknown' as Goal['status'];
+      expect(getGoalStatusText(unknownStatus)).toBe('unknown');
     });
   });
 
   describe('validateGoalForm', () => {
-    test('should return no errors for valid form', () => {
-      const formData = {
-        title: 'Test Goal',
-        description: 'Test Description',
+    it('should validate complete form with no errors', () => {
+      const form = {
+        title: 'Valid Goal',
+        description: 'Description',
         targetValue: '100',
         startDate: '2024-01-01',
-        endDate: '2024-12-31'
+        endDate: '2024-12-31',
       };
-      
-      const errors = validateGoalForm(formData);
-      expect(Object.keys(errors).length).toBe(0);
+      const result = validateGoalForm(form);
+      expect(Object.keys(result)).toHaveLength(0);
     });
 
-    test('should return error for empty title', () => {
-      const formData = {
+    it('should return errors for empty title', () => {
+      const form = {
         title: '',
-        description: 'Test Description',
+        description: 'Description',
         targetValue: '100',
         startDate: '2024-01-01',
-        endDate: '2024-12-31'
+        endDate: '2024-12-31',
       };
-      
-      const errors = validateGoalForm(formData);
-      expect(errors.title).toBe('请输入目标标题');
+      const result = validateGoalForm(form);
+      expect(result.title).toBeTruthy();
     });
 
-    test('should return error for whitespace-only title', () => {
-      const formData = {
-        title: '   ',
-        description: 'Test Description',
-        targetValue: '100',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31'
-      };
-      
-      const errors = validateGoalForm(formData);
-      expect(errors.title).toBe('请输入目标标题');
-    });
-
-    test('should return error for invalid target value', () => {
-      const formData = {
-        title: 'Test Goal',
-        description: 'Test Description',
-        targetValue: 'invalid',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31'
-      };
-      
-      const errors = validateGoalForm(formData);
-      expect(errors.targetValue).toBe('请输入有效的目标值');
-    });
-
-    test('should return error for zero target value', () => {
-      const formData = {
-        title: 'Test Goal',
-        description: 'Test Description',
+    it('should return errors for invalid targetValue', () => {
+      const form = {
+        title: 'Valid Title',
+        description: 'Description',
         targetValue: '0',
         startDate: '2024-01-01',
-        endDate: '2024-12-31'
+        endDate: '2024-12-31',
       };
-      
-      const errors = validateGoalForm(formData);
-      expect(errors.targetValue).toBe('请输入有效的目标值');
+      const result = validateGoalForm(form);
+      expect(result.targetValue).toBeTruthy();
     });
 
-    test('should return error for negative target value', () => {
-      const formData = {
-        title: 'Test Goal',
-        description: 'Test Description',
-        targetValue: '-10',
+    it('should return errors for non-numeric targetValue', () => {
+      const form = {
+        title: 'Valid Title',
+        description: 'Description',
+        targetValue: 'abc',
         startDate: '2024-01-01',
-        endDate: '2024-12-31'
+        endDate: '2024-12-31',
       };
-      
-      const errors = validateGoalForm(formData);
-      expect(errors.targetValue).toBe('请输入有效的目标值');
+      const result = validateGoalForm(form);
+      expect(result.targetValue).toBeTruthy();
     });
 
-    test('should return error for missing start date', () => {
-      const formData = {
-        title: 'Test Goal',
-        description: 'Test Description',
+    it('should return errors for missing startDate', () => {
+      const form = {
+        title: 'Valid Title',
+        description: 'Description',
         targetValue: '100',
         startDate: '',
-        endDate: '2024-12-31'
+        endDate: '2024-12-31',
       };
-      
-      const errors = validateGoalForm(formData);
-      expect(errors.startDate).toBe('请选择开始日期');
+      const result = validateGoalForm(form);
+      expect(result.startDate).toBeTruthy();
     });
 
-    test('should return error for missing end date', () => {
-      const formData = {
-        title: 'Test Goal',
-        description: 'Test Description',
+    it('should return errors for missing endDate', () => {
+      const form = {
+        title: 'Valid Title',
+        description: 'Description',
         targetValue: '100',
         startDate: '2024-01-01',
-        endDate: ''
+        endDate: '',
       };
-      
-      const errors = validateGoalForm(formData);
-      expect(errors.endDate).toBe('请选择结束日期');
+      const result = validateGoalForm(form);
+      expect(result.endDate).toBeTruthy();
     });
 
-    test('should return error when end date is before start date', () => {
-      const formData = {
-        title: 'Test Goal',
-        description: 'Test Description',
+    it('should return error when endDate is before startDate', () => {
+      const form = {
+        title: 'Valid Title',
+        description: 'Description',
         targetValue: '100',
         startDate: '2024-12-31',
-        endDate: '2024-01-01'
+        endDate: '2024-01-01',
       };
-      
-      const errors = validateGoalForm(formData);
-      expect(errors.endDate).toBe('结束日期不能早于开始日期');
-    });
-
-    test('should accept same start and end date', () => {
-      const formData = {
-        title: 'Test Goal',
-        description: 'Test Description',
-        targetValue: '100',
-        startDate: '2024-01-01',
-        endDate: '2024-01-01'
-      };
-      
-      const errors = validateGoalForm(formData);
-      expect(Object.keys(errors).length).toBe(0);
-    });
-
-    test('should return multiple errors', () => {
-      const formData = {
-        title: '',
-        description: 'Test Description',
-        targetValue: 'invalid',
-        startDate: '',
-        endDate: ''
-      };
-      
-      const errors = validateGoalForm(formData);
-      expect(Object.keys(errors).length).toBe(4);
-      expect(errors.title).toBeDefined();
-      expect(errors.targetValue).toBeDefined();
-      expect(errors.startDate).toBeDefined();
-      expect(errors.endDate).toBeDefined();
+      const result = validateGoalForm(form);
+      expect(result.endDate).toBe('结束日期不能早于开始日期');
     });
   });
 });

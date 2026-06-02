@@ -20,7 +20,6 @@ export default defineConfig({
           'vendor-redux': ['@reduxjs/toolkit', 'react-redux'],
           'vendor-charts': ['recharts', 'reactflow'],
           'vendor-i18n': ['i18next', 'react-i18next'],
-          'vendor-ai': ['openai'],
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
