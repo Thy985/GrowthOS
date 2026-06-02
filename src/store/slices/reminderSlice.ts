@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { useDispatch, useSelector } from 'react-redux';
 import { type ReminderState, type Reminder } from '../../types';
 import reminderServiceV2 from '../../common/services/reminderServiceV2';
 
@@ -23,9 +22,9 @@ export const fetchReminders = createAsyncThunk(
 
 export const addReminder = createAsyncThunk(
   'reminders/addReminder',
-  async (reminder: Omit<Reminder, 'id' | 'createdAt'>, { rejectWithValue }) => {
+  async (reminder: Partial<Reminder>, { rejectWithValue }) => {
     try {
-      const newReminder = await reminderServiceV2.createReminder(reminder);
+      const newReminder = await reminderServiceV2.createReminder(reminder as any);
       return newReminder;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : '创建提醒失败');
@@ -95,20 +94,5 @@ const reminderSlice = createSlice({
 });
 
 export const { clearError } = reminderSlice.actions;
-
-export const useReminders = () => {
-  const dispatch = useDispatch();
-  const { reminders, isLoading, error } = useSelector((state: { reminders: ReminderState }) => state.reminders);
-
-  return {
-    reminders,
-    isLoading,
-    error,
-    fetchReminders: () => dispatch(fetchReminders()),
-    addReminder: (reminder: Omit<Reminder, 'id' | 'createdAt'>) => dispatch(addReminder(reminder)),
-    updateReminder: (id: string, updates: Partial<Reminder>) => dispatch(updateReminder({ id, updates })),
-    deleteReminder: (id: string) => dispatch(deleteReminder(id)),
-  };
-};
 
 export default reminderSlice.reducer;

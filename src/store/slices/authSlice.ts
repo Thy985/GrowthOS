@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import { AuthState } from '../../types';
+import { type AuthState } from '../../types';
 import authServiceV2 from '../../common/services/authServiceV2';
 
 const initialState: AuthState = {
@@ -24,7 +24,7 @@ export const login = createAsyncThunk(
 
 export const register = createAsyncThunk(
   'auth/register',
-  async (data: { email: string, password: string, name: string }, { rejectWithValue }) => {
+  async (data: { email: string, password: string, name?: string }, { rejectWithValue }) => {
     try {
       const response = await authServiceV2.register(data);
       return response;
@@ -37,18 +37,6 @@ export const register = createAsyncThunk(
 export const logout = createAsyncThunk('auth/logout', async () => {
   await authServiceV2.logout();
 });
-
-export const refreshToken = createAsyncThunk(
-  'auth/refreshToken',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await authServiceV2.refreshToken();
-      return response;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : '刷新token失败');
-    }
-  }
-);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -108,10 +96,6 @@ const authSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
         localStorage.removeItem('user');
-      })
-      .addCase(refreshToken.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        localStorage.setItem('user', JSON.stringify(action.payload.user));
       });
   },
 });
@@ -126,7 +110,7 @@ export const useAuth = () => {
     ...auth,
     login: (credentials: { email: string, password: string }) =>
       dispatch(login(credentials)),
-    register: (data: { email: string, password: string, name: string }) =>
+    register: (data: { email: string, password: string, name?: string }) =>
       dispatch(register(data)),
     logout: () => dispatch(logout()),
     checkAuth: () => dispatch(checkAuth()),

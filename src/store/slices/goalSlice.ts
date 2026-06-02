@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { useDispatch, useSelector } from 'react-redux';
 import { type GoalState, type Goal } from '../../types';
 import goalServiceV2 from '../../common/services/goalServiceV2';
 
@@ -23,9 +22,9 @@ export const fetchGoals = createAsyncThunk(
 
 export const addGoal = createAsyncThunk(
   'goals/addGoal',
-  async (goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+  async (goal: Partial<Goal>, { rejectWithValue }) => {
     try {
-      const newGoal = await goalServiceV2.createGoal(goal);
+      const newGoal = await goalServiceV2.createGoal(goal as any);
       return newGoal;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : '创建目标失败');
@@ -95,20 +94,5 @@ const goalSlice = createSlice({
 });
 
 export const { clearError } = goalSlice.actions;
-
-export const useGoals = () => {
-  const dispatch = useDispatch();
-  const { goals, isLoading, error } = useSelector((state: { goals: GoalState }) => state.goals);
-
-  return {
-    goals,
-    isLoading,
-    error,
-    fetchGoals: () => dispatch(fetchGoals()),
-    addGoal: (goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>) => dispatch(addGoal(goal)),
-    updateGoal: (id: string, updates: Partial<Goal>) => dispatch(updateGoal({ id, updates })),
-    deleteGoal: (id: string) => dispatch(deleteGoal(id)),
-  };
-};
 
 export default goalSlice.reducer;

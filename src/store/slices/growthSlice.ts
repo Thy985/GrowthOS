@@ -1,5 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { useDispatch, useSelector } from 'react-redux';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { type GrowthState, type GrowthRecord } from '../../types';
 import recordServiceV2 from '../../common/services/recordServiceV2';
 
@@ -25,9 +24,9 @@ export const fetchRecords = createAsyncThunk(
 
 export const addRecord = createAsyncThunk(
   'growth/addRecord',
-  async (record: Omit<GrowthRecord, 'id' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+  async (record: Partial<GrowthRecord>, { rejectWithValue }) => {
     try {
-      const newRecord = await recordServiceV2.createRecord(record);
+      const newRecord = await recordServiceV2.createRecord(record as any);
       return newRecord;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : '添加记录失败');
@@ -93,17 +92,8 @@ const growthSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      .addCase(addRecord.pending, (state) => {
-        state.isLoading = true;
-      })
       .addCase(addRecord.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.records = state.records.filter((r) => r.id !== action.payload.id);
         state.records.unshift(action.payload);
-      })
-      .addCase(addRecord.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
       })
       .addCase(updateRecord.fulfilled, (state, action) => {
         const index = state.records.findIndex((r) => r.id === action.payload.id);
@@ -123,28 +113,5 @@ export const {
   optimisticUpdateRecord,
   optimisticDeleteRecord,
 } = growthSlice.actions;
-
-export const selectGrowthRecords = (state: { growth: GrowthState }) => state.growth.records;
-export const selectGrowthLoading = (state: { growth: GrowthState }) => state.growth.isLoading;
-export const selectGrowthError = (state: { growth: GrowthState }) => state.growth.error;
-
-export const useGrowth = () => {
-  const dispatch = useDispatch();
-  const { records, tags, trees, isLoading, error } = useSelector((state: { growth: GrowthState }) => state.growth);
-
-  return {
-    records,
-    tags,
-    trees,
-    isLoading,
-    error,
-    fetchRecords: () => dispatch(fetchRecords()),
-    addRecord: (record: Omit<GrowthRecord, 'id' | 'createdAt' | 'updatedAt'>) =>
-      dispatch(addRecord(record)),
-    updateRecord: (id: string, updates: Partial<GrowthRecord>) =>
-      dispatch(updateRecord({ id, updates })),
-    deleteRecord: (id: string) => dispatch(deleteRecord(id)),
-  };
-};
 
 export default growthSlice.reducer;

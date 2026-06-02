@@ -12,7 +12,8 @@ const Records: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     activity: '',
-    category: 'learning' as 'learning' | 'career' | 'health' | 'personal' | 'other',
+    learning: '',
+    category: 'learning',
     tags: [] as string[],
   });
 
@@ -24,11 +25,11 @@ const Records: React.FC = () => {
     e.preventDefault();
     void dispatch(addRecord({
       activity: formData.activity,
-      learning: formData.activity,
-      category: formData.category,
+      learning: formData.learning,
+      category: formData.category as 'learning' | 'career' | 'health' | 'personal' | 'social' | 'other',
       tags: formData.tags,
     }));
-    setFormData({ activity: '', category: 'learning', tags: [] });
+    setFormData({ activity: '', learning: '', category: 'learning', tags: [] });
     setShowForm(false);
   };
 
@@ -36,10 +37,6 @@ const Records: React.FC = () => {
     if (window.confirm(t('records.confirmDelete', '确定要删除这条记录吗？'))) {
       void dispatch(deleteRecord(id));
     }
-  };
-
-  const getRecordContent = (record: typeof records[0]) => {
-    return record.activity || record.learning || '';
   };
 
   return (
@@ -60,32 +57,28 @@ const Records: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-                {t('records.content', '内容')}
+                {t('records.activity', '活动')}
               </label>
               <textarea
                 className="input"
                 value={formData.activity}
                 onChange={(e) => setFormData({ ...formData, activity: e.target.value })}
-                placeholder={t('records.contentPlaceholder', '今天发生了什么？')}
-                rows={4}
+                placeholder={t('records.activityPlaceholder', '今天做了什么活动？')}
+                rows={3}
                 required
               />
             </div>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-                {t('records.category', '分类')}
+                {t('records.learning', '学习心得')}
               </label>
-              <select
+              <textarea
                 className="input"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as typeof formData.category })}
-              >
-                <option value="learning">{t('category.learning', '学习')}</option>
-                <option value="career">{t('category.career', '职业')}</option>
-                <option value="health">{t('category.health', '健康')}</option>
-                <option value="personal">{t('category.personal', '个人')}</option>
-                <option value="other">{t('category.other', '其他')}</option>
-              </select>
+                value={formData.learning}
+                onChange={(e) => setFormData({ ...formData, learning: e.target.value })}
+                placeholder={t('records.learningPlaceholder', '今天学到了什么？')}
+                rows={3}
+              />
             </div>
             <button type="submit" className="btn btn-primary" disabled={isLoading}>
               {t('records.save', '保存')}
@@ -112,8 +105,20 @@ const Records: React.FC = () => {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                       <span className="badge badge-info">{record.category}</span>
+                      {record.tags && record.tags.length > 0 && record.tags.map((tag, index) => (
+                        <span key={index} className="badge badge-secondary">{tag}</span>
+                      ))}
                     </div>
-                    <p style={{ fontSize: '15px', marginBottom: '8px' }}>{getRecordContent(record)}</p>
+                    {record.activity && (
+                      <p style={{ fontSize: '15px', marginBottom: '8px' }}>
+                        <strong>{t('records.activity', '活动')}:</strong> {record.activity}
+                      </p>
+                    )}
+                    {record.learning && (
+                      <p style={{ fontSize: '15px', marginBottom: '8px' }}>
+                        <strong>{t('records.learning', '学习')}:</strong> {record.learning}
+                      </p>
+                    )}
                     <span className="caption">
                       {new Date(record.createdAt).toLocaleDateString()} {new Date(record.createdAt).toLocaleTimeString()}
                     </span>
