@@ -2,50 +2,44 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchRecords, addRecord, deleteRecord } from '../../store/slices/growthSlice';
-import { type RootState } from '../../store';
+import { type RootState, type AppDispatch } from '../../store';
 
 const Records: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const records = useSelector((state: RootState) => state.growth.records);
   const isLoading = useSelector((state: RootState) => state.growth.isLoading);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    content: '',
-    category: 'learning',
-    mood: 'okay' as MoodType,
+    activity: '',
+    category: 'learning' as 'learning' | 'career' | 'health' | 'personal' | 'other',
     tags: [] as string[],
   });
 
   useEffect(() => {
-    dispatch(fetchRecords());
+    void dispatch(fetchRecords());
   }, [dispatch]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(addRecord({
-      content: formData.content,
+    void dispatch(addRecord({
+      activity: formData.activity,
+      learning: formData.activity,
       category: formData.category,
-      mood: formData.mood,
       tags: formData.tags,
     }));
-    setFormData({ content: '', category: 'learning', mood: 'okay', tags: [] });
+    setFormData({ activity: '', category: 'learning', tags: [] });
     setShowForm(false);
   };
 
   const handleDelete = (id: string) => {
     if (window.confirm(t('records.confirmDelete', '确定要删除这条记录吗？'))) {
-      dispatch(deleteRecord(id));
+      void dispatch(deleteRecord(id));
     }
   };
 
-  const getMoodEmoji = (mood: MoodType) => {
-    switch (mood) {
-      case 'great': return '😊';
-      case 'okay': return '😐';
-      case 'not-good': return '😔';
-      default: return '😐';
-    }
+  const getRecordContent = (record: typeof records[0]) => {
+    return record.activity || record.learning || '';
   };
 
   return (
@@ -70,8 +64,8 @@ const Records: React.FC = () => {
               </label>
               <textarea
                 className="input"
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                value={formData.activity}
+                onChange={(e) => setFormData({ ...formData, activity: e.target.value })}
                 placeholder={t('records.contentPlaceholder', '今天发生了什么？')}
                 rows={4}
                 required
@@ -79,26 +73,19 @@ const Records: React.FC = () => {
             </div>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-                {t('records.mood', '心情')}
+                {t('records.category', '分类')}
               </label>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {(['great', 'okay', 'not-good'] as MoodType[]).map((mood) => (
-                  <button
-                    key={mood}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, mood })}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      border: formData.mood === mood ? '2px solid var(--color-primary-500)' : '1px solid var(--color-border)',
-                      background: formData.mood === mood ? 'var(--color-primary-50)' : 'white',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {getMoodEmoji(mood)} {t(`mood.${mood}`, mood)}
-                  </button>
-                ))}
-              </div>
+              <select
+                className="input"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value as typeof formData.category })}
+              >
+                <option value="learning">{t('category.learning', '学习')}</option>
+                <option value="career">{t('category.career', '职业')}</option>
+                <option value="health">{t('category.health', '健康')}</option>
+                <option value="personal">{t('category.personal', '个人')}</option>
+                <option value="other">{t('category.other', '其他')}</option>
+              </select>
             </div>
             <button type="submit" className="btn btn-primary" disabled={isLoading}>
               {t('records.save', '保存')}
@@ -124,10 +111,9 @@ const Records: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '20px' }}>{getMoodEmoji(record.mood)}</span>
                       <span className="badge badge-info">{record.category}</span>
                     </div>
-                    <p style={{ fontSize: '15px', marginBottom: '8px' }}>{record.content}</p>
+                    <p style={{ fontSize: '15px', marginBottom: '8px' }}>{getRecordContent(record)}</p>
                     <span className="caption">
                       {new Date(record.createdAt).toLocaleDateString()} {new Date(record.createdAt).toLocaleTimeString()}
                     </span>

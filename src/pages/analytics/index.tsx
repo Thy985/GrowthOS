@@ -7,19 +7,19 @@ import { type RootState } from '../../store';
 const Analytics: React.FC = () => {
   const { t } = useTranslation();
   const records = useSelector((state: RootState) => state.growth.records);
+  const goals = useSelector((state: RootState) => state.goals.goals);
+  const reminders = useSelector((state: RootState) => state.reminders.reminders);
 
-  const moodData = [
-    { name: t('mood.great', '很棒'), value: records.filter(r => r.mood === 'great').length, fill: '#10b981' },
-    { name: t('mood.okay', '一般'), value: records.filter(r => r.mood === 'okay').length, fill: '#f59e0b' },
-    { name: t('mood.notGood', '不好'), value: records.filter(r => r.mood === 'not-good').length, fill: '#ef4444' },
-  ];
-
-  const categoryData = Object.entries(
+  const activityData = Object.entries(
     records.reduce((acc, record) => {
       acc[record.category] = (acc[record.category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>)
   ).map(([name, value]) => ({ name, value }));
+
+  const completedGoals = goals.filter(g => g.status === 'completed').length;
+  const activeGoals = goals.filter(g => g.status === 'active').length;
+  const completedReminders = reminders.filter(r => r.isCompleted).length;
 
   return (
     <div className="main">
@@ -45,24 +45,20 @@ const Analytics: React.FC = () => {
           </p>
         </div>
         <div className="card" style={{ padding: '24px' }}>
-          <p className="caption">{t('analytics.categories', '分类数')}</p>
-          <p className="heading-2">{categoryData.length}</p>
+          <p className="caption">{t('analytics.completedGoals', '已完成目标')}</p>
+          <p className="heading-2">{completedGoals}/{activeGoals}</p>
         </div>
         <div className="card" style={{ padding: '24px' }}>
-          <p className="caption">{t('analytics.averageMood', '平均心情')}</p>
-          <p className="heading-2">
-            {moodData.length > 0
-              ? moodData.reduce((acc, m) => acc + m.value, 0) / moodData.filter(m => m.value > 0).length || 0
-              : 0}
-          </p>
+          <p className="caption">{t('analytics.completedReminders', '已完成提醒')}</p>
+          <p className="heading-2">{completedReminders}/{reminders.length}</p>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
         <div className="card" style={{ padding: '24px' }}>
-          <h3 className="heading-4" style={{ marginBottom: '16px' }}>{t('analytics.moodDistribution', '心情分布')}</h3>
+          <h3 className="heading-4" style={{ marginBottom: '16px' }}>{t('analytics.activityDistribution', '活动分布')}</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={moodData}>
+            <BarChart data={activityData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -75,7 +71,7 @@ const Analytics: React.FC = () => {
         <div className="card" style={{ padding: '24px' }}>
           <h3 className="heading-4" style={{ marginBottom: '16px' }}>{t('analytics.categoryDistribution', '分类分布')}</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={categoryData}>
+            <BarChart data={activityData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchReminders, addReminder, updateReminder, deleteReminder } from '../../store/slices/reminderSlice';
-import { type RootState } from '../../store';
+import { type RootState, type AppDispatch } from '../../store';
 
 const Reminders: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const reminders = useSelector((state: RootState) => state.reminders.reminders);
   const isLoading = useSelector((state: RootState) => state.reminders.isLoading);
   const [showForm, setShowForm] = useState(false);
@@ -14,33 +14,31 @@ const Reminders: React.FC = () => {
     title: '',
     description: '',
     time: '',
-    repeat: 'none' as 'none' | 'daily' | 'weekly',
   });
 
   useEffect(() => {
-    dispatch(fetchReminders());
+    void dispatch(fetchReminders());
   }, [dispatch]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(addReminder({
+    void dispatch(addReminder({
       title: formData.title,
       description: formData.description,
       time: formData.time,
-      repeat: formData.repeat,
-      completed: false,
+      isCompleted: false,
     }));
-    setFormData({ title: '', description: '', time: '', repeat: 'none' });
+    setFormData({ title: '', description: '', time: '' });
     setShowForm(false);
   };
 
-  const handleToggle = (id: string, completed: boolean) => {
-    dispatch(updateReminder({ id, updates: { completed: !completed } }));
+  const handleToggle = (id: string, isCompleted: boolean) => {
+    void dispatch(updateReminder({ id, updates: { isCompleted: !isCompleted } }));
   };
 
   const handleDelete = (id: string) => {
     if (window.confirm(t('reminders.confirmDelete', '确定要删除这个提醒吗？'))) {
-      dispatch(deleteReminder(id));
+      void dispatch(deleteReminder(id));
     }
   };
 
@@ -113,7 +111,7 @@ const Reminders: React.FC = () => {
                 key={reminder.id}
                 style={{
                   padding: '16px',
-                  background: reminder.completed ? 'var(--color-gray-50)' : 'var(--color-surface)',
+                  background: reminder.isCompleted ? 'var(--color-gray-50)' : 'var(--color-surface)',
                   borderRadius: '12px',
                   border: '1px solid var(--color-border)',
                   display: 'flex',
@@ -123,8 +121,8 @@ const Reminders: React.FC = () => {
               >
                 <input
                   type="checkbox"
-                  checked={reminder.completed}
-                  onChange={() => handleToggle(reminder.id, reminder.completed)}
+                  checked={reminder.isCompleted}
+                  onChange={() => handleToggle(reminder.id, reminder.isCompleted)}
                   style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                 />
                 <div style={{ flex: 1 }}>
@@ -132,8 +130,8 @@ const Reminders: React.FC = () => {
                     fontSize: '16px',
                     fontWeight: '500',
                     marginBottom: '4px',
-                    textDecoration: reminder.completed ? 'line-through' : 'none',
-                    color: reminder.completed ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
+                    textDecoration: reminder.isCompleted ? 'line-through' : 'none',
+                    color: reminder.isCompleted ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
                   }}>
                     {reminder.title}
                   </h4>

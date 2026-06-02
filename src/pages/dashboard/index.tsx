@@ -4,19 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { fetchRecords } from '../../store/slices/growthSlice';
 import { fetchGoals } from '../../store/slices/goalSlice';
 import { fetchReminders } from '../../store/slices/reminderSlice';
-import { type RootState } from '../../store';
+import { type RootState, type AppDispatch } from '../../store';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const records = useSelector((state: RootState) => state.growth.records);
   const goals = useSelector((state: RootState) => state.goals.goals);
   const reminders = useSelector((state: RootState) => state.reminders.reminders);
 
   useEffect(() => {
-    dispatch(fetchRecords());
-    dispatch(fetchGoals());
-    dispatch(fetchReminders());
+    void dispatch(fetchRecords());
+    void dispatch(fetchGoals());
+    void dispatch(fetchReminders());
   }, [dispatch]);
 
   const todayRecords = records.filter((r) => {
@@ -30,7 +30,12 @@ const Dashboard: React.FC = () => {
   });
 
   const activeGoals = goals.filter((g) => g.status === 'active');
-  const upcomingReminders = reminders.filter((r) => !r.completed);
+  const upcomingReminders = reminders.filter((r) => !r.isCompleted);
+
+  const getGoalProgress = (goal: typeof goals[0]) => {
+    if (goal.targetValue === 0) return 0;
+    return Math.min(100, Math.round((goal.currentValue / goal.targetValue) * 100));
+  };
 
   return (
     <div className="main">
@@ -87,7 +92,7 @@ const Dashboard: React.FC = () => {
                     borderRadius: '8px',
                   }}
                 >
-                  <p style={{ fontSize: '14px', marginBottom: '4px' }}>{record.content}</p>
+                  <p style={{ fontSize: '14px', marginBottom: '4px' }}>{record.activity || record.learning}</p>
                   <span className="caption">{new Date(record.createdAt).toLocaleTimeString()}</span>
                 </div>
               ))}
@@ -115,7 +120,7 @@ const Dashboard: React.FC = () => {
                     <div
                       className="progress-bar-fill"
                       style={{
-                        width: `${goal.progress}%`,
+                        width: `${getGoalProgress(goal)}%`,
                         background: 'var(--color-primary-500)',
                       }}
                     />
