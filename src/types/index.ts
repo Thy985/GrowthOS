@@ -4,11 +4,6 @@ export type ID = string;
 // 情绪类型 (使用 i18n key)
 export type Mood = 'great' | 'okay' | 'not_good';
 
-// Sync types
-import type { SyncState } from '../store/slices/syncSlice';
-import type { SyncQueueItem, ConflictInfo } from '../utils/syncQueue';
-export type { SyncState, SyncQueueItem, ConflictInfo };
-
 // 目标状态
 export type GoalStatus = 'active' | 'completed' | 'cancelled';
 
@@ -136,7 +131,6 @@ export interface RootState {
   goals: GoalState,
   reminders: ReminderState,
   ai: AIState,
-  sync: SyncState,
 }
 
 // 服务层 DTO 类型

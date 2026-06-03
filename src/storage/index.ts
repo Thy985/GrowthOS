@@ -84,3 +84,11 @@ export function isStorageAdapter<T extends BaseEntity>(value: unknown): value is
     typeof (value as { delete?: unknown }).delete === 'function'
   );
 }
+
+// 跨切关注点：缓存 + 跨 tab 同步 + 配额监控
+export { LRUCache, CachingRepository } from './cache';
+export type { LRUOptions, CachingRepositoryOptions } from './cache';
+export { CrossTabChannel, SyncedRepository, getDefaultChannelName } from './sync';
+export type { CrossTabEvent, CrossTabEventType, CrossTabSubscriber } from './sync';
+export { QuotaMonitor, getQuotaMonitor } from './quota';
+export type { QuotaStatus, QuotaLevel, QuotaMonitorOptions, QuotaSubscriber } from './quota';

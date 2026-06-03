@@ -23,11 +23,6 @@ declare module './components/ErrorBoundary' {
   export default ErrorBoundary;
 }
 
-declare module './components/OfflineIndicator' {
-  const OfflineIndicator: React.FC;
-  export default OfflineIndicator;
-}
-
 declare module './components/Tutorial' {
   const Tutorial: React.LazyExoticComponent<React.ComponentType>;
   export default Tutorial;

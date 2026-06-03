@@ -111,10 +111,5 @@ export const selectCurrentUser = (state: RootState) => state.auth.user;
 export const selectTheme = (state: RootState) => state.theme;
 export const selectIsDarkMode = (state: RootState) => state.theme.isDarkMode;
 
-export const selectSync = (state: RootState) => state.sync;
-export const selectIsOnline = (state: RootState) => state.sync.isOnline;
-export const selectPendingSyncCount = (state: RootState) => state.sync.pendingCount;
-export const selectIsSyncing = (state: RootState) => state.sync.isSyncing;
-
 export const selectAI = (state: RootState) => state.ai;
 export const selectAIConfig = (state: RootState) => state.ai.config;

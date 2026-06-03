@@ -5,7 +5,6 @@ import growthReducer from './slices/growthSlice';
 import goalReducer from './slices/goalSlice';
 import reminderReducer from './slices/reminderSlice';
 import aiReducer from './slices/aiSlice';
-import syncReducer from './slices/syncSlice';
 
 export const store = configureStore({
   reducer: {
@@ -15,7 +14,6 @@ export const store = configureStore({
     goals: goalReducer,
     reminders: reminderReducer,
     ai: aiReducer,
-    sync: syncReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
