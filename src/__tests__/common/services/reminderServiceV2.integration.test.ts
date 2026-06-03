@@ -13,10 +13,10 @@ import {
   __resetReminderRepositoryForTest,
 } from '../../../common/services/reminderServiceV2';
 import { createTestRepository } from './_helpers';
-import type { Repository } from '../../../common/repositories/repository';
+import type { ReadWriteRepository } from '../../../common/repositories/repository';
 import type { Reminder } from '../../../types';
 
-let repo: Repository<Reminder>;
+let repo: ReadWriteRepository<Reminder>;
 
 beforeEach(() => {
   __resetReminderRepositoryForTest();

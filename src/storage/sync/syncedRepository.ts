@@ -15,11 +15,11 @@
  */
 
 import type { BaseEntity } from '../types';
-import type { Repository } from '../../common/repositories/repository';
+import type { ReadWriteRepository, Repository } from '../../common/repositories/repository';
 import { CrossTabChannel, getDefaultChannelName } from './crossTabChannel';
 import { CachingRepository } from '../cache/cachingRepository';
 
-export class SyncedRepository<T extends BaseEntity> {
+export class SyncedRepository<T extends BaseEntity> implements ReadWriteRepository<T> {
   private readonly channel: CrossTabChannel;
   private readonly store: string;
   private unsubscribe: (() => void) | null = null;

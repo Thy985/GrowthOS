@@ -16,19 +16,18 @@ import {
   __resetAuthRepositoryForTest,
 } from '../../../common/services/authServiceV2';
 import { createTestRepository } from './_helpers';
-import type { Repository } from '../../../common/repositories/repository';
+import type { ReadWriteRepository } from '../../../common/repositories/repository';
 import type { User } from '../../../types';
 
 interface StoredUser {
   id: string,
   email: string,
-  name?: string,
   passwordHash: string,
   createdAt: string,
 }
 
-let userRepo: Repository<StoredUser>;
-let currentUserRepo: Repository<User>;
+let userRepo: ReadWriteRepository<StoredUser>;
+let currentUserRepo: ReadWriteRepository<User>;
 
 beforeEach(() => {
   __resetAuthRepositoryForTest();

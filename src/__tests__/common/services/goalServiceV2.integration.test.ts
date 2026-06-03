@@ -13,10 +13,10 @@ import {
   __resetGoalRepositoryForTest,
 } from '../../../common/services/goalServiceV2';
 import { createTestRepository } from './_helpers';
-import type { Repository } from '../../../common/repositories/repository';
+import type { ReadWriteRepository } from '../../../common/repositories/repository';
 import type { Goal } from '../../../types';
 
-let repo: Repository<Goal>;
+let repo: ReadWriteRepository<Goal>;
 
 beforeEach(() => {
   __resetGoalRepositoryForTest();

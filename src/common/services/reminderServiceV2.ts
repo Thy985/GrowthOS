@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import type { Reminder, CreateReminderDTO, UpdateReminderDTO } from '../../types';
 import { createIndexedDbRepository } from '../repositories/repository';
-import type { Repository } from '../repositories/repository';
+import type { ReadWriteRepository } from '../repositories/repository';
 import { StorageError } from '../../storage';
 
 const isNative = Capacitor.isNativePlatform();
@@ -22,10 +22,13 @@ function ensureNativeOrThrow(): void {
   }
 }
 
-let repositoryInstance: Repository<Reminder> | null = null;
-function getRepository(): Repository<Reminder> {
+let repositoryInstance: ReadWriteRepository<Reminder> | null = null;
+function getRepository(): ReadWriteRepository<Reminder> {
   if (!repositoryInstance) {
-    repositoryInstance = createIndexedDbRepository<Reminder>('reminders');
+    repositoryInstance = createIndexedDbRepository<Reminder>('reminders', {
+      cache: true,
+      sync: true,
+    });
   }
   return repositoryInstance;
 }
@@ -113,7 +116,7 @@ export function __resetReminderRepositoryForTest(): void {
 }
 
 /** 测试用：注入 Repository */
-export function __setReminderRepositoryForTest(repo: Repository<Reminder> | null): void {
+export function __setReminderRepositoryForTest(repo: ReadWriteRepository<Reminder> | null): void {
   repositoryInstance = repo;
 }
 

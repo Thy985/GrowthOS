@@ -13,6 +13,7 @@ import Reminders from './pages/reminders';
 import Analytics from './pages/analytics';
 import Auth from './pages/auth';
 import GrowthTreePage from './pages/growth-tree';
+import StorageSettings from './pages/settings';
 import Tutorial from './components/Tutorial';
 import ErrorBoundary from './components/ErrorBoundary';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
@@ -63,6 +64,7 @@ function AppContent() {
         <Route path="/reminders" element={<Reminders />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/growth-tree" element={<GrowthTreePage />} />
+        <Route path="/settings/storage" element={<StorageSettings />} />
       </Routes>
       {showTutorial && <Tutorial onClose={handleTutorialClose} />}
       {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}

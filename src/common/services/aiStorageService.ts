@@ -18,7 +18,7 @@ import {
   createIndexedDbRepository,
   createLocalStorageRepository,
 } from '../repositories/repository';
-import type { Repository } from '../repositories/repository';
+import type { ReadWriteRepository } from '../repositories/repository';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
@@ -60,10 +60,10 @@ function fromStoredMessage(stored: StoredChatMessage): ChatMessage {
 }
 
 // Repositories（懒单例）
-let llmConfigRepo: Repository<LLMConfigWithId> | null = null;
-let aiSettingsRepo: Repository<AISettingsWithId> | null = null;
-let sessionRepo: Repository<ChatSession> | null = null;
-let messageRepo: Repository<StoredChatMessage> | null = null;
+let llmConfigRepo: ReadWriteRepository<LLMConfigWithId> | null = null;
+let aiSettingsRepo: ReadWriteRepository<AISettingsWithId> | null = null;
+let sessionRepo: ReadWriteRepository<ChatSession> | null = null;
+let messageRepo: ReadWriteRepository<StoredChatMessage> | null = null;
 
 /**
  * LocalStorageAdapter 是"单 key 存单条"的模式。
@@ -73,30 +73,42 @@ type LLMConfigWithId = LLMConfig & { id: string };
 type AISettingsWithId = AISettings & { id: string };
 const SINGLETON_ID = 'singleton';
 
-function getLLMConfigRepository(): Repository<LLMConfigWithId> {
+function getLLMConfigRepository(): ReadWriteRepository<LLMConfigWithId> {
   if (!llmConfigRepo) {
-    llmConfigRepo = createLocalStorageRepository<LLMConfigWithId>(AI_STORAGE_KEYS.LLM_CONFIG);
+    llmConfigRepo = createLocalStorageRepository<LLMConfigWithId>(AI_STORAGE_KEYS.LLM_CONFIG, {
+      cache: true,
+      sync: true,
+    });
   }
   return llmConfigRepo;
 }
 
-function getAISettingsRepository(): Repository<AISettingsWithId> {
+function getAISettingsRepository(): ReadWriteRepository<AISettingsWithId> {
   if (!aiSettingsRepo) {
-    aiSettingsRepo = createLocalStorageRepository<AISettingsWithId>(AI_STORAGE_KEYS.SETTINGS);
+    aiSettingsRepo = createLocalStorageRepository<AISettingsWithId>(AI_STORAGE_KEYS.SETTINGS, {
+      cache: true,
+      sync: true,
+    });
   }
   return aiSettingsRepo;
 }
 
-function getSessionRepository(): Repository<ChatSession> {
+function getSessionRepository(): ReadWriteRepository<ChatSession> {
   if (!sessionRepo) {
-    sessionRepo = createIndexedDbRepository<ChatSession>('chatSessions');
+    sessionRepo = createIndexedDbRepository<ChatSession>('chatSessions', {
+      cache: true,
+      sync: true,
+    });
   }
   return sessionRepo;
 }
 
-function getMessageRepository(): Repository<StoredChatMessage> {
+function getMessageRepository(): ReadWriteRepository<StoredChatMessage> {
   if (!messageRepo) {
-    messageRepo = createIndexedDbRepository<StoredChatMessage>('chatMessages');
+    messageRepo = createIndexedDbRepository<StoredChatMessage>('chatMessages', {
+      cache: true,
+      sync: true,
+    });
   }
   return messageRepo;
 }
@@ -272,10 +284,10 @@ export function __resetAIStorageRepositoryForTest(): void {
 
 /** 测试用：注入 Repositories */
 export function __setAIStorageRepositoriesForTest(repos: {
-  llmConfig?: Repository<LLMConfigWithId> | null,
-  aiSettings?: Repository<AISettingsWithId> | null,
-  session?: Repository<ChatSession> | null,
-  message?: Repository<StoredChatMessage> | null,
+  llmConfig?: ReadWriteRepository<LLMConfigWithId> | null,
+  aiSettings?: ReadWriteRepository<AISettingsWithId> | null,
+  session?: ReadWriteRepository<ChatSession> | null,
+  message?: ReadWriteRepository<StoredChatMessage> | null,
 }): void {
   if ('llmConfig' in repos) llmConfigRepo = repos.llmConfig ?? null;
   if ('aiSettings' in repos) aiSettingsRepo = repos.aiSettings ?? null;

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Home, FileText, Target, Bell, BarChart3, TreePine, 
-  Menu, X, LogOut, Sun, Moon 
+import {
+  Home, FileText, Target, Bell, BarChart3, TreePine, Settings,
+  Menu, X, LogOut, Sun, Moon
 } from 'lucide-react';
 import { toggleTheme as _toggleTheme, setTheme } from '../store/slices/themeSlice';
 import { logout } from '../store/slices/authSlice';
@@ -27,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/reminders', label: '提醒', icon: Bell },
     { path: '/analytics', label: '分析', icon: BarChart3 },
     { path: '/growth-tree', label: '成长树', icon: TreePine },
+    { path: '/settings/storage', label: '设置', icon: Settings },
   ];
 
   const handleToggleTheme = () => {

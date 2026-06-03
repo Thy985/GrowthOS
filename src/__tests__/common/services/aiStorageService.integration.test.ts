@@ -20,7 +20,7 @@ import {
   __resetAIStorageRepositoryForTest,
 } from '../../../common/services/aiStorageService';
 import { createTestRepository } from './_helpers';
-import type { Repository } from '../../../common/repositories/repository';
+import type { ReadWriteRepository } from '../../../common/repositories/repository';
 import type { LLMConfig, ChatSession } from '../../../types';
 import type { AISettings } from '../../../common/services/aiStorageService';
 
@@ -33,10 +33,10 @@ interface StoredChatMessage {
   tokens?: number,
 }
 
-let llmRepo: Repository<LLMConfig & { id: string }>;
-let settingsRepo: Repository<AISettings & { id: string }>;
-let sessionRepo: Repository<ChatSession>;
-let messageRepo: Repository<StoredChatMessage>;
+let llmRepo: ReadWriteRepository<LLMConfig & { id: string }>;
+let settingsRepo: ReadWriteRepository<AISettings & { id: string }>;
+let sessionRepo: ReadWriteRepository<ChatSession>;
+let messageRepo: ReadWriteRepository<StoredChatMessage>;
 
 beforeEach(() => {
   __resetAIStorageRepositoryForTest();

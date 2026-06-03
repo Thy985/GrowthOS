@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import type { GrowthRecord as GrowthRecordEntity, Mood } from '../../types';
 import { createIndexedDbRepository } from '../repositories/repository';
-import type { Repository } from '../repositories/repository';
+import type { ReadWriteRepository } from '../repositories/repository';
 import { StorageError } from '../../storage';
 
 const isNative = Capacitor.isNativePlatform();
@@ -31,8 +31,8 @@ function ensureNativeOrThrow(): void {
 }
 
 // 单例 Repository（懒初始化）
-let repositoryInstance: Repository<GrowthRecordEntity> | null = null;
-function getRepository(): Repository<GrowthRecordEntity> {
+let repositoryInstance: ReadWriteRepository<GrowthRecordEntity> | null = null;
+function getRepository(): ReadWriteRepository<GrowthRecordEntity> {
   if (!repositoryInstance) {
     repositoryInstance = createIndexedDbRepository<GrowthRecordEntity>('records');
   }
@@ -148,7 +148,7 @@ export function __resetRecordRepositoryForTest(): void {
 }
 
 /** 测试用：注入 Repository（让测试可换 InMemory / Mock） */
-export function __setRecordRepositoryForTest(repo: Repository<GrowthRecordEntity> | null): void {
+export function __setRecordRepositoryForTest(repo: ReadWriteRepository<GrowthRecordEntity> | null): void {
   repositoryInstance = repo;
 }
 

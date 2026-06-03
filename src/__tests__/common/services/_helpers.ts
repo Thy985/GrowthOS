@@ -8,8 +8,8 @@
  *   records.clear();
  */
 
-import { createInMemoryRepository, type Repository } from '../../../common/repositories/repository';
+import { createInMemoryRepository, type ReadWriteRepository } from '../../../common/repositories/repository';
 
-export function createTestRepository<T extends { id: string }>(): Repository<T> {
+export function createTestRepository<T extends { id: string }>(): ReadWriteRepository<T> {
   return createInMemoryRepository<T>();
 }

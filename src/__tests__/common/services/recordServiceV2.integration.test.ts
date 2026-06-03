@@ -15,10 +15,10 @@ import {
   __resetRecordRepositoryForTest,
 } from '../../../common/services/recordServiceV2';
 import { createTestRepository } from './_helpers';
-import type { Repository } from '../../../common/repositories/repository';
+import type { ReadWriteRepository } from '../../../common/repositories/repository';
 import type { GrowthRecord } from '../../../types';
 
-let repo: Repository<GrowthRecord>;
+let repo: ReadWriteRepository<GrowthRecord>;
 
 beforeEach(() => {
   __resetRecordRepositoryForTest();

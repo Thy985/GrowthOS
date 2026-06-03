@@ -10,6 +10,9 @@
  * 2. 懒初始化。Adapter init() 是 async，但业务不想每次 await。
  *    Repository 内部 promise 化，多并发调用合并到同一个 init。
  * 3. 测试可注入。createInMemory() 走纯内存后端，零外部依赖。
+ * 4. 装饰器可堆叠。`createIndexedDbRepository(store, { cache: true, sync: true })`
+ *    自动包成 SyncedRepository(CachingRepository(Repository))，
+ *    业务侧拿到同一个 ReadWriteRepository 接口。
  */
 
 import {
@@ -21,6 +24,8 @@ import {
   type StorageError,
 } from '../../storage';
 import type { EntityStore } from '../../storage/schema/types';
+import { CachingRepository, type CachingRepositoryOptions } from '../../storage/cache/cachingRepository';
+import { SyncedRepository } from '../../storage/sync/syncedRepository';
 
 export type { StorageError };
 
@@ -31,15 +36,43 @@ function hasIndexedDB(): boolean {
 }
 
 /**
- * 业务层用的 typed "表"。
- * 暴露 StorageAdapter 的全部方法，但参数类型锁定到 T。
+ * 业务侧用的通用 Repository 接口。
+ *
+ * 所有"表"对外暴露同一组读写方法（get/put/...），
+ * 底层可以是裸 IDB / 带缓存 / 带跨 tab 同步，调用方无感。
  */
-export class Repository<T extends BaseEntity> {
+export interface ReadWriteRepository<T extends BaseEntity> {
+  /** 懒初始化：多次调用复用同一个 init promise */
+  ready(): Promise<void>;
+  get(id: string): Promise<T | null>;
+  getAll(): Promise<T[]>;
+  put(entity: T): Promise<T>;
+  putMany(entities: T[]): Promise<T[]>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+  count(): Promise<number>;
+  queryByIndex(index: string, range?: { gte?: string | number, lte?: string | number }): Promise<T[]>;
+  close(): Promise<void>;
+}
+
+/**
+ * 装饰器配置：让业务侧按需启用缓存 / 跨 tab 同步
+ */
+export interface RepositoryDecorators {
+  /** 是否在 Repository 上包一层 LRU 读缓存 */
+  cache?: boolean | CachingRepositoryOptions,
+  /** 是否在 Repository 上包一层 BroadcastChannel 跨 tab 同步 */
+  sync?: boolean,
+}
+
+/**
+ * 基础 Repository：把 StorageAdapter 包成懒初始化的 typed "表"。
+ */
+export class Repository<T extends BaseEntity> implements ReadWriteRepository<T> {
   private initPromise: Promise<void> | null = null;
 
   constructor(private readonly adapter: StorageAdapter<T>) {}
 
-  /** 懒初始化：多次调用复用同一个 init promise */
   async ready(): Promise<void> {
     if (!this.initPromise) {
       this.initPromise = this.adapter.init();
@@ -98,17 +131,26 @@ export class Repository<T extends BaseEntity> {
 
 /**
  * 创建 IndexedDB Repository（生产 / 开发）
+ *
+ * 可选装饰器：
+ *   createIndexedDbRepository<GrowthRecord>('records')              // 裸 IDB
+ *   createIndexedDbRepository<GrowthRecord>('records', { cache: true })  // + LRU 缓存
+ *   createIndexedDbRepository<GrowthRecord>('records', { sync: true })   // + 跨 tab 同步
+ *   createIndexedDbRepository<GrowthRecord>('records', { cache: true, sync: true })
+ *                                                                  // 两者都启用
  */
 export function createIndexedDbRepository<T extends BaseEntity>(
   store: EntityStore,
-): Repository<T> {
+  decorators: RepositoryDecorators = {},
+): ReadWriteRepository<T> {
   if (!hasIndexedDB()) {
     throw new Error(
       `createIndexedDbRepository(${store}): IndexedDB is not available in this environment. ` +
       'Use createFallbackRepository() for SSR / tests.',
     );
   }
-  return new Repository<T>(new IndexedDbAdapter<T>(store));
+  const base = new Repository<T>(new IndexedDbAdapter<T>(store));
+  return decorateRepository(base, store, decorators);
 }
 
 /**
@@ -116,17 +158,26 @@ export function createIndexedDbRepository<T extends BaseEntity>(
  */
 export function createLocalStorageRepository<T extends BaseEntity>(
   key: string,
-): Repository<T> {
-  return new Repository<T>(new LocalStorageAdapter<T>(key));
+  decorators: RepositoryDecorators = {},
+): ReadWriteRepository<T> {
+  const base = new Repository<T>(new LocalStorageAdapter<T>(key));
+  // LocalStorage 是单 key 单条数据，跨 tab 同步由浏览器原生提供；缓存意义不大
+  // 这里仍允许装饰器叠加，但默认不启用
+  return decorators.cache || decorators.sync
+    ? decorateRepository(base, key, decorators)
+    : base;
 }
 
 /**
  * 创建纯内存 Repository（测试 / 兜底）
- * 业务侧一般不用，用 createIndexedDbRepository 即可（IndexedDB 不可用时
- * 由 Repository 内部降级）。
  */
-export function createInMemoryRepository<T extends BaseEntity>(): Repository<T> {
-  return new Repository<T>(new InMemoryAdapter<T>());
+export function createInMemoryRepository<T extends BaseEntity>(
+  decorators: RepositoryDecorators = {},
+): ReadWriteRepository<T> {
+  const base = new Repository<T>(new InMemoryAdapter<T>());
+  return decorators.cache || decorators.sync
+    ? decorateRepository(base, 'inMemory', decorators)
+    : base;
 }
 
 /**
@@ -135,9 +186,49 @@ export function createInMemoryRepository<T extends BaseEntity>(): Repository<T> 
  */
 export function createFallbackRepository<T extends BaseEntity>(
   store: EntityStore,
-): Repository<T> {
+  decorators: RepositoryDecorators = {},
+): ReadWriteRepository<T> {
   if (hasIndexedDB()) {
-    return createIndexedDbRepository<T>(store);
+    return createIndexedDbRepository<T>(store, decorators);
   }
-  return createInMemoryRepository<T>();
+  return createInMemoryRepository<T>(decorators);
+}
+
+/**
+ * 装饰器栈工厂：在已建好的 Repository 上按顺序叠加装饰器
+ *
+ * 顺序：cache → sync（内层是 cache，外层是 sync）
+ *
+ * 为什么这样：
+ * - 写路径：sync.broadcastPut → cache.invalidate → inner.put
+ *   这样其他 tab 收到事件时，cache 已经被本 tab 的写失效，
+ *   它们再读时不会拿到本 tab 失效前的脏值。
+ * - 读路径：sync.get → cache.get → inner.get
+ *   缓存命中时直接返回；其他 tab 写时由 sync 事件触发 cache 失效。
+ *
+ * 注意：cachingRepository / syncedRepository 仅 `import type` 引用 Repository，
+ * 所以此处反向引用不会产生 runtime 循环。
+ */
+export function decorateRepository<T extends BaseEntity>(
+  base: ReadWriteRepository<T>,
+  store: string,
+  decorators: RepositoryDecorators,
+): ReadWriteRepository<T> {
+  let current: ReadWriteRepository<T> = base;
+
+  if (decorators.cache) {
+    const cacheOpts: CachingRepositoryOptions =
+      decorators.cache === true ? {} : decorators.cache;
+    // 当前 current 实际是 Repository 实例（CachingRepository 构造签名要求 Repository）
+    current = new CachingRepository<T>(current as Repository<T>, cacheOpts);
+  }
+
+  if (decorators.sync) {
+    current = new SyncedRepository<T>(
+      current as Repository<T> | CachingRepository<T>,
+      store,
+    );
+  }
+
+  return current;
 }

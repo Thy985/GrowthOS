@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import type { Goal, CreateGoalDTO, UpdateGoalDTO } from '../../types';
 import { createIndexedDbRepository } from '../repositories/repository';
-import type { Repository } from '../repositories/repository';
+import type { ReadWriteRepository } from '../repositories/repository';
 import { StorageError } from '../../storage';
 
 const isNative = Capacitor.isNativePlatform();
@@ -22,10 +22,13 @@ function ensureNativeOrThrow(): void {
   }
 }
 
-let repositoryInstance: Repository<Goal> | null = null;
-function getRepository(): Repository<Goal> {
+let repositoryInstance: ReadWriteRepository<Goal> | null = null;
+function getRepository(): ReadWriteRepository<Goal> {
   if (!repositoryInstance) {
-    repositoryInstance = createIndexedDbRepository<Goal>('goals');
+    repositoryInstance = createIndexedDbRepository<Goal>('goals', {
+      cache: true,
+      sync: true,
+    });
   }
   return repositoryInstance;
 }
@@ -116,7 +119,7 @@ export function __resetGoalRepositoryForTest(): void {
 }
 
 /** 测试用：注入 Repository */
-export function __setGoalRepositoryForTest(repo: Repository<Goal> | null): void {
+export function __setGoalRepositoryForTest(repo: ReadWriteRepository<Goal> | null): void {
   repositoryInstance = repo;
 }
 

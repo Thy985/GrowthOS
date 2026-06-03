@@ -18,7 +18,7 @@
  */
 
 import type { BaseEntity, StorageAdapter } from '../types';
-import type { Repository } from '../../common/repositories/repository';
+import type { ReadWriteRepository, Repository } from '../../common/repositories/repository';
 import { LRUCache, type LRUOptions } from './lruCache';
 
 export interface CachingRepositoryOptions extends LRUOptions {
@@ -37,7 +37,7 @@ export interface CachingRepositoryOptions extends LRUOptions {
  * 写路径（put / delete / clear / putMany）保持直通，
  * 但在调用前**先失效**对应 key。
  */
-export class CachingRepository<T extends BaseEntity> {
+export class CachingRepository<T extends BaseEntity> implements ReadWriteRepository<T> {
   private readonly itemCache: LRUCache<T>;
   private readonly listCache: LRUCache<T[]> | null;
   private readonly getAllTtlMs: number;

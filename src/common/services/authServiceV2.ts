@@ -32,7 +32,7 @@ import {
   createIndexedDbRepository,
   createLocalStorageRepository,
 } from '../repositories/repository';
-import type { Repository } from '../repositories/repository';
+import type { ReadWriteRepository } from '../repositories/repository';
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -58,19 +58,25 @@ interface StoredUser {
   createdAt: string,
 }
 
-let userRepoInstance: Repository<StoredUser> | null = null;
-let currentUserRepoInstance: Repository<User> | null = null;
+let userRepoInstance: ReadWriteRepository<StoredUser> | null = null;
+let currentUserRepoInstance: ReadWriteRepository<User> | null = null;
 
-function getUserRepository(): Repository<StoredUser> {
+function getUserRepository(): ReadWriteRepository<StoredUser> {
   if (!userRepoInstance) {
-    userRepoInstance = createIndexedDbRepository<StoredUser>('users');
+    userRepoInstance = createIndexedDbRepository<StoredUser>('users', {
+      cache: true,
+      sync: true,
+    });
   }
   return userRepoInstance;
 }
 
-function getCurrentUserRepository(): Repository<User> {
+function getCurrentUserRepository(): ReadWriteRepository<User> {
   if (!currentUserRepoInstance) {
-    currentUserRepoInstance = createLocalStorageRepository<User>(STORAGE_KEYS.USER);
+    currentUserRepoInstance = createLocalStorageRepository<User>(STORAGE_KEYS.USER, {
+      cache: true,
+      sync: true,
+    });
   }
   return currentUserRepoInstance;
 }
@@ -222,12 +228,12 @@ export function __resetAuthRepositoryForTest(): void {
 }
 
 /** 测试用：注入 User Repository（passwordHash 在用户表） */
-export function __setUserRepositoryForTest(repo: Repository<StoredUser> | null): void {
+export function __setUserRepositoryForTest(repo: ReadWriteRepository<StoredUser> | null): void {
   userRepoInstance = repo;
 }
 
 /** 测试用：注入 CurrentUser Repository（LocalStorage 风格的当前用户引用） */
-export function __setCurrentUserRepositoryForTest(repo: Repository<User> | null): void {
+export function __setCurrentUserRepositoryForTest(repo: ReadWriteRepository<User> | null): void {
   currentUserRepoInstance = repo;
 }
 
