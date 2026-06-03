@@ -73,6 +73,36 @@ export interface ChatMessageEntity {
   timestamp: string,
 }
 
+/**
+ * 技能树实体
+ *
+ * 整个树（含 children 节点）作为一条记录存放。
+ * children 是 TreeNode[] 嵌入字段——保持 API 简单，
+ * 节点数小（一般 < 100）没必要拆独立 store。
+ */
+export interface TreeEntity {
+  id: string,
+  userId?: string,
+  name: string,
+  createdAt: string,
+  updatedAt: string,
+  children?: TreeNodeEntity[],
+}
+
+/** 技能树节点（嵌入在 TreeEntity.children 内） */
+export interface TreeNodeEntity {
+  id: string,
+  treeId: string,
+  parentId: string | null,
+  name: string,
+  type: 'skill' | 'habit' | 'knowledge',
+  mastery: number,
+  status: 'not_started' | 'in_progress' | 'completed',
+  startDate?: string,
+  createdAt: string,
+  updatedAt?: string,
+}
+
 // 所有 entity store 的字符串联合
 export const ENTITY_STORES = [
   'records',
@@ -81,6 +111,7 @@ export const ENTITY_STORES = [
   'users',
   'chatSessions',
   'chatMessages',
+  'trees',
 ] as const;
 
 export type EntityStore = (typeof ENTITY_STORES)[number];
@@ -137,7 +168,14 @@ export interface GrowthOSDB extends DBSchema {
       'by-timestamp': string,
     },
   },
+  trees: {
+    key: string,
+    value: TreeEntity,
+    indexes: {
+      'by-updated': string,
+    },
+  },
 }
 
 export const DB_NAME = 'growthos';
-export const CURRENT_DB_VERSION = 1;
+export const CURRENT_DB_VERSION = 2;

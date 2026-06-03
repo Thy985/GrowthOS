@@ -65,10 +65,25 @@ const migrationV1: Migration = {
 };
 
 /**
- * 所有迁移（顺序执行）
- * 加新版本：写一个 migrationV2，往数组里 push 即可
+ * v2: 加 trees store（从 secureStorage 迁出）
+ * - 整个树（含 children 节点）作为一条记录
  */
-export const migrations: readonly Migration[] = [migrationV1];
+const migrationV2: Migration = {
+  version: 2,
+  description: 'Add trees store for growthTreeServiceV2',
+  up: async (db) => {
+    if (!db.objectStoreNames.contains('trees')) {
+      const trees = db.createObjectStore('trees', { keyPath: 'id' });
+      trees.createIndex('by-updated', 'updatedAt');
+    }
+  },
+};
+
+/**
+ * 所有迁移（顺序执行）
+ * 加新版本：写一个 migrationVx，往数组里 push 即可
+ */
+export const migrations: readonly Migration[] = [migrationV1, migrationV2];
 
 export function getLatestVersion(): number {
   return migrations.length > 0 ? migrations[migrations.length - 1].version : 0;
