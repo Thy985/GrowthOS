@@ -1,7 +1,8 @@
 import { Capacitor } from '@capacitor/core';
-import { secureStorage } from '../../utils/secureStorage';
-import { STORAGE_KEYS } from '../../constants';
 import type { Reminder, CreateReminderDTO, UpdateReminderDTO } from '../../types';
+import { createIndexedDbRepository } from '../repositories/repository';
+import type { Repository } from '../repositories/repository';
+import { StorageError } from '../../storage';
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -21,23 +22,24 @@ function ensureNativeOrThrow(): void {
   }
 }
 
-async function mutateReminders(
-  mutator: (current: Reminder[]) => Reminder[] | Promise<Reminder[]>,
-): Promise<Reminder[]> {
-  const result = await secureStorage.updateWithVersion<Reminder[]>(STORAGE_KEYS.REMINDERS, [], mutator);
-  return result.value;
+let repositoryInstance: Repository<Reminder> | null = null;
+function getRepository(): Repository<Reminder> {
+  if (!repositoryInstance) {
+    repositoryInstance = createIndexedDbRepository<Reminder>('reminders');
+  }
+  return repositoryInstance;
 }
 
 export async function getReminders(): Promise<Reminder[]> {
   ensureNativeOrThrow();
-  const { value } = await secureStorage.readWithVersion<Reminder[]>(STORAGE_KEYS.REMINDERS, []);
-  return value;
+  const repo = getRepository();
+  const all = await repo.getAll();
+  return all.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
 export async function getReminderById(id: string): Promise<Reminder | null> {
   ensureNativeOrThrow();
-  const reminders = await getReminders();
-  return reminders.find((r) => r.id === id) ?? null;
+  return getRepository().get(id);
 }
 
 export async function createReminder(data: CreateReminderDTO): Promise<Reminder> {
@@ -55,47 +57,37 @@ export async function createReminder(data: CreateReminderDTO): Promise<Reminder>
     updatedAt: new Date().toISOString(),
   };
 
-  await mutateReminders((current) => [...current, newReminder]);
+  await getRepository().put(newReminder);
   return newReminder;
 }
 
 export async function updateReminder(id: string, updates: UpdateReminderDTO): Promise<Reminder> {
   ensureNativeOrThrow();
 
-  const updated = await mutateReminders((current) => {
-    const index = current.findIndex((r) => r.id === id);
-    if (index === -1) {
-      throw new Error('提醒不存在');
-    }
-    const next: Reminder = {
-      ...current[index],
-      ...updates,
-      id: current[index].id,
-      createdAt: current[index].createdAt,
-      updatedAt: new Date().toISOString(),
-    };
-    const copy = current.slice();
-    copy[index] = next;
-    return copy;
-  });
-
-  const found = updated.find((r) => r.id === id);
-  if (!found) {
-    throw new Error('提醒不存在');
+  const repo = getRepository();
+  const current = await repo.get(id);
+  if (!current) {
+    throw new StorageError('NOT_FOUND', '提醒不存在', { details: { id } });
   }
-  return found;
+
+  const next: Reminder = {
+    ...current,
+    ...updates,
+    id: current.id,
+    createdAt: current.createdAt,
+    updatedAt: new Date().toISOString(),
+  };
+  await repo.put(next);
+  return next;
 }
 
 export async function deleteReminder(id: string): Promise<void> {
   ensureNativeOrThrow();
-
-  await mutateReminders((current) => {
-    const filtered = current.filter((r) => r.id !== id);
-    if (filtered.length === current.length) {
-      throw new Error('提醒不存在');
-    }
-    return filtered;
-  });
+  const repo = getRepository();
+  const existed = await repo.delete(id);
+  if (!existed) {
+    throw new StorageError('NOT_FOUND', '提醒不存在', { details: { id } });
+  }
 }
 
 export async function completeReminder(id: string): Promise<Reminder> {
@@ -104,7 +96,7 @@ export async function completeReminder(id: string): Promise<Reminder> {
 
 export async function getUpcomingReminders(): Promise<Reminder[]> {
   ensureNativeOrThrow();
-  const reminders = await getReminders();
+  const reminders = await getRepository().getAll();
   const now = new Date();
 
   return reminders
@@ -113,6 +105,16 @@ export async function getUpcomingReminders(): Promise<Reminder[]> {
     .sort((a, b) =>
       new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime()
     );
+}
+
+/** 测试用：重置单例 */
+export function __resetReminderRepositoryForTest(): void {
+  repositoryInstance = null;
+}
+
+/** 测试用：注入 Repository */
+export function __setReminderRepositoryForTest(repo: Repository<Reminder> | null): void {
+  repositoryInstance = repo;
 }
 
 const reminderServiceV2 = {

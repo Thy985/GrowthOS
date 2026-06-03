@@ -1,7 +1,8 @@
 import { Capacitor } from '@capacitor/core';
-import { secureStorage } from '../../utils/secureStorage';
-import { STORAGE_KEYS } from '../../constants';
 import type { Goal, CreateGoalDTO, UpdateGoalDTO } from '../../types';
+import { createIndexedDbRepository } from '../repositories/repository';
+import type { Repository } from '../repositories/repository';
+import { StorageError } from '../../storage';
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -21,23 +22,29 @@ function ensureNativeOrThrow(): void {
   }
 }
 
-async function mutateGoals(
-  mutator: (current: Goal[]) => Goal[] | Promise<Goal[]>,
-): Promise<Goal[]> {
-  const result = await secureStorage.updateWithVersion<Goal[]>(STORAGE_KEYS.GOALS, [], mutator);
-  return result.value;
+let repositoryInstance: Repository<Goal> | null = null;
+function getRepository(): Repository<Goal> {
+  if (!repositoryInstance) {
+    repositoryInstance = createIndexedDbRepository<Goal>('goals');
+  }
+  return repositoryInstance;
 }
 
 export async function getGoals(): Promise<Goal[]> {
   ensureNativeOrThrow();
-  const { value } = await secureStorage.readWithVersion<Goal[]>(STORAGE_KEYS.GOALS, []);
-  return value;
+  const repo = getRepository();
+  const all = await repo.getAll();
+  // 与旧行为一致：按 updatedAt 倒序
+  return all.sort((a, b) => {
+    const at = a.updatedAt ?? a.createdAt;
+    const bt = b.updatedAt ?? b.createdAt;
+    return at < bt ? 1 : -1;
+  });
 }
 
 export async function getGoalById(id: string): Promise<Goal | null> {
   ensureNativeOrThrow();
-  const goals = await getGoals();
-  return goals.find((g) => g.id === id) ?? null;
+  return getRepository().get(id);
 }
 
 export async function createGoal(data: CreateGoalDTO): Promise<Goal> {
@@ -56,54 +63,44 @@ export async function createGoal(data: CreateGoalDTO): Promise<Goal> {
     updatedAt: new Date().toISOString(),
   };
 
-  await mutateGoals((current) => [...current, newGoal]);
+  await getRepository().put(newGoal);
   return newGoal;
 }
 
 export async function updateGoal(id: string, updates: UpdateGoalDTO): Promise<Goal> {
   ensureNativeOrThrow();
 
-  const updated = await mutateGoals((current) => {
-    const index = current.findIndex((g) => g.id === id);
-    if (index === -1) {
-      throw new Error('目标不存在');
-    }
-    const next: Goal = {
-      ...current[index],
-      ...updates,
-      id: current[index].id,
-      createdAt: current[index].createdAt,
-      updatedAt: new Date().toISOString(),
-    };
-    const copy = current.slice();
-    copy[index] = next;
-    return copy;
-  });
-
-  const found = updated.find((g) => g.id === id);
-  if (!found) {
-    throw new Error('目标不存在');
+  const repo = getRepository();
+  const current = await repo.get(id);
+  if (!current) {
+    throw new StorageError('NOT_FOUND', '目标不存在', { details: { id } });
   }
-  return found;
+
+  const next: Goal = {
+    ...current,
+    ...updates,
+    id: current.id,
+    createdAt: current.createdAt,
+    updatedAt: new Date().toISOString(),
+  };
+  await repo.put(next);
+  return next;
 }
 
 export async function deleteGoal(id: string): Promise<void> {
   ensureNativeOrThrow();
-
-  await mutateGoals((current) => {
-    const filtered = current.filter((g) => g.id !== id);
-    if (filtered.length === current.length) {
-      throw new Error('目标不存在');
-    }
-    return filtered;
-  });
+  const repo = getRepository();
+  const existed = await repo.delete(id);
+  if (!existed) {
+    throw new StorageError('NOT_FOUND', '目标不存在', { details: { id } });
+  }
 }
 
 export async function incrementGoalProgress(id: string, value: number): Promise<Goal> {
   ensureNativeOrThrow();
   const goal = await getGoalById(id);
   if (!goal) {
-    throw new Error('目标不存在');
+    throw new StorageError('NOT_FOUND', '目标不存在', { details: { id } });
   }
   const newCurrentValue = Math.max(0, goal.currentValue + value);
   const newStatus = newCurrentValue >= goal.targetValue ? 'completed' : goal.status;
@@ -111,6 +108,16 @@ export async function incrementGoalProgress(id: string, value: number): Promise<
     currentValue: newCurrentValue,
     status: newStatus,
   });
+}
+
+/** 测试用：重置单例 */
+export function __resetGoalRepositoryForTest(): void {
+  repositoryInstance = null;
+}
+
+/** 测试用：注入 Repository */
+export function __setGoalRepositoryForTest(repo: Repository<Goal> | null): void {
+  repositoryInstance = repo;
 }
 
 const goalServiceV2 = {

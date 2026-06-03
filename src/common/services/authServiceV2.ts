@@ -6,7 +6,7 @@
  * 关键问题：
  * 1. 用户表 + 密码哈希都存在浏览器 storage 中。XSS、浏览器扩展、
  *    本地文件读取、磁盘镜像都能拿到原始数据。
- * 2. 客户端 PBKDF2 600k 次迭代是"剧场式安全"——攻击者拿到 hash 后
+ * 2. 客户端 SHA-256 哈希是"剧场式安全"——攻击者拿到 hash 后
  *    可以离线爆破，浏览器跑得再慢也赶不上一张 GPU 跑 hashcat。
  * 3. Refresh token 也是本地生成的，等于没有 token 体系。
  *
@@ -17,13 +17,22 @@
  *
  * 本文件保留 register/login 的"外形"是因为 UI 依赖这些 API。
  * ============================================================
+ *
+ * Step 2 迁移：底层从 secureStorage.updateWithVersion 改为：
+ * - users 存 IndexedDB（by-email 索引）
+ * - 当前用户引用存 LocalStorage（STORAGE_KEYS.USER）
+ * - token 仍由 tokenManager 负责（用 secureStorage；后续 step 单独迁移）
  */
 
-import { secureStorage } from '../../utils/secureStorage';
-import { STORAGE_KEYS } from '../../constants';
 import type { User } from '../../types';
 import { tokenManager } from '../../utils/tokenManager';
 import { ErrorFactory } from '../api/ApiResponse';
+import { STORAGE_KEYS } from '../../constants';
+import {
+  createIndexedDbRepository,
+  createLocalStorageRepository,
+} from '../repositories/repository';
+import type { Repository } from '../repositories/repository';
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -37,6 +46,10 @@ function generateId(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+/**
+ * 内部存储格式（与 src/types/index.ts 中的 User 不同，
+ * 这里多了 passwordHash 字段）。
+ */
 interface StoredUser {
   id: string,
   email: string,
@@ -45,21 +58,26 @@ interface StoredUser {
   createdAt: string,
 }
 
-async function loadUsersFromStorage(): Promise<StoredUser[]> {
-  try {
-    const data = await secureStorage.getItem<StoredUser[]>(STORAGE_KEYS.USERS);
-    return data ?? [];
-  } catch (error) {
-    throw ErrorFactory.storage(`Failed to load users: ${error instanceof Error ? error.message : 'Unknown error'}`);
+let userRepoInstance: Repository<StoredUser> | null = null;
+let currentUserRepoInstance: Repository<User> | null = null;
+
+function getUserRepository(): Repository<StoredUser> {
+  if (!userRepoInstance) {
+    userRepoInstance = createIndexedDbRepository<StoredUser>('users');
   }
+  return userRepoInstance;
 }
 
-async function saveUsersToStorage(users: StoredUser[]): Promise<void> {
-  try {
-    await secureStorage.setItem(STORAGE_KEYS.USERS, users);
-  } catch (error) {
-    throw ErrorFactory.storage(`Failed to save users: ${error instanceof Error ? error.message : 'Unknown error'}`);
+function getCurrentUserRepository(): Repository<User> {
+  if (!currentUserRepoInstance) {
+    currentUserRepoInstance = createLocalStorageRepository<User>(STORAGE_KEYS.USER);
   }
+  return currentUserRepoInstance;
+}
+
+async function findUserByEmail(email: string): Promise<StoredUser | null> {
+  const users = await getUserRepository().getAll();
+  return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
 }
 
 /**
@@ -82,9 +100,8 @@ export async function register(
   data: { email: string, password: string, name?: string },
 ): Promise<{ user: User, token: string, refreshToken?: string }> {
   const { email, password, name } = data;
-  const users = await loadUsersFromStorage();
 
-  const existingUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  const existingUser = await findUserByEmail(email);
   if (existingUser) {
     throw ErrorFactory.conflict('邮箱已被注册', { email });
   }
@@ -96,7 +113,6 @@ export async function register(
     });
   }
 
-  // 基础 email 格式校验（生产由后端做更严格校验）
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw ErrorFactory.validation('邮箱格式无效', { field: 'email' });
   }
@@ -111,8 +127,7 @@ export async function register(
     createdAt: new Date().toISOString(),
   };
 
-  users.push(newUser);
-  await saveUsersToStorage(users);
+  await getUserRepository().put(newUser);
 
   const safeUser: User = {
     id: newUser.id,
@@ -122,7 +137,8 @@ export async function register(
   };
 
   // 缓存到 STORAGE_KEYS.USER 用于下次启动恢复登录态
-  await secureStorage.setItem(STORAGE_KEYS.USER, safeUser);
+  // 用固定 id 'current'（与 getCurrentUserInfo / logout 一致）
+  await getCurrentUserRepository().put({ ...safeUser, id: 'current' });
 
   const tokenPair = await tokenManager.generateTokens(safeUser);
 
@@ -137,8 +153,7 @@ export async function login(
   email: string,
   password: string,
 ): Promise<{ user: User, token: string, refreshToken?: string }> {
-  const users = await loadUsersFromStorage();
-  const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  const user = await findUserByEmail(email);
 
   if (!user) {
     throw ErrorFactory.unauthorized('邮箱或密码错误');
@@ -156,7 +171,7 @@ export async function login(
     createdAt: user.createdAt,
   };
 
-  await secureStorage.setItem(STORAGE_KEYS.USER, safeUser);
+  await getCurrentUserRepository().put({ ...safeUser, id: 'current' });
 
   const tokenPair = await tokenManager.generateTokens(safeUser);
 
@@ -169,12 +184,12 @@ export async function login(
 
 export async function logout(): Promise<void> {
   await tokenManager.clearTokens();
-  void secureStorage.removeItem(STORAGE_KEYS.USER);
+  await getCurrentUserRepository().delete('current');
 }
 
 export async function getCurrentUserInfo(): Promise<User | null> {
   try {
-    return await secureStorage.getItem<User>(STORAGE_KEYS.USER);
+    return await getCurrentUserRepository().get('current');
   } catch {
     return null;
   }
@@ -198,6 +213,22 @@ export function isTokenExpiringSoon(): boolean {
 
 export function getTokenInfo() {
   return tokenManager.getTokenInfo();
+}
+
+/** 测试用：重置单例 */
+export function __resetAuthRepositoryForTest(): void {
+  userRepoInstance = null;
+  currentUserRepoInstance = null;
+}
+
+/** 测试用：注入 User Repository（passwordHash 在用户表） */
+export function __setUserRepositoryForTest(repo: Repository<StoredUser> | null): void {
+  userRepoInstance = repo;
+}
+
+/** 测试用：注入 CurrentUser Repository（LocalStorage 风格的当前用户引用） */
+export function __setCurrentUserRepositoryForTest(repo: Repository<User> | null): void {
+  currentUserRepoInstance = repo;
 }
 
 const authServiceV2 = {

@@ -8,6 +8,24 @@ if (typeof globalThis.structuredClone !== 'function') {
     return JSON.parse(JSON.stringify(val));
   };
 }
+// jsdom 同样缺 TextEncoder / TextDecoder
+// Node 11+ 内置了它们，直接从 util 拿过来挂到 globalThis 上
+import { TextEncoder as NodeTextEncoder, TextDecoder as NodeTextDecoder } from 'util';
+if (typeof globalThis.TextEncoder === 'undefined') {
+  (globalThis as { TextEncoder: typeof NodeTextEncoder }).TextEncoder = NodeTextEncoder;
+}
+if (typeof globalThis.TextDecoder === 'undefined') {
+  (globalThis as { TextDecoder: typeof NodeTextDecoder }).TextDecoder = NodeTextDecoder;
+}
+// jsdom 缺 crypto.subtle / getRandomValues —— 用 Node 16+ 的 webcrypto
+import { webcrypto } from 'crypto';
+if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: webcrypto,
+    configurable: true,
+    writable: true,
+  });
+}
 
 configure({
   testIdAttribute: 'data-testid',
