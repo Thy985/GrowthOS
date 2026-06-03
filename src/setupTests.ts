@@ -1,5 +1,13 @@
 import '@testing-library/jest-dom';
 import { configure } from '@testing-library/react';
+// jsdom 没有 IndexedDB，给测试环境注入 fake-indexeddb
+import 'fake-indexeddb/auto';
+// jsdom 也不带 structuredClone，给 fake-indexeddb 注入
+if (typeof globalThis.structuredClone !== 'function') {
+  (globalThis as { structuredClone: typeof structuredClone }).structuredClone = (val: unknown) => {
+    return JSON.parse(JSON.stringify(val));
+  };
+}
 
 configure({
   testIdAttribute: 'data-testid',
