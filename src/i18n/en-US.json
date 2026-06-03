@@ -143,6 +143,7 @@
     "completed": "Completed",
     "expired": "Expired",
     "upcoming": "Upcoming",
+    "cancelled": "Cancelled",
     "allGoals": "All Goals",
     "activeGoals": "Active Goals",
     "completedGoals": "Completed Goals",

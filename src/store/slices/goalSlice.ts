@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { type GoalState, type Goal } from '../../types';
+import { type GoalState, type CreateGoalDTO, type UpdateGoalDTO } from '../../types';
 import goalServiceV2 from '../../common/services/goalServiceV2';
 
 const initialState: GoalState = {
@@ -8,38 +8,39 @@ const initialState: GoalState = {
   error: null,
 };
 
+function toMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export const fetchGoals = createAsyncThunk(
   'goals/fetchGoals',
   async (_, { rejectWithValue }) => {
     try {
-      const goals = await goalServiceV2.getGoals();
-      return goals;
+      return await goalServiceV2.getGoals();
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : '获取目标失败');
+      return rejectWithValue(toMessage(error, '获取目标失败'));
     }
   }
 );
 
 export const addGoal = createAsyncThunk(
   'goals/addGoal',
-  async (goal: Partial<Goal>, { rejectWithValue }) => {
+  async (goal: CreateGoalDTO, { rejectWithValue }) => {
     try {
-      const newGoal = await goalServiceV2.createGoal(goal as any);
-      return newGoal;
+      return await goalServiceV2.createGoal(goal);
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : '创建目标失败');
+      return rejectWithValue(toMessage(error, '创建目标失败'));
     }
   }
 );
 
 export const updateGoal = createAsyncThunk(
   'goals/updateGoal',
-  async ({ id, updates }: { id: string, updates: Partial<Goal> }, { rejectWithValue }) => {
+  async ({ id, updates }: { id: string, updates: UpdateGoalDTO }, { rejectWithValue }) => {
     try {
-      const updatedGoal = await goalServiceV2.updateGoal(id, updates);
-      return updatedGoal;
+      return await goalServiceV2.updateGoal(id, updates);
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : '更新目标失败');
+      return rejectWithValue(toMessage(error, '更新目标失败'));
     }
   }
 );
@@ -51,7 +52,7 @@ export const deleteGoal = createAsyncThunk(
       await goalServiceV2.deleteGoal(id);
       return id;
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : '删除目标失败');
+      return rejectWithValue(toMessage(error, '删除目标失败'));
     }
   }
 );
@@ -76,10 +77,21 @@ const goalSlice = createSlice({
       })
       .addCase(fetchGoals.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = (action.payload as string) ?? '获取目标失败';
+      })
+      .addCase(addGoal.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(addGoal.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // fulfilled 时清掉任何 __optimistic__ 占位
+        state.goals = state.goals.filter((g) => !g.id.startsWith('__optimistic__'));
         state.goals.push(action.payload);
+      })
+      .addCase(addGoal.rejected, (state) => {
+        state.isLoading = false;
+        // optimistic 回滚由调用方负责
       })
       .addCase(updateGoal.fulfilled, (state, action) => {
         const index = state.goals.findIndex((g) => g.id === action.payload.id);
@@ -87,12 +99,17 @@ const goalSlice = createSlice({
           state.goals[index] = action.payload;
         }
       })
+      .addCase(updateGoal.rejected, (_state, _action) => {
+        // optimistic 回滚由调用方负责
+      })
       .addCase(deleteGoal.fulfilled, (state, action) => {
         state.goals = state.goals.filter((g) => g.id !== action.payload);
+      })
+      .addCase(deleteGoal.rejected, (_state, _action) => {
+        // optimistic 回滚由调用方负责
       });
   },
 });
 
 export const { clearError } = goalSlice.actions;
-
 export default goalSlice.reducer;

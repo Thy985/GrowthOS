@@ -220,7 +220,7 @@ export class InsightsService {
     }
     
     const weekGoalCount = goals.filter(g => {
-      const start = new Date(g.startDate);
+      const start = new Date(g.createdAt);
       const now = new Date();
       const diffDays = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
       return diffDays <= 7 && g.status === 'active';
@@ -241,12 +241,12 @@ export class InsightsService {
     
     const incompleteGoals = goals.filter(g => {
       if (g.status !== 'active') return false;
-      const daysTotal = Math.ceil(
-        (new Date(g.endDate).getTime() - new Date(g.startDate).getTime()) / (1000 * 60 * 60 * 24)
-      );
-      const daysElapsed = Math.ceil(
-        (Date.now() - new Date(g.startDate).getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const created = new Date(g.createdAt).getTime();
+      const target = new Date(g.targetDate).getTime();
+      if (!Number.isFinite(created) || !Number.isFinite(target) || target <= created) return false;
+      const daysTotal = Math.ceil((target - created) / (1000 * 60 * 60 * 24));
+      const daysElapsed = Math.ceil((Date.now() - created) / (1000 * 60 * 60 * 24));
+      if (daysTotal <= 0) return false;
       const expectedProgress = (daysElapsed / daysTotal) * 100;
       const actualProgress = (g.currentValue / g.targetValue) * 100;
       return actualProgress < expectedProgress * 0.8;

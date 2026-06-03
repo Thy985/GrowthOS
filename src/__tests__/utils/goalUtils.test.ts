@@ -1,4 +1,4 @@
-import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../utils/goalUtils';
+import { calculateProgress, formatDate, getGoalStatusI18nKey, validateGoalForm, getGoalProgress } from '../../utils/goalUtils';
 import type { Goal } from '../../types';
 
 describe('Goal Utils', () => {
@@ -37,16 +37,33 @@ describe('Goal Utils', () => {
     });
   });
 
-  describe('getGoalStatusText', () => {
-    it('should return correct text for each status', () => {
-      expect(getGoalStatusText('active')).toBe('进行中');
-      expect(getGoalStatusText('completed')).toBe('已完成');
-      expect(getGoalStatusText('cancelled')).toBe('已取消');
+  describe('getGoalStatusI18nKey', () => {
+    it('should return correct i18n key for each status', () => {
+      expect(getGoalStatusI18nKey('active')).toBe('goals.inProgress');
+      expect(getGoalStatusI18nKey('completed')).toBe('goals.completed');
+      expect(getGoalStatusI18nKey('cancelled')).toBe('goals.cancelled');
     });
 
     it('should handle unknown status', () => {
       const unknownStatus = 'unknown' as Goal['status'];
-      expect(getGoalStatusText(unknownStatus)).toBe('unknown');
+      expect(getGoalStatusI18nKey(unknownStatus)).toBe('common.unknown');
+    });
+  });
+
+  describe('getGoalProgress', () => {
+    it('should compute progress from goal fields', () => {
+      expect(getGoalProgress({ currentValue: 50, targetValue: 100 })).toBe(50);
+      expect(getGoalProgress({ currentValue: 0, targetValue: 100 })).toBe(0);
+      expect(getGoalProgress({ currentValue: 100, targetValue: 100 })).toBe(100);
+    });
+
+    it('should clamp at 100 when current > target', () => {
+      expect(getGoalProgress({ currentValue: 150, targetValue: 100 })).toBe(100);
+    });
+
+    it('should return 0 when target is zero or invalid', () => {
+      expect(getGoalProgress({ currentValue: 10, targetValue: 0 })).toBe(0);
+      expect(getGoalProgress({ currentValue: 10, targetValue: -5 })).toBe(0);
     });
   });
 

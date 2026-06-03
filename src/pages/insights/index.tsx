@@ -19,7 +19,7 @@ const InsightsDashboard: React.FC = () => {
   const [selectedWeekOffset, setSelectedWeekOffset] = useState(0);
   
   const { records } = useSelector((state: RootState) => state.growth);
-  const { goals } = useSelector((state: RootState) => state.goal);
+  const { goals } = useSelector((state: RootState) => state.goals);
 
   const currentWeekDate = useMemo(() => {
     const date = new Date();

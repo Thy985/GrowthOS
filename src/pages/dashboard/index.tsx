@@ -5,6 +5,7 @@ import { fetchRecords } from '../../store/slices/growthSlice';
 import { fetchGoals } from '../../store/slices/goalSlice';
 import { fetchReminders } from '../../store/slices/reminderSlice';
 import { type RootState, type AppDispatch } from '../../store';
+import { getGoalProgress } from '../../utils/goalUtils';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -31,11 +32,6 @@ const Dashboard: React.FC = () => {
 
   const activeGoals = goals.filter((g) => g.status === 'active');
   const upcomingReminders = reminders.filter((r) => !r.isCompleted);
-
-  const getGoalProgress = (goal: typeof goals[0]) => {
-    if (goal.targetValue === 0) return 0;
-    return Math.min(100, Math.round((goal.currentValue / goal.targetValue) * 100));
-  };
 
   return (
     <div className="main">

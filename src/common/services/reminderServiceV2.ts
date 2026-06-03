@@ -6,92 +6,96 @@ import type { Reminder, CreateReminderDTO, UpdateReminderDTO } from '../../types
 const isNative = Capacitor.isNativePlatform();
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-async function getReminderFromStorage(): Promise<Reminder[]> {
-  try {
-    const data = await secureStorage.getItem<Reminder[]>(STORAGE_KEYS.REMINDERS);
-    return data ?? [];
-  } catch (error) {
-    console.error('Error reading reminders from storage:', error);
-    return [];
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
   }
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  const hex = Array.from(array).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-async function saveRemindersToStorage(reminders: Reminder[]): Promise<void> {
-  try {
-    await secureStorage.setItem(STORAGE_KEYS.REMINDERS, reminders);
-  } catch (error) {
-    console.error('Error saving reminders to storage:', error);
-    throw new Error('保存提醒失败');
-  }
-}
-
-export async function getReminders(): Promise<Reminder[]> {
+function ensureNativeOrThrow(): void {
   if (isNative) {
     throw new Error('Native SQLite not implemented yet');
   }
-  return getReminderFromStorage();
+}
+
+async function mutateReminders(
+  mutator: (current: Reminder[]) => Reminder[] | Promise<Reminder[]>,
+): Promise<Reminder[]> {
+  const result = await secureStorage.updateWithVersion<Reminder[]>(STORAGE_KEYS.REMINDERS, [], mutator);
+  return result.value;
+}
+
+export async function getReminders(): Promise<Reminder[]> {
+  ensureNativeOrThrow();
+  const { value } = await secureStorage.readWithVersion<Reminder[]>(STORAGE_KEYS.REMINDERS, []);
+  return value;
 }
 
 export async function getReminderById(id: string): Promise<Reminder | null> {
-  const reminders = await getReminderFromStorage();
-  return reminders.find(r => r.id === id) || null;
+  ensureNativeOrThrow();
+  const reminders = await getReminders();
+  return reminders.find((r) => r.id === id) ?? null;
 }
 
 export async function createReminder(data: CreateReminderDTO): Promise<Reminder> {
-  const reminders = await getReminderFromStorage();
-  
+  ensureNativeOrThrow();
+
   const newReminder: Reminder = {
     id: generateId(),
     title: data.title,
-    description: data.description || '',
+    description: data.description ?? '',
     date: data.date,
     time: data.time,
     goalId: data.goalId,
     isCompleted: false,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
-  
-  reminders.push(newReminder);
-  await saveRemindersToStorage(reminders);
-  
+
+  await mutateReminders((current) => [...current, newReminder]);
   return newReminder;
 }
 
 export async function updateReminder(id: string, updates: UpdateReminderDTO): Promise<Reminder> {
-  const reminders = await getReminderFromStorage();
-  const index = reminders.findIndex(r => r.id === id);
-  
-  if (index === -1) {
+  ensureNativeOrThrow();
+
+  const updated = await mutateReminders((current) => {
+    const index = current.findIndex((r) => r.id === id);
+    if (index === -1) {
+      throw new Error('提醒不存在');
+    }
+    const next: Reminder = {
+      ...current[index],
+      ...updates,
+      id: current[index].id,
+      createdAt: current[index].createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    const copy = current.slice();
+    copy[index] = next;
+    return copy;
+  });
+
+  const found = updated.find((r) => r.id === id);
+  if (!found) {
     throw new Error('提醒不存在');
   }
-  
-  const updatedReminder: Reminder = {
-    ...reminders[index],
-    ...updates,
-    id: reminders[index].id,
-    createdAt: reminders[index].createdAt,
-    updatedAt: new Date().toISOString()
-  };
-  
-  reminders[index] = updatedReminder;
-  await saveRemindersToStorage(reminders);
-  
-  return updatedReminder;
+  return found;
 }
 
 export async function deleteReminder(id: string): Promise<void> {
-  const reminders = await getReminderFromStorage();
-  const filteredReminders = reminders.filter(r => r.id !== id);
-  
-  if (filteredReminders.length === reminders.length) {
-    throw new Error('提醒不存在');
-  }
-  
-  await saveRemindersToStorage(filteredReminders);
+  ensureNativeOrThrow();
+
+  await mutateReminders((current) => {
+    const filtered = current.filter((r) => r.id !== id);
+    if (filtered.length === current.length) {
+      throw new Error('提醒不存在');
+    }
+    return filtered;
+  });
 }
 
 export async function completeReminder(id: string): Promise<Reminder> {
@@ -99,20 +103,16 @@ export async function completeReminder(id: string): Promise<Reminder> {
 }
 
 export async function getUpcomingReminders(): Promise<Reminder[]> {
-  const reminders = await getReminderFromStorage();
+  ensureNativeOrThrow();
+  const reminders = await getReminders();
   const now = new Date();
-  
+
   return reminders
-    .filter(r => !r.isCompleted)
-    .filter(r => {
-      const reminderDate = new Date(`${r.date}T${r.time}`);
-      return reminderDate >= now;
-    })
-    .sort((a, b) => {
-      const dateA = new Date(`${a.date}T${a.time}`);
-      const dateB = new Date(`${b.date}T${b.time}`);
-      return dateA.getTime() - dateB.getTime();
-    });
+    .filter((r) => !r.isCompleted)
+    .filter((r) => new Date(`${r.date}T${r.time}`).getTime() >= now.getTime())
+    .sort((a, b) =>
+      new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime()
+    );
 }
 
 const reminderServiceV2 = {
@@ -122,7 +122,7 @@ const reminderServiceV2 = {
   updateReminder,
   deleteReminder,
   completeReminder,
-  getUpcomingReminders
+  getUpcomingReminders,
 };
 
 export default reminderServiceV2;

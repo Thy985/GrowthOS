@@ -142,6 +142,7 @@
     "completed": "已完成",
     "expired": "已过期",
     "upcoming": "即将开始",
+    "cancelled": "已取消",
     "allGoals": "所有目标",
     "activeGoals": "进行中的目标",
     "completedGoals": "已完成的目标",

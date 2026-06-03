@@ -282,12 +282,11 @@ export class WeeklyReportGenerator {
     const goalsProgress: GoalProgress[] = goals
       .filter(g => g.status === 'active')
       .map(goal => {
-        const daysTotal = Math.ceil(
-          (new Date(goal.endDate).getTime() - new Date(goal.startDate).getTime()) / 86400000
-        );
-        const daysElapsed = Math.ceil(
-          (Date.now() - new Date(goal.startDate).getTime()) / 86400000
-        );
+        const created = new Date(goal.createdAt).getTime();
+        const target = new Date(goal.targetDate).getTime();
+        if (!Number.isFinite(created) || !Number.isFinite(target) || target <= created) return null;
+        const daysTotal = Math.ceil((target - created) / 86400000);
+        const daysElapsed = Math.ceil((Date.now() - created) / 86400000);
         const daysRemaining = Math.max(0, daysTotal - daysElapsed);
         const expectedProgress = (daysElapsed / daysTotal) * 100;
         const actualProgress = goal.currentValue / goal.targetValue * 100;
@@ -299,7 +298,8 @@ export class WeeklyReportGenerator {
           isOnTrack: actualProgress >= expectedProgress * 0.9,
           daysRemaining
         };
-      });
+      })
+      .filter((p): p is GoalProgress => p !== null);
     
     const recommendations: Recommendation[] = [];
     

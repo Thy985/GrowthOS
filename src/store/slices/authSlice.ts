@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { useDispatch, useSelector } from 'react-redux';
 import { type AuthState } from '../../types';
-import { type AppDispatch } from '../index';
 import authServiceV2 from '../../common/services/authServiceV2';
+import { STORAGE_KEYS } from '../../constants';
 
 const initialState: AuthState = {
   user: null,
@@ -18,7 +17,8 @@ export const login = createAsyncThunk(
       const response = await authServiceV2.login(credentials.email, credentials.password);
       return response;
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : '登录失败');
+      const message = error instanceof Error ? error.message : '登录失败';
+      return rejectWithValue(message);
     }
   }
 );
@@ -30,14 +30,23 @@ export const register = createAsyncThunk(
       const response = await authServiceV2.register(data);
       return response;
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : '注册失败');
+      const message = error instanceof Error ? error.message : '注册失败';
+      return rejectWithValue(message);
     }
   }
 );
 
-export const logout = createAsyncThunk('auth/logout', async () => {
-  await authServiceV2.logout();
-});
+export const logout = createAsyncThunk(
+  'auth/logout',
+  async (_: void, { rejectWithValue }) => {
+    try {
+      await authServiceV2.logout();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '登出失败';
+      return rejectWithValue(message);
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -50,16 +59,30 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    // 同步 action：从 localStorage 恢复登录态
     checkAuth: (state) => {
-      const user = localStorage.getItem('user');
-      if (user) {
-        try {
-          state.user = JSON.parse(user);
-          state.isAuthenticated = true;
-        } catch {
-          state.user = null;
-          state.isAuthenticated = false;
+      const raw = localStorage.getItem(STORAGE_KEYS.USER);
+      if (!raw) return;
+      try {
+        const cached: unknown = JSON.parse(raw);
+        // 兼容两种数据形状：
+        // 1. { user: {...}, token: ... } （authServiceV2.setItem 时包装的）
+        // 2. {...} （裸 user 对象）
+        let user: AuthState['user'] = null;
+        if (cached && typeof cached === 'object') {
+          const obj = cached as Record<string, unknown>;
+          if ('user' in obj && obj.user) {
+            user = obj.user as AuthState['user'];
+          } else if ('id' in obj && 'email' in obj) {
+            user = obj as unknown as AuthState['user'];
+          }
         }
+        if (user) {
+          state.user = user;
+          state.isAuthenticated = true;
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEYS.USER);
       }
     },
   },
@@ -73,11 +96,11 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
-        localStorage.setItem('user', JSON.stringify(action.payload.user));
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = (action.payload as string) ?? action.error.message ?? '登录失败';
       })
       .addCase(register.pending, (state) => {
         state.isLoading = true;
@@ -87,36 +110,25 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
-        localStorage.setItem('user', JSON.stringify(action.payload.user));
+        state.error = null;
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = (action.payload as string) ?? action.error.message ?? '注册失败';
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
-        localStorage.removeItem('user');
+        state.error = null;
+      })
+      .addCase(logout.rejected, (state, action) => {
+        // 即便后端清 token 失败，本地态也要清掉
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = (action.payload as string) ?? action.error.message ?? '登出失败';
       });
   },
 });
 
 export const { setUser, clearError, checkAuth } = authSlice.actions;
-
-export const useAuth = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const auth = useSelector((state: { auth: AuthState }) => state.auth);
-
-  return {
-    ...auth,
-    login: (credentials: { email: string, password: string }) =>
-      dispatch(login(credentials)),
-    register: (data: { email: string, password: string, name?: string }) =>
-      dispatch(register(data)),
-    logout: () => dispatch(logout()),
-    checkAuth: () => dispatch(checkAuth()),
-    clearError: () => dispatch(clearError()),
-  };
-};
-
 export default authSlice.reducer;

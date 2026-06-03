@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { fetchGoals, addGoal, updateGoal, deleteGoal } from '../../store/slices/goalSlice';
 import { type RootState, type AppDispatch } from '../../store';
 import { type Goal } from '../../types';
+import { getGoalProgress } from '../../utils/goalUtils';
 
 const Goals: React.FC = () => {
   const { t } = useTranslation();
@@ -29,10 +30,9 @@ const Goals: React.FC = () => {
       title: formData.title,
       description: formData.description,
       targetDate: formData.targetDate,
-      category: formData.category as 'learning' | 'career' | 'health' | 'personal' | 'other',
+      category: formData.category as Goal['category'],
       targetValue: formData.targetValue,
       currentValue: 0,
-      status: 'active',
     }));
     setFormData({ title: '', description: '', targetDate: '', category: 'learning', targetValue: 100 });
     setShowForm(false);
@@ -53,11 +53,6 @@ const Goals: React.FC = () => {
         status: newProgress >= 100 ? 'completed' : 'active',
       },
     }));
-  };
-
-  const getGoalProgress = (goal: Goal) => {
-    if (goal.targetValue === 0) return 0;
-    return Math.min(100, Math.round((goal.currentValue / goal.targetValue) * 100));
   };
 
   return (

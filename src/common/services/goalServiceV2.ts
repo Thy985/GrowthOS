@@ -1,126 +1,115 @@
 import { Capacitor } from '@capacitor/core';
 import { secureStorage } from '../../utils/secureStorage';
 import { STORAGE_KEYS } from '../../constants';
-import type { Goal, UpdateGoalDTO } from '../../types';
+import type { Goal, CreateGoalDTO, UpdateGoalDTO } from '../../types';
 
 const isNative = Capacitor.isNativePlatform();
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-async function ensureStorageInitialized(): Promise<void> {
-  await secureStorage.initialize();
-}
-
-async function getGoalFromStorage(): Promise<Goal[]> {
-  await ensureStorageInitialized();
-  try {
-    const data = await secureStorage.getItem<Goal[]>(STORAGE_KEYS.GOALS);
-    return data ?? [];
-  } catch (error) {
-    console.error('Error reading goals from storage:', error);
-    return [];
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
   }
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  const hex = Array.from(array).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-async function saveGoalsToStorage(goals: Goal[]): Promise<void> {
-  await ensureStorageInitialized();
-  try {
-    await secureStorage.setItem(STORAGE_KEYS.GOALS, goals);
-  } catch (error) {
-    console.error('Error saving goals to storage:', error);
-    throw new Error('保存目标失败');
-  }
-}
-
-export async function getGoals(): Promise<Goal[]> {
+function ensureNativeOrThrow(): void {
   if (isNative) {
     throw new Error('Native SQLite not implemented yet');
   }
-  return getGoalFromStorage();
+}
+
+async function mutateGoals(
+  mutator: (current: Goal[]) => Goal[] | Promise<Goal[]>,
+): Promise<Goal[]> {
+  const result = await secureStorage.updateWithVersion<Goal[]>(STORAGE_KEYS.GOALS, [], mutator);
+  return result.value;
+}
+
+export async function getGoals(): Promise<Goal[]> {
+  ensureNativeOrThrow();
+  const { value } = await secureStorage.readWithVersion<Goal[]>(STORAGE_KEYS.GOALS, []);
+  return value;
 }
 
 export async function getGoalById(id: string): Promise<Goal | null> {
-  const goals = await getGoalFromStorage();
-  return goals.find(g => g.id === id) || null;
+  ensureNativeOrThrow();
+  const goals = await getGoals();
+  return goals.find((g) => g.id === id) ?? null;
 }
 
-export async function createGoal(data: {
-  title: string,
-  description?: string,
-  target_value: number,
-  start_date: string,
-  end_date: string,
-}): Promise<Goal> {
-  const goals = await getGoalFromStorage();
-  
+export async function createGoal(data: CreateGoalDTO): Promise<Goal> {
+  ensureNativeOrThrow();
+
   const newGoal: Goal = {
     id: generateId(),
     title: data.title,
-    description: data.description || '',
-    targetValue: data.target_value,
-    currentValue: 0,
-    startDate: data.start_date,
-    endDate: data.end_date,
+    description: data.description ?? '',
+    category: data.category ?? 'other',
+    targetValue: data.targetValue,
+    currentValue: data.currentValue ?? 0,
+    targetDate: data.targetDate,
     status: 'active',
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
-  
-  goals.push(newGoal);
-  await saveGoalsToStorage(goals);
-  
+
+  await mutateGoals((current) => [...current, newGoal]);
   return newGoal;
 }
 
 export async function updateGoal(id: string, updates: UpdateGoalDTO): Promise<Goal> {
-  const goals = await getGoalFromStorage();
-  const index = goals.findIndex(g => g.id === id);
-  
-  if (index === -1) {
+  ensureNativeOrThrow();
+
+  const updated = await mutateGoals((current) => {
+    const index = current.findIndex((g) => g.id === id);
+    if (index === -1) {
+      throw new Error('目标不存在');
+    }
+    const next: Goal = {
+      ...current[index],
+      ...updates,
+      id: current[index].id,
+      createdAt: current[index].createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    const copy = current.slice();
+    copy[index] = next;
+    return copy;
+  });
+
+  const found = updated.find((g) => g.id === id);
+  if (!found) {
     throw new Error('目标不存在');
   }
-  
-  const updatedGoal: Goal = {
-    ...goals[index],
-    ...updates,
-    id: goals[index].id,
-    createdAt: goals[index].createdAt,
-    updatedAt: new Date().toISOString()
-  };
-  
-  goals[index] = updatedGoal;
-  await saveGoalsToStorage(goals);
-  
-  return updatedGoal;
+  return found;
 }
 
 export async function deleteGoal(id: string): Promise<void> {
-  const goals = await getGoalFromStorage();
-  const filteredGoals = goals.filter(g => g.id !== id);
-  
-  if (filteredGoals.length === goals.length) {
-    throw new Error('目标不存在');
-  }
-  
-  await saveGoalsToStorage(filteredGoals);
+  ensureNativeOrThrow();
+
+  await mutateGoals((current) => {
+    const filtered = current.filter((g) => g.id !== id);
+    if (filtered.length === current.length) {
+      throw new Error('目标不存在');
+    }
+    return filtered;
+  });
 }
 
 export async function incrementGoalProgress(id: string, value: number): Promise<Goal> {
-  const goals = await getGoalFromStorage();
-  const goal = goals.find(g => g.id === id);
-  
+  ensureNativeOrThrow();
+  const goal = await getGoalById(id);
   if (!goal) {
     throw new Error('目标不存在');
   }
-  
-  const newCurrentValue = goal.currentValue + value;
+  const newCurrentValue = Math.max(0, goal.currentValue + value);
   const newStatus = newCurrentValue >= goal.targetValue ? 'completed' : goal.status;
-  
   return updateGoal(id, {
     currentValue: newCurrentValue,
-    status: newStatus
+    status: newStatus,
   });
 }
 
@@ -130,7 +119,7 @@ const goalServiceV2 = {
   createGoal,
   updateGoal,
   deleteGoal,
-  incrementGoalProgress
+  incrementGoalProgress,
 };
 
 export default goalServiceV2;

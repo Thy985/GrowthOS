@@ -2,8 +2,8 @@ import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '../../types';
 
 const selectRecordsState = (state: RootState) => state.growth;
-const selectGoalsState = (state: RootState) => state.goal;
-const selectRemindersState = (state: RootState) => state.reminder;
+const selectGoalsState = (state: RootState) => state.goals;
+const selectRemindersState = (state: RootState) => state.reminders;
 
 export const selectAllRecords = (state: RootState) => selectRecordsState(state).records;
 export const selectRecordsLoading = (state: RootState) => selectRecordsState(state).isLoading;

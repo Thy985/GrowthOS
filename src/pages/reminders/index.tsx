@@ -13,7 +13,8 @@ const Reminders: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    time: '',
+    date: new Date().toISOString().split('T')[0],
+    time: '09:00',
   });
 
   useEffect(() => {
@@ -25,10 +26,15 @@ const Reminders: React.FC = () => {
     void dispatch(addReminder({
       title: formData.title,
       description: formData.description,
+      date: formData.date,
       time: formData.time,
-      isCompleted: false,
     }));
-    setFormData({ title: '', description: '', time: '' });
+    setFormData({
+      title: '',
+      description: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '09:00',
+    });
     setShowForm(false);
   };
 

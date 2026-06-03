@@ -11,7 +11,7 @@ export const STORAGE_KEYS = {
   TREES: 'growth-trees',
   GOALS: 'growth-goals',
   REMINDERS: 'growth-reminders',
-  USER: 'auth-user',
+  USER: 'user',
   USERS: 'auth-users',
   THEME: 'app-theme',
   SETTINGS: 'app-settings',

@@ -40,8 +40,8 @@ export const generateCSV = (records: GrowthRecord[], goals: Goal[], dataTypes: s
       const description = goal.description ? `"${goal.description.replace(/"/g, '""')}"` : '';
       const targetValue = goal.targetValue;
       const currentValue = goal.currentValue;
-      const startDate = new Date(goal.startDate).toLocaleDateString();
-      const endDate = new Date(goal.endDate).toLocaleDateString();
+      const startDate = new Date(goal.createdAt).toLocaleDateString();
+      const endDate = new Date(goal.targetDate).toLocaleDateString();
       const status = goal.status;
       csvContent += `${title},${description},${targetValue},${currentValue},${startDate},${endDate},${status}\n`;
     });
@@ -92,8 +92,8 @@ export const generateMarkdown = (
       const description = goal.description || '';
       const targetValue = goal.targetValue;
       const currentValue = goal.currentValue;
-      const startDate = new Date(goal.startDate).toLocaleDateString();
-      const endDate = new Date(goal.endDate).toLocaleDateString();
+      const startDate = new Date(goal.createdAt).toLocaleDateString();
+      const endDate = new Date(goal.targetDate).toLocaleDateString();
       const status = goal.status;
       markdownContent += `| ${title} | ${description} | ${targetValue} | ${currentValue} | ${startDate} | ${endDate} | ${status} |\n`;
     });

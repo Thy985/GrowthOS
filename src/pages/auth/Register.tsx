@@ -152,7 +152,7 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      await authServiceV2.register(email, password, name);
+      await authServiceV2.register({ email, password, name });
       showToast('注册成功！正在跳转...', 'success');
       setTimeout(() => navigate('/'), 1000);
     } catch (err: unknown) {

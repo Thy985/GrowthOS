@@ -18,7 +18,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useTheme } from './store/slices/themeSlice';
-import { useAuth } from './store/slices/authSlice';
+import { useAuth } from './hooks/useAuth';
 
 function AppContent() {
   const { t: _t } = useTranslation();

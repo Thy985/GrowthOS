@@ -147,21 +147,25 @@ export interface CreateRecordDTO {
   reflection?: string,
   mood?: Mood,
   tags?: string[],
+  category?: GrowthRecord['category'],
 }
 
 export interface CreateGoalDTO {
   title: string,
   description?: string,
+  category?: Goal['category'],
   targetValue: number,
-  startDate: string,
-  endDate: string,
+  currentValue?: number,
+  targetDate: string,
 }
 
 export interface UpdateGoalDTO {
   title?: string,
   description?: string,
+  category?: Goal['category'],
   targetValue?: number,
   currentValue?: number,
+  targetDate?: string,
   status?: GoalStatus,
 }
 
