@@ -31,8 +31,10 @@ import { STORAGE_KEYS } from '../../constants';
 import {
   createIndexedDbRepository,
   createLocalStorageRepository,
+  createInMemoryRepository,
 } from '../repositories/repository';
 import type { ReadWriteRepository } from '../repositories/repository';
+import { getStorageBackendConfig } from '../../storage/config';
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -63,16 +65,25 @@ let currentUserRepoInstance: ReadWriteRepository<User> | null = null;
 
 function getUserRepository(): ReadWriteRepository<StoredUser> {
   if (!userRepoInstance) {
-    userRepoInstance = createIndexedDbRepository<StoredUser>('users', {
-      cache: true,
-      sync: true,
-    });
+    const kind = getStorageBackendConfig().getStorageBackend();
+    switch (kind) {
+      case 'indexeddb':
+        userRepoInstance = createIndexedDbRepository<StoredUser>('users', { cache: true, sync: true });
+        break;
+      case 'localStorage':
+        userRepoInstance = createLocalStorageRepository<StoredUser>('auth-users', { cache: true, sync: true });
+        break;
+      case 'inMemory':
+        userRepoInstance = createInMemoryRepository<StoredUser>({ cache: false, sync: false });
+        break;
+    }
   }
   return userRepoInstance;
 }
 
 function getCurrentUserRepository(): ReadWriteRepository<User> {
   if (!currentUserRepoInstance) {
+    // current session 始终走 LS（跨 tab 即时同步、刷新不丢）
     currentUserRepoInstance = createLocalStorageRepository<User>(STORAGE_KEYS.USER, {
       cache: true,
       sync: true,

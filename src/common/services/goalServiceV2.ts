@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import type { Goal, CreateGoalDTO, UpdateGoalDTO } from '../../types';
-import { createIndexedDbRepository } from '../repositories/repository';
-import type { ReadWriteRepository } from '../repositories/repository';
+import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, type ReadWriteRepository } from '../repositories/repository';
+import { getStorageBackendConfig } from '../../storage/config';
 import { StorageError } from '../../storage';
 
 const isNative = Capacitor.isNativePlatform();
@@ -25,10 +25,18 @@ function ensureNativeOrThrow(): void {
 let repositoryInstance: ReadWriteRepository<Goal> | null = null;
 function getRepository(): ReadWriteRepository<Goal> {
   if (!repositoryInstance) {
-    repositoryInstance = createIndexedDbRepository<Goal>('goals', {
-      cache: true,
-      sync: true,
-    });
+    const kind = getStorageBackendConfig().getStorageBackend();
+    switch (kind) {
+      case 'indexeddb':
+        repositoryInstance = createIndexedDbRepository<Goal>('goals', { cache: true, sync: true });
+        break;
+      case 'localStorage':
+        repositoryInstance = createLocalStorageRepository<Goal>('growth-goals', { cache: true, sync: true });
+        break;
+      case 'inMemory':
+        repositoryInstance = createInMemoryRepository<Goal>({ cache: false, sync: false });
+        break;
+    }
   }
   return repositoryInstance;
 }

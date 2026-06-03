@@ -17,6 +17,7 @@ import Button from '../../components/common/Button';
 import { getQuotaMonitor } from '../../storage/quota';
 import { getDB, resetDatabase } from '../../storage/schema';
 import { ENTITY_STORES, type EntityStore } from '../../storage/schema/types';
+import { getStorageBackendConfig, type StorageBackendKind } from '../../storage/config';
 
 interface StoreStats {
   store: EntityStore,
@@ -91,8 +92,130 @@ export async function clearAllStorage(): Promise<void> {
   localStorage.clear();
   sessionStorage.clear();
   // 强制重载，让所有 service 单例重建
-  window.location.reload();
+  try {
+    window.location.reload();
+  } catch {
+    /* 忽略：测试环境 */
+  }
 }
+
+/**
+ * 切换 storage backend
+ * 持久化到 LocalStorage，调用方需自行 reload。
+ */
+export function switchStorageBackend(kind: StorageBackendKind): void {
+  getStorageBackendConfig().setStorageBackend(kind);
+  try {
+    window.location.reload();
+  } catch {
+    /* 忽略：测试环境 */
+  }
+}
+
+/** BackendCard：选 IDB / LS / In-Memory */
+const BACKEND_OPTIONS: { kind: StorageBackendKind, label: string, description: string, warning?: string }[] = [
+  {
+    kind: 'indexeddb',
+    label: 'IndexedDB（推荐）',
+    description: '容量大、支持索引、跨 tab 同步、自动持久化',
+  },
+  {
+    kind: 'localStorage',
+    label: 'LocalStorage',
+    description: '单 store ~5MB 上限、跨 tab 即时同步、简单可靠',
+    warning: '容量小，不适合大量记录/聊天消息',
+  },
+  {
+    kind: 'inMemory',
+    label: 'In-Memory（内存）',
+    description: '纯内存、刷新清空、用于测试 / 调试',
+    warning: '刷新或切换路由后数据丢失',
+  },
+];
+
+const BackendCard: React.FC = () => {
+  const config = getStorageBackendConfig();
+  const [current, setCurrent] = useState<StorageBackendKind>(config.getStorageBackend());
+  const [pending, setPending] = useState<StorageBackendKind | null>(null);
+
+  // 订阅 backend 变化（应对其他来源的切换）
+  useEffect(() => {
+    const unsubscribe = config.subscribe((kind) => setCurrent(kind));
+    return unsubscribe;
+  }, [config]);
+
+  const handleSelect = (kind: StorageBackendKind) => {
+    if (kind === current) return;
+    setPending(kind);
+  };
+
+  const handleConfirm = () => {
+    if (pending) {
+      switchStorageBackend(pending);
+      // reload 触发，下面不执行
+    }
+  };
+
+  return (
+    <Card
+      title="数据后端"
+      subtitle="决定所有业务数据存哪里（重启后保持）"
+    >
+      <div className="space-y-3">
+        {BACKEND_OPTIONS.map((opt) => {
+          const isCurrent = opt.kind === current;
+          return (
+            <label
+              key={opt.kind}
+              className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                isCurrent
+                  ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20'
+                  : 'border-[var(--color-border-subtle)] hover:border-[var(--color-border)]'
+              }`}
+            >
+              <input
+                type="radio"
+                name="storage-backend"
+                value={opt.kind}
+                checked={isCurrent}
+                onChange={() => handleSelect(opt.kind)}
+                className="mt-1"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-[var(--color-text-primary)]">
+                  {opt.label}
+                  {isCurrent && <span className="ml-2 text-xs text-emerald-600">当前</span>}
+                </div>
+                <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                  {opt.description}
+                </div>
+                {opt.warning && (
+                  <div className="text-xs text-amber-600 mt-1">⚠ {opt.warning}</div>
+                )}
+              </div>
+            </label>
+          );
+        })}
+
+        {pending && (
+          <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border-subtle)]">
+            <span className="text-sm text-amber-600">
+              确定切到 {
+                BACKEND_OPTIONS.find((o) => o.kind === pending)?.label
+              }？这会重新加载页面。
+            </span>
+            <Button variant="primary" size="small" onClick={handleConfirm}>
+              确认切换
+            </Button>
+            <Button variant="ghost" size="small" onClick={() => setPending(null)}>
+              取消
+            </Button>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
 
 const StorageSettings: React.FC = () => {
   // t 是 i18n hook 的返回值；当前页面文案固定中文，未使用
@@ -147,6 +270,8 @@ const StorageSettings: React.FC = () => {
           查看浏览器存储用量，或清空所有数据重置应用。
         </p>
       </div>
+
+      <BackendCard />
 
       {error && (
         <Card>

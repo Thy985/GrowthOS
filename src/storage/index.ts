@@ -7,7 +7,7 @@
  */
 
 export { StorageError, isStorageError, type StorageErrorCode } from './errors';
-export type { BaseEntity, StorageAdapter, StorageBackendKind, QueryOptions, QueryValue } from './types';
+export type { BaseEntity, StorageAdapter, QueryOptions, QueryValue } from './types';
 
 export { InMemoryAdapter } from './backends/InMemoryAdapter';
 export { MemoryAdapter } from './backends/MemoryAdapter';
@@ -92,3 +92,13 @@ export { CrossTabChannel, SyncedRepository, getDefaultChannelName } from './sync
 export type { CrossTabEvent, CrossTabEventType, CrossTabSubscriber } from './sync';
 export { QuotaMonitor, getQuotaMonitor } from './quota';
 export type { QuotaStatus, QuotaLevel, QuotaMonitorOptions, QuotaSubscriber } from './quota';
+// 后端配置中心
+export {
+  getStorageBackendConfig,
+  clearStorageBackendConfig,
+  _resetStorageBackendConfig,
+  STORAGE_BACKEND_KINDS,
+  isLargeCapacityBackend,
+  isPersistentBackend,
+} from './config';
+export type { StorageBackendKind, StorageBackendConfig } from './config';

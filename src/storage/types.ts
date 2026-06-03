@@ -12,8 +12,8 @@ export interface BaseEntity {
   id: string,
 }
 
-// 后端选型枚举
-export type StorageBackendKind = 'indexeddb' | 'localStorage' | 'memory';
+// 后端选型枚举（重导出 config/storageConfig 中的权威定义）
+export type { StorageBackendKind } from './config/storageConfig';
 
 // 索引查询的可比较字段
 export type QueryValue = string | number | boolean | null;

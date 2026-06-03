@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import type { Reminder, CreateReminderDTO, UpdateReminderDTO } from '../../types';
-import { createIndexedDbRepository } from '../repositories/repository';
-import type { ReadWriteRepository } from '../repositories/repository';
+import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, type ReadWriteRepository } from '../repositories/repository';
+import { getStorageBackendConfig } from '../../storage/config';
 import { StorageError } from '../../storage';
 
 const isNative = Capacitor.isNativePlatform();
@@ -25,10 +25,18 @@ function ensureNativeOrThrow(): void {
 let repositoryInstance: ReadWriteRepository<Reminder> | null = null;
 function getRepository(): ReadWriteRepository<Reminder> {
   if (!repositoryInstance) {
-    repositoryInstance = createIndexedDbRepository<Reminder>('reminders', {
-      cache: true,
-      sync: true,
-    });
+    const kind = getStorageBackendConfig().getStorageBackend();
+    switch (kind) {
+      case 'indexeddb':
+        repositoryInstance = createIndexedDbRepository<Reminder>('reminders', { cache: true, sync: true });
+        break;
+      case 'localStorage':
+        repositoryInstance = createLocalStorageRepository<Reminder>('growth-reminders', { cache: true, sync: true });
+        break;
+      case 'inMemory':
+        repositoryInstance = createInMemoryRepository<Reminder>({ cache: false, sync: false });
+        break;
+    }
   }
   return repositoryInstance;
 }

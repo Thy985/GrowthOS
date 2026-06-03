@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import type { GrowthRecord as GrowthRecordEntity, Mood } from '../../types';
-import { createIndexedDbRepository } from '../repositories/repository';
-import type { ReadWriteRepository } from '../repositories/repository';
+import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, type ReadWriteRepository } from '../repositories/repository';
+import { getStorageBackendConfig } from '../../storage/config';
 import { StorageError } from '../../storage';
 
 const isNative = Capacitor.isNativePlatform();
@@ -30,13 +30,29 @@ function ensureNativeOrThrow(): void {
   }
 }
 
-// 单例 Repository（懒初始化）
+// 单例 Repository（懒初始化，按当前 backend config 选后端）
 let repositoryInstance: ReadWriteRepository<GrowthRecordEntity> | null = null;
 function getRepository(): ReadWriteRepository<GrowthRecordEntity> {
   if (!repositoryInstance) {
-    repositoryInstance = createIndexedDbRepository<GrowthRecordEntity>('records');
+    repositoryInstance = createRepositoryForBackend<GrowthRecordEntity>('records', 'records');
   }
   return repositoryInstance;
+}
+
+/** 通用：按当前 backend 配置创建对应 Repository */
+function createRepositoryForBackend<T extends { id: string }>(
+  storeKey: string,
+  lsKey: string,
+): ReadWriteRepository<T> {
+  const kind = getStorageBackendConfig().getStorageBackend();
+  switch (kind) {
+    case 'indexeddb':
+      return createIndexedDbRepository<T>(storeKey as never, { cache: true, sync: true });
+    case 'localStorage':
+      return createLocalStorageRepository<T>(lsKey, { cache: true, sync: true });
+    case 'inMemory':
+      return createInMemoryRepository<T>({ cache: false, sync: false });
+  }
 }
 
 export interface RecordCreateInput {

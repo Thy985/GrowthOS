@@ -17,8 +17,10 @@ import { AI_STORAGE_KEYS } from '../../constants';
 import {
   createIndexedDbRepository,
   createLocalStorageRepository,
+  createInMemoryRepository,
 } from '../repositories/repository';
 import type { ReadWriteRepository } from '../repositories/repository';
+import { getStorageBackendConfig } from '../../storage/config';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
@@ -74,6 +76,8 @@ type AISettingsWithId = AISettings & { id: string };
 const SINGLETON_ID = 'singleton';
 
 function getLLMConfigRepository(): ReadWriteRepository<LLMConfigWithId> {
+  // LLMConfig 是用户偏好，没有 IDB store 对应实体
+  // 永远走 LocalStorage（跨 tab 即时同步，刷新不丢）
   if (!llmConfigRepo) {
     llmConfigRepo = createLocalStorageRepository<LLMConfigWithId>(AI_STORAGE_KEYS.LLM_CONFIG, {
       cache: true,
@@ -84,6 +88,8 @@ function getLLMConfigRepository(): ReadWriteRepository<LLMConfigWithId> {
 }
 
 function getAISettingsRepository(): ReadWriteRepository<AISettingsWithId> {
+  // AISettings 是用户偏好，没有 IDB store 对应实体
+  // 永远走 LocalStorage
   if (!aiSettingsRepo) {
     aiSettingsRepo = createLocalStorageRepository<AISettingsWithId>(AI_STORAGE_KEYS.SETTINGS, {
       cache: true,
@@ -95,20 +101,36 @@ function getAISettingsRepository(): ReadWriteRepository<AISettingsWithId> {
 
 function getSessionRepository(): ReadWriteRepository<ChatSession> {
   if (!sessionRepo) {
-    sessionRepo = createIndexedDbRepository<ChatSession>('chatSessions', {
-      cache: true,
-      sync: true,
-    });
+    const kind = getStorageBackendConfig().getStorageBackend();
+    switch (kind) {
+      case 'indexeddb':
+        sessionRepo = createIndexedDbRepository<ChatSession>('chatSessions', { cache: true, sync: true });
+        break;
+      case 'localStorage':
+        sessionRepo = createLocalStorageRepository<ChatSession>('chatSessions', { cache: true, sync: true });
+        break;
+      case 'inMemory':
+        sessionRepo = createInMemoryRepository<ChatSession>({ cache: false, sync: false });
+        break;
+    }
   }
   return sessionRepo;
 }
 
 function getMessageRepository(): ReadWriteRepository<StoredChatMessage> {
   if (!messageRepo) {
-    messageRepo = createIndexedDbRepository<StoredChatMessage>('chatMessages', {
-      cache: true,
-      sync: true,
-    });
+    const kind = getStorageBackendConfig().getStorageBackend();
+    switch (kind) {
+      case 'indexeddb':
+        messageRepo = createIndexedDbRepository<StoredChatMessage>('chatMessages', { cache: true, sync: true });
+        break;
+      case 'localStorage':
+        messageRepo = createLocalStorageRepository<StoredChatMessage>('chatMessages', { cache: true, sync: true });
+        break;
+      case 'inMemory':
+        messageRepo = createInMemoryRepository<StoredChatMessage>({ cache: false, sync: false });
+        break;
+    }
   }
   return messageRepo;
 }
