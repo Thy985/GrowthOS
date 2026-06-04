@@ -23,6 +23,14 @@ import {
   estimateMigrationSize,
   type TableMigrationResult,
 } from '../../storage/migration';
+import {
+  createBackup,
+  restoreFromBackup,
+  BackupFormatError,
+  type BackupData,
+  type RestoreOptions,
+  type RestoreResult,
+} from '../../storage/backup';
 
 interface StoreStats {
   store: EntityStore,
@@ -364,6 +372,262 @@ const BackendCard: React.FC = () => {
   );
 };
 
+/* ============================================================ */
+/* 备份与恢复（BackupCard）                                     */
+/* ============================================================ */
+
+interface BackupPreview {
+  fileName: string,
+  backup: BackupData,
+}
+
+const BackupCard: React.FC = () => {
+  const [busy, setBusy] = useState<'export' | 'import' | null>(null);
+  const [restoreMode, setRestoreMode] = useState<'merge' | 'overwrite'>('merge');
+  const [restorePrefs, setRestorePrefs] = useState(true);
+  const [restoreCreds, setRestoreCreds] = useState(true);
+  const [preview, setPreview] = useState<BackupPreview | null>(null);
+  const [restoreResult, setRestoreResult] = useState<RestoreResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleExport = async () => {
+    setBusy('export');
+    setError(null);
+    try {
+      const backup = await createBackup();
+      const { downloadBackup } = await import('../../storage/backup');
+      downloadBackup(backup);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy('import');
+    setError(null);
+    setRestoreResult(null);
+    try {
+      const { readBackupFile } = await import('../../storage/backup');
+      const backup = await readBackupFile(file);
+      setPreview({ fileName: file.name, backup });
+    } catch (err) {
+      if (err instanceof BackupFormatError) {
+        setError(`备份文件无效：${err.message}`);
+      } else {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    } finally {
+      setBusy(null);
+      // 清空 input，允许重选同一文件
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!preview) return;
+    setBusy('import');
+    setError(null);
+    try {
+      const options: RestoreOptions = {
+        mode: restoreMode,
+        includePreferences: restorePrefs,
+        includeCredentials: restoreCreds,
+      };
+      const result = await restoreFromBackup(preview.backup, options);
+      setRestoreResult(result);
+      // 成功后保留 preview，让用户看到结果
+      if (result.success) {
+        // 不清 preview，让用户看结果摘要
+      } else {
+        setError('部分表恢复失败，详情见下方');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleCancelPreview = () => {
+    setPreview(null);
+    setRestoreResult(null);
+    setError(null);
+  };
+
+  const totalItems = preview
+    ? preview.backup.data.records.length +
+      preview.backup.data.goals.length +
+      preview.backup.data.reminders.length +
+      preview.backup.data.trees.length +
+      preview.backup.data.users.length +
+      preview.backup.data.chatSessions.length +
+      preview.backup.data.chatMessages.length
+    : 0;
+
+  return (
+    <Card
+      title="数据备份"
+      subtitle="导出全量数据为 JSON 文件，或从备份恢复"
+    >
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="primary"
+            size="small"
+            onClick={() => void handleExport()}
+            disabled={busy !== null}
+            data-testid="backup-export"
+          >
+            {busy === 'export' ? '正在导出…' : '导出全量数据'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="small"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={busy !== null}
+            data-testid="backup-import-trigger"
+          >
+            {busy === 'import' ? '正在读取…' : '从备份恢复'}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={(e) => void handleFileChange(e)}
+            className="hidden"
+            data-testid="backup-file-input"
+          />
+        </div>
+
+        {error && (
+          <div className="text-sm text-red-600" data-testid="backup-error">
+            ✗ {error}
+          </div>
+        )}
+
+        {preview && !restoreResult && (
+          <div
+            className="space-y-3 p-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]"
+            data-testid="backup-preview"
+          >
+            <div className="text-sm">
+              <div className="font-medium">📄 {preview.fileName}</div>
+              <div className="text-xs text-[var(--color-text-secondary)] mt-1 space-y-0.5">
+                <div>备份时间：{new Date(preview.backup.timestamp).toLocaleString()}</div>
+                <div>schema v{preview.backup.schemaVersion} · 格式 v{preview.backup.$version}</div>
+                <div>共 <span className="font-semibold">{totalItems}</span> 条业务数据</div>
+                <ul className="list-disc list-inside ml-2">
+                  <li>记录：{preview.backup.data.records.length}</li>
+                  <li>目标：{preview.backup.data.goals.length}</li>
+                  <li>提醒：{preview.backup.data.reminders.length}</li>
+                  <li>技能树：{preview.backup.data.trees.length}</li>
+                  <li>用户（含凭证）：{preview.backup.data.users.length}</li>
+                  <li>聊天会话：{preview.backup.data.chatSessions.length}</li>
+                  <li>聊天消息：{preview.backup.data.chatMessages.length}</li>
+                  {preview.backup.data.preferences.llmConfig && <li>LLM 配置：✓</li>}
+                  {preview.backup.data.preferences.aiSettings && <li>AI 设置：✓</li>}
+                  {preview.backup.data.preferences.currentUser && <li>当前登录态：✓</li>}
+                </ul>
+              </div>
+            </div>
+
+            <div className="space-y-2 border-t border-[var(--color-border-subtle)] pt-2">
+              <div className="text-sm font-medium">恢复选项</div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="restore-mode"
+                  value="merge"
+                  checked={restoreMode === 'merge'}
+                  onChange={() => setRestoreMode('merge')}
+                />
+                <span>合并（保留现有数据，仅插入新 ID）</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="restore-mode"
+                  value="overwrite"
+                  checked={restoreMode === 'overwrite'}
+                  onChange={() => setRestoreMode('overwrite')}
+                />
+                <span className="text-amber-600">
+                  覆盖（清空现有表后写入）⚠ 不可逆
+                </span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={restorePrefs}
+                  onChange={(e) => setRestorePrefs(e.target.checked)}
+                />
+                <span>恢复偏好（LLM 配置、AI 设置、当前登录态）</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={restoreCreds}
+                  onChange={(e) => setRestoreCreds(e.target.checked)}
+                />
+                <span>恢复用户账号（含密码哈希）</span>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2 border-t border-[var(--color-border-subtle)] pt-2">
+              <Button
+                variant="primary"
+                size="small"
+                onClick={() => void handleConfirmRestore()}
+                disabled={busy !== null}
+                data-testid="backup-confirm"
+              >
+                确认恢复
+              </Button>
+              <Button variant="ghost" size="small" onClick={handleCancelPreview}>
+                取消
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {restoreResult && (
+          <div
+            className="space-y-2 p-3 rounded-lg border border-emerald-500/50 bg-emerald-50/30"
+            data-testid="backup-result"
+          >
+            <div className="text-sm font-medium text-emerald-700">
+              ✓ 恢复完成：{restoreResult.totalItems} 条数据
+            </div>
+            <ul className="text-xs space-y-0.5 text-[var(--color-text-secondary)]">
+              {restoreResult.tableResults.map((r) => (
+                <li key={r.tableId}>
+                  {r.tableId}：{r.count} 条 {r.success ? '✓' : `✗ ${r.error}`}
+                </li>
+              ))}
+              <li>LLM 配置：{restoreResult.preferencesRestored.llmConfig ? '✓' : '—'}</li>
+              <li>AI 设置：{restoreResult.preferencesRestored.aiSettings ? '✓' : '—'}</li>
+              <li>当前登录态：{restoreResult.preferencesRestored.currentUser ? '✓' : '—'}</li>
+            </ul>
+            <Button
+              variant="ghost"
+              size="small"
+              onClick={handleCancelPreview}
+              className="mt-2"
+            >
+              关闭
+            </Button>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
 const StorageSettings: React.FC = () => {
   // t 是 i18n hook 的返回值；当前页面文案固定中文，未使用
   const { t: _t } = useTranslation();
@@ -419,6 +683,8 @@ const StorageSettings: React.FC = () => {
       </div>
 
       <BackendCard />
+
+      <BackupCard />
 
       {error && (
         <Card>

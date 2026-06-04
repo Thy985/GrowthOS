@@ -102,6 +102,23 @@ export {
   type TableMigrationResult,
   type MigrationOptions,
 } from './migration';
+// 备份与恢复（全量数据导出/导入）
+export {
+  createBackup,
+  restoreFromBackup,
+  parseBackup,
+  validateBackup,
+  downloadBackup,
+  readBackupFile,
+  BackupFormatError,
+  BACKUP_TYPE_MARKER,
+  BACKUP_FORMAT_VERSION,
+  type BackupData,
+  type CreateBackupOptions,
+  type RestoreOptions,
+  type RestoreResult,
+  type RestoreTableResult,
+} from './backup';
 // 后端配置中心
 export {
   getStorageBackendConfig,

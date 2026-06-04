@@ -2,6 +2,15 @@
 
 一个帮助你跟踪个人成长的应用。
 
+## 状态
+
+[![CI](https://img.shields.io/github/actions/workflow/status/USER/REPO/ci.yml?branch=main&label=CI&logo=github)](https://github.com/USER/REPO/actions/workflows/ci.yml)
+[![E2E](https://img.shields.io/github/actions/workflow/status/USER/REPO/e2e.yml?branch=main&label=E2E&logo=github)](https://github.com/USER/REPO/actions/workflows/e2e.yml)
+[![CD](https://img.shields.io/github/actions/workflow/status/USER/REPO/cd.yml?branch=main&label=CD&logo=github&event=workflow_run)](https://github.com/USER/REPO/actions/workflows/cd.yml)
+[![codecov](https://codecov.io/gh/USER/REPO/branch/main/graph/badge.svg)](https://codecov.io/gh/USER/REPO)
+
+> ⚠️ Badge 链接里的 `USER/REPO` 请替换为实际的 GitHub owner/repo。
+
 ## 功能
 
 - 📝 **记录** - 记录您的成长瞬间和心情

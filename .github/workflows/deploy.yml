@@ -1,5 +1,10 @@
 name: Deploy
 
+# 说明：
+# - 上一个版本用了 actions/create-release@v1 和 actions/upload-release-asset@v1
+#   这两个 action 已被 GitHub 归档（archived），无法使用
+# - 替换为社区维护的 softprops/action-gh-release@v2
+# - 仍保留手动触发 + 自动 push 触发两套入口
 on:
   push:
     branches: [main]
@@ -17,12 +22,19 @@ on:
 env:
   NODE_VERSION: '20'
 
+concurrency:
+  group: deploy-${{ github.event_name == 'push' && 'preview' || inputs.environment }}
+  cancel-in-progress: false
+
 jobs:
   deploy-preview:
     name: Deploy Preview
     runs-on: ubuntu-latest
     environment: preview
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' && inputs.environment == 'preview'
+    # 自动：push 到 main → preview；手动：选 preview
+    if: >
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && inputs.environment == 'preview')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -52,13 +64,13 @@ jobs:
     name: Deploy Production
     runs-on: ubuntu-latest
     environment: production
+    # 仅手动触发；production 不接受 push 直接部署
     if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
-    concurrency:
-      group: production
-      cancel-in-progress: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -78,26 +90,25 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package dist
+        run: |
+          zip -r dist.zip dist
+        shell: bash
+
+      - name: Create GitHub Release
+        # softprops/action-gh-release@v2 同时支持创建 release 和上传资产
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: release-${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
+          name: Release ${{ github.run_number }}
           draft: true
           prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+          files: |
+            dist.zip
+            LICENSE
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist.zip
-          asset_name: dist.zip
-          asset_content_type: application/zip
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

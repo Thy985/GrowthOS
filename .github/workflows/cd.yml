@@ -1,43 +1,53 @@
 name: CD Pipeline
 
+# 说明：
+# - ci.yml 的 workflow name 是 "CI"（不是 "CI Pipeline"）
+# - 上一个版本错写为 "CI Pipeline" → 永远不会触发
+# - 本工作流只在 CI 成功（conclusion=success）后才跑
 on:
   workflow_run:
-    workflows: ["CI Pipeline"]
+    workflows: ["CI"]
     types: [completed]
     branches: [main, develop]
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
+
+concurrency:
+  group: cd-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
 
 jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/develop'
-    
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop'
+
     environment:
       name: staging
       url: https://staging.growthos.example.com
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+        with:
+          ref: develop
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build production bundle
         run: npm run build
         env:
           VITE_APP_TITLE: GrowthOS Staging
-          VITE_APP_VERSION: ${{ github.sha }}
-      
+          VITE_APP_VERSION: ${{ github.event.workflow_run.head_sha }}
+
       - name: Deploy to staging server
         run: |
           echo "Deploying to staging environment..."
@@ -45,7 +55,7 @@ jobs:
           # Example: rsync -avz dist/ user@staging-server:/var/www/growthos/
           echo "Staging deployment completed"
         continue-on-error: true
-      
+
       - name: Notify deployment status
         if: always()
         run: |
@@ -58,36 +68,34 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main'
-    
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+
     environment:
       name: production
       url: https://growthos.example.com
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build production bundle
         run: npm run build
         env:
           VITE_APP_TITLE: GrowthOS
-          VITE_APP_VERSION: ${{ github.sha }}
-      
-      - name: Run tests before deployment
-        run: npm test -- --ci
-      
+          VITE_APP_VERSION: ${{ github.event.workflow_run.head_sha }}
+
       - name: Deploy to production server
         run: |
           echo "Deploying to production environment..."
@@ -96,25 +104,12 @@ jobs:
           # Example: ./scripts/deploy.sh production
           echo "Production deployment completed"
         continue-on-error: true
-      
-      - name: Create GitHub Release
-        if: github.event.workflow_run.conclusion == 'success'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          draft: false
-          prerelease: false
-        continue-on-error: true
-      
+
       - name: Notify deployment status
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
             echo "✅ Production deployment successful"
-            echo "🚀 Release v${{ github.run_number }} deployed"
           else
             echo "❌ Production deployment failed"
           fi

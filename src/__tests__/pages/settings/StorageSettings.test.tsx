@@ -348,3 +348,110 @@ describe('switchStorageBackend', () => {
     expect(listener).toHaveBeenCalledWith('localStorage');
   });
 });
+
+describe('BackupCard', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+    try { localStorage.removeItem('growthos:storageBackend'); } catch { /* ignore */ }
+    _resetStorageBackendConfig();
+    getStorageBackendConfig().setStorageBackend('indexeddb');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('renders export and import buttons', () => {
+    renderWithI18n(<StorageSettings />);
+    expect(screen.getByTestId('backup-export')).toHaveTextContent('导出全量数据');
+    expect(screen.getByTestId('backup-import-trigger')).toHaveTextContent('从备份恢复');
+  });
+
+  it('triggers download when export is clicked', async () => {
+    // mock downloadBackup（避免真实下载）
+    let downloaded: unknown = null;
+    const backupModule = await import('../../../storage/backup');
+    const spy = jest.spyOn(backupModule, 'downloadBackup').mockImplementation((b) => {
+      downloaded = b;
+    });
+
+    renderWithI18n(<StorageSettings />);
+    fireEvent.click(screen.getByTestId('backup-export'));
+
+    await waitFor(() => {
+      expect(downloaded).not.toBeNull();
+    });
+    expect((downloaded as { $type: string }).$type).toBe('growthos-backup');
+    spy.mockRestore();
+  });
+
+  it('shows preview when a valid backup file is selected', async () => {
+    const backup = {
+      $type: 'growthos-backup',
+      $version: 1,
+      schemaVersion: 2,
+      timestamp: '2024-06-01T00:00:00.000Z',
+      appVersion: '1.0.0',
+      data: {
+        records: [], goals: [], reminders: [], trees: [], users: [],
+        chatSessions: [], chatMessages: [],
+        preferences: { llmConfig: null, aiSettings: null, currentUser: null },
+      },
+    };
+    const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' });
+    // jsdom 不支持 file.text()，手动实现
+    (file as unknown as { text: () => Promise<string> }).text = async () => JSON.stringify(backup);
+
+    renderWithI18n(<StorageSettings />);
+
+    const fileInput = screen.getByTestId('backup-file-input') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('backup-preview')).toBeInTheDocument();
+    });
+    expect(screen.getByText(/backup\.json/)).toBeInTheDocument();
+  });
+
+  it('shows error when invalid file is selected', async () => {
+    const file = new File(['not json{'], 'bad.json', { type: 'application/json' });
+    (file as unknown as { text: () => Promise<string> }).text = async () => 'not json{';
+
+    renderWithI18n(<StorageSettings />);
+    const fileInput = screen.getByTestId('backup-file-input') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('backup-error')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('backup-error').textContent).toMatch(/备份文件无效/);
+  });
+
+  it('cancels preview', async () => {
+    const backup = {
+      $type: 'growthos-backup',
+      $version: 1,
+      schemaVersion: 2,
+      timestamp: '2024-06-01T00:00:00.000Z',
+      appVersion: '1.0.0',
+      data: {
+        records: [], goals: [], reminders: [], trees: [], users: [],
+        chatSessions: [], chatMessages: [],
+        preferences: { llmConfig: null, aiSettings: null, currentUser: null },
+      },
+    };
+    const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' });
+    (file as unknown as { text: () => Promise<string> }).text = async () => JSON.stringify(backup);
+
+    renderWithI18n(<StorageSettings />);
+    const fileInput = screen.getByTestId('backup-file-input') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('backup-preview')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('取消'));
+    expect(screen.queryByTestId('backup-preview')).not.toBeInTheDocument();
+  });
+});

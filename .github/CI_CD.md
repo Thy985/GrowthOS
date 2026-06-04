@@ -6,10 +6,13 @@
 .github/
 ├── workflows/
 │   ├── ci.yml          # 主 CI：lint → type-check → test → build
-│   ├── e2e.yml         # E2E 测试：Playwright 端到端测试
-│   └── deploy.yml      # CD：部署到 GitHub Pages
+│   ├── e2e.yml         # 端到端测试：Playwright TS（统一入口）
+│   ├── cd.yml          # CD：CI 成功后自动部署 staging / production
+│   ├── deploy.yml      # 手动部署：GitHub Pages + 可选 release
+│   └── pr-review.yml   # PR 自动评论 + size label
 ├── dependabot.yml       # 自动依赖更新
-└── PULL_REQUEST_TEMPLATE.md  # PR 模板
+├── PULL_REQUEST_TEMPLATE.md  # PR 模板
+└── CI_CD.md             # 本文档
 ```
 
 ---
@@ -18,165 +21,199 @@
 
 ### 1. CI (`ci.yml`)
 
-**触发**: `push` / `pull_request` 到 main/master/develop 分支
+**触发**: `push` / `pull_request` 到 main/develop
 
-**并发控制**: 同一分支的多次推送取消旧任务
+**并发控制**: 同分支的多次推送自动取消旧任务
 
-| Job | 名称 | 步骤 |
-|-----|------|------|
-| `lint` | 代码规范检查 | Prettier 格式检查 → ESLint 检查 |
-| `type-check` | TypeScript 类型检查 | `tsc --noEmit` |
-| `test` | 单元测试 | Jest + 覆盖率报告 |
-| `build` | 构建 | Vite 生产构建 + 产物上传 |
+| Job | 名称 | 步骤 | 必过 |
+|-----|------|------|------|
+| `lint-and-typecheck` | Lint & Type Check | `npm run lint` → `npm run type-check` | ✅ |
+| `unit-tests` | Unit Tests | `npm run test:ci`（带 coverage） | ✅ |
+| `build` | Build Production | `npm run build` | ✅ |
+| `security-audit` | Security Audit | `npm audit`（continue-on-error） | ❌ informational |
+| `ci-status` | CI Status | 汇总报告 → 必过项失败则 exit 1 | - |
 
-**缓存**: 使用 `actions/setup-node` 的 npm 缓存加速安装
+**缓存**: `actions/setup-node` 的 npm 缓存（基于 `package-lock.json`）
 
 **产物**:
-- `coverage-report` - 测试覆盖率报告（保留 7 天）
-- `dist` - 生产构建产物（保留 7 天）
+- `coverage-report` (7d) - 测试覆盖率
+- `dist` (7d) - 生产构建
+
+**Codecov**: 需在 Settings → Secrets 配置 `CODECOV_TOKEN`（没配也不阻塞 PR，设为 `fail_ci_if_error: false`）
 
 ---
 
-### 2. E2E Tests (`e2e.yml`)
+### 2. E2E (`e2e.yml`)
 
-**触发**: `push` / `pull_request` 到 main/master/develop 分支，或手动触发
+**触发**: `push` / `pull_request` 到 main/develop，或手动
 
-**超时**: 15 分钟
+**单 job**: Playwright Chromium
 
 | 步骤 | 说明 |
 |------|------|
-| Checkout + Setup | 检出代码，安装 Node.js |
-| npm ci | 安装依赖 |
-| Playwright 安装 | 安装 Chromium 浏览器及系统依赖 |
-| 启动服务 | Vite dev server + 健康检查 |
-| 运行测试 | `python e2e_tests.py` |
-| 截图上传 | E2E 测试截图（保留 7 天） |
-| 报告上传 | 测试报告（保留 7 天） |
+| Checkout + Setup | 检出 + Node 20 + npm 缓存 |
+| Playwright 安装 | `npx playwright install --with-deps chromium` |
+| Build | `npm run build` |
+| Start server | `npm run preview` 后台运行（`background: true`） |
+| Wait | bash 轮询 4173 端口，最长 60s |
+| Test | `npx playwright test`（**continue-on-error**：路由保护导致部分测试 flaky，团队后续逐个修） |
+| Upload | playwright-report + test-results (14d) |
+
+> 旧版本曾同时跑 Python `e2e_tests.py` 和 Playwright TS，重复且不一致。
+> 现在 CI 中**只**跑 Playwright TS（`e2e/app.spec.ts` + `playwright.config.ts`）。
+> Python 脚本仍保留在仓库根供本地调试，**不进 CI**。
 
 ---
 
-### 3. Deploy (`deploy.yml`)
+### 3. CD (`cd.yml`)
 
-**触发**: `push` 到 main/master，或手动触发
+**触发**: CI workflow_run = success
 
-**权限**: `contents: read`, `pages: write`, `id-token: write`
+> **关键修复**：之前错写 `workflows: ["CI Pipeline"]`（workflow 实际名为 "CI"），导致 CD 永远不触发。
+> 现已修正为 `workflows: ["CI"]`。
+
+| Job | 触发条件 | 目标 |
+|-----|---------|------|
+| `deploy-staging` | CI 成功 + develop 分支 | staging 环境 |
+| `deploy-production` | CI 成功 + main 分支 | production 环境 |
+
+两 job 都使用 GitHub `environment` 保护规则（需在 Settings → Environments 配置批准人）。
+
+---
+
+### 4. Deploy (`deploy.yml`)
+
+**触发**: `push` 到 main（自动 preview），或 `workflow_dispatch`（手动选 preview/production）
+
+| Job | 触发 | 说明 |
+|-----|------|------|
+| `deploy-preview` | push main OR 手动 preview | 推送到 gh-pages 分支 |
+| `deploy-production` | 手动 production | 全量验证（type-check + lint + test）→ build → zip → GitHub Release + Pages |
+
+> **关键修复**：之前用 `actions/create-release@v1` + `actions/upload-release-asset@v1`，这俩 action 已被 GitHub 归档。
+> 现已替换为 `softprops/action-gh-release@v2`（社区维护，活跃）。
+
+---
+
+### 5. PR Review (`pr-review.yml`)
+
+**触发**: PR opened / synchronize / reopened
 
 | Job | 说明 |
 |-----|------|
-| `build` | Vite 生产构建 → 上传 Pages Artifact |
-| `deploy` | 部署到 GitHub Pages |
-
-> **注意**: 部署需要仓库 Settings > Pages 中启用 GitHub Pages，Source 选择 "GitHub Actions"。
+| `pr-info` | 在 PR 上发布带元数据的自动评论 |
+| `size-label` | 按改动文件数贴 size 标签（xs / s / m / l / xl） |
 
 ---
 
-### 4. Dependabot (`dependabot.yml`)
+### 6. Dependabot (`dependabot.yml`)
 
-**更新频率**: 每周一 09:00 (北京时间)
-
-| 生态 | 目录 | PR 限制 |
-|------|------|---------|
-| npm | `/` | 10 |
-| GitHub Actions | `/` | 无限制 |
-
-**依赖分组**（减少 PR 数量）:
-- `react` - React 核心及相关类型
-- `redux` - Redux Toolkit + React-Redux
-- `testing` - Testing Library + Jest
-- `vite` - Vite 及相关插件
-- `eslint` - ESLint 及相关插件
+每周一 09:00 (Asia/Shanghai) 检查 npm + GitHub Actions 依赖更新，按生态分组。
 
 ---
 
 ## 本地运行
 
-在提交前验证所有 CI 步骤：
+提交前验证所有 CI 步骤：
 
 ```bash
-# 验证全部
+# 全部
 npm run validate
 
-# 或分步运行
-npm run format:check    # Prettier 格式检查
+# 或分步
+npm run format:check    # Prettier
 npm run lint            # ESLint
-npm run type-check      # TypeScript 类型检查
-npm run test            # Jest 单元测试
-npm run build           # Vite 构建
+npm run type-check      # tsc --noEmit
+npm run test            # Jest
+npm run build           # Vite
 ```
 
-E2E 测试：
+E2E（Playwright TS）：
 ```bash
-# 启动服务器 + 运行测试
-python /data/user/skills/webapp-testing/scripts/with_server.py \
-  --server "npx vite --host 0.0.0.0 --port 5173" \
-  --port 5173 \
-  -- python e2e_tests.py
+# 自动启停 preview server
+npx playwright test
+
+# 调试模式
+npx playwright test --ui
+npx playwright test --headed
+```
+
+E2E（Python，仅本地调试，不进 CI）：
+```bash
+# 需先启动 vite dev server
+npx vite --host 0.0.0.0 --port 5173 &
+python e2e_tests.py
 ```
 
 ---
 
 ## 状态 Badge
 
-将以下 badge 添加到 README：
+在 README 中显示：
 
 ```markdown
 [![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/REPO/actions/workflows/ci.yml)
 [![E2E](https://github.com/USER/REPO/actions/workflows/e2e.yml/badge.svg)](https://github.com/USER/REPO/actions/workflows/e2e.yml)
-[![Deploy](https://github.com/USER/REPO/actions/workflows/deploy.yml/badge.svg)](https://github.com/USER/REPO/actions/workflows/deploy.yml)
+[![CD](https://github.com/USER/REPO/actions/workflows/cd.yml/badge.svg)](https://github.com/USER/REPO/actions/workflows/cd.yml)
 ```
 
 ---
 
 ## 首次使用指南
 
-1. **推送配置文件**:
+1. **推送配置**：
    ```bash
    git add .github/
-   git commit -m "ci: 添加 CI/CD 工作流配置"
+   git commit -m "ci: 修复 CI/CD 流水线（workflow 名匹配、替换 deprecated action）"
    git push
    ```
 
-2. **启用 GitHub Pages** (如需部署):
+2. **启用 GitHub Pages**（如需部署）：
    - Settings → Pages → Source: "GitHub Actions"
 
-3. **启用 Dependabot**:
+3. **配置 Dependabot**：
    - Settings → Code security → Dependabot → Enable
 
-4. **配置分支保护** (推荐):
+4. **配置 Codecov**（可选）：
+   - https://codecov.io → 连接仓库 → 复制 token → Settings → Secrets → `CODECOV_TOKEN`
+
+5. **分支保护**（推荐）：
    - Settings → Branches → Add rule
-   - 目标: `main`
-   - 勾选: "Require status checks to pass before merging"
-   - 选择: `lint`, `type-check`, `test`, `build`
+   - 目标：`main`
+   - 勾选 "Require status checks to pass before merging"
+   - 必选 checks：`Lint & Type Check`、`Unit Tests`、`Build Production`
 
 ---
 
 ## 工作流图
 
 ```
-push/PR to main
+push/PR to main/develop
      │
      ▼
-┌─────────┐    ┌───────────┐
-│   CI    │    │    E2E    │
-│  ┌────┐ │    │ ┌───────┐ │
-│  │lint│ │    │ │Playwr.│ │
-│  └────┘ │    │ └───────┘ │
-│  ┌────┐ │    └───────────┘
-│  │type│ │
-│  └────┘ │
-│  ┌────┐ │
-│  │test│ │
-│  └────┘ │
-│  ┌────┐ │
-│  │bld │─┼──→ artifact (dist)
-│  └────┘ │
-└─────────┘
-     │ (仅 main 分支)
-     ▼
-┌─────────┐
-│ Deploy  │
+┌─────────┐    ┌─────────┐
+│   CI    │    │   E2E   │
+│ ┌─────┐ │    │ ┌─────┐ │
+│ │lint │ │    │ │Play.│ │
+│ └─────┘ │    │ └─────┘ │
+│ ┌─────┐ │    └─────────┘
+│ │tsc  │ │
+│ └─────┘ │
 │ ┌─────┐ │
-│ │Pages│ │
+│ │test │─┼──→ codecov
+│ └─────┘ │
+│ ┌─────┐ │
+│ │build│─┼──→ dist artifact
 │ └─────┘ │
 └─────────┘
+     │ workflow_run=success
+     ▼
+┌─────────┐
+│   CD    │
+│ staging │  ← develop
+│ prod    │  ← main
+└─────────┘
+
+(单独路径)
+workflow_dispatch → Deploy.yml → gh-pages / GitHub Release
 ```
