@@ -43,16 +43,16 @@ function hasIndexedDB(): boolean {
  */
 export interface ReadWriteRepository<T extends BaseEntity> {
   /** 懒初始化：多次调用复用同一个 init promise */
-  ready(): Promise<void>;
-  get(id: string): Promise<T | null>;
-  getAll(): Promise<T[]>;
-  put(entity: T): Promise<T>;
-  putMany(entities: T[]): Promise<T[]>;
-  delete(id: string): Promise<boolean>;
-  clear(): Promise<void>;
-  count(): Promise<number>;
-  queryByIndex(index: string, range?: { gte?: string | number, lte?: string | number }): Promise<T[]>;
-  close(): Promise<void>;
+  ready(): Promise<void>,
+  get(id: string): Promise<T | null>,
+  getAll(): Promise<T[]>,
+  put(entity: T): Promise<T>,
+  putMany(entities: T[]): Promise<T[]>,
+  delete(id: string): Promise<boolean>,
+  clear(): Promise<void>,
+  count(): Promise<number>,
+  queryByIndex(index: string, range?: { gte?: string | number, lte?: string | number }): Promise<T[]>,
+  close(): Promise<void>,
 }
 
 /**

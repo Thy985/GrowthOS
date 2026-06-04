@@ -1,12 +1,16 @@
 /**
  * StorageSettings 组件测试
  *
+ * i18n 策略：测试在 en-US 下跑，所有断言用英文，确保 i18n 化后测试仍可移植
+ *
  * 覆盖：
  * - 初始加载时拉取每个 store 的 count + 配额信息
- * - 渲染标题"存储设置"
+ * - 渲染标题 "Storage Settings"
  * - 显示每个 store 名称
- * - "清空所有数据"按钮第一次点击进入"确认"状态，第二次触发 clearAllStorage
+ * - "Clear All Data" 按钮第一次点击进入"确认"状态，第二次触发 clearAllStorage
  * - 刷新按钮调用 hook 的 refresh
+ * - BackendCard 三个 radio 切换 + 持久化
+ * - BackupCard 导出/导入/预览/取消
  */
 
 import React from 'react';
@@ -18,6 +22,11 @@ import * as schemaModule from '../../../storage/schema';
 import { getStorageBackendConfig, _resetStorageBackendConfig } from '../../../storage/config/storageConfig';
 import { ENTITY_STORES } from '../../../storage/schema/types';
 
+// 固定为 en-US，使断言不依赖运行环境
+beforeAll(async () => {
+  await i18n.changeLanguage('en-US');
+});
+
 const renderWithI18n = (ui: React.ReactElement) => {
   return render(<I18nextProvider i18n={i18n}>{ui}</I18nextProvider>);
 };
@@ -26,10 +35,10 @@ describe('StorageSettings', () => {
   it('renders the title and danger section', async () => {
     renderWithI18n(<StorageSettings />);
 
-    expect(screen.getByText('存储设置')).toBeInTheDocument();
-    expect(screen.getByText('存储配额')).toBeInTheDocument();
-    expect(screen.getByText('IndexedDB 各 store 记录数')).toBeInTheDocument();
-    expect(screen.getByText('危险操作')).toBeInTheDocument();
+    expect(screen.getByText('Storage Settings')).toBeInTheDocument();
+    expect(screen.getByText('Storage Quota')).toBeInTheDocument();
+    expect(screen.getByText('IndexedDB Store Counts')).toBeInTheDocument();
+    expect(screen.getByText('Dangerous Operations')).toBeInTheDocument();
   });
 
   it('loads store counts and displays them', async () => {
@@ -70,7 +79,7 @@ describe('StorageSettings', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/当前浏览器不支持 navigator\.storage\.estimate/),
+        screen.getByText(/Current browser does not support navigator\.storage\.estimate/),
       ).toBeInTheDocument();
     });
   });
@@ -85,17 +94,17 @@ describe('StorageSettings', () => {
     renderWithI18n(<StorageSettings />);
 
     await waitFor(() => {
-      expect(screen.getByText('清空所有数据')).toBeInTheDocument();
+      expect(screen.getByText('Clear All Data')).toBeInTheDocument();
     });
 
     // 第一次点击：进入确认状态
-    fireEvent.click(screen.getByText('清空所有数据'));
-    expect(screen.getByText('确认清空')).toBeInTheDocument();
-    expect(screen.getByText('取消')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Clear All Data'));
+    expect(screen.getByText('Confirm Clear')).toBeInTheDocument();
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
 
     // 第二次点击：触发 clearAllStorage
     await act(async () => {
-      fireEvent.click(screen.getByText('确认清空'));
+      fireEvent.click(screen.getByText('Confirm Clear'));
     });
 
     await waitFor(() => {
@@ -110,18 +119,18 @@ describe('StorageSettings', () => {
     renderWithI18n(<StorageSettings />);
 
     await waitFor(() => {
-      expect(screen.getByText('清空所有数据')).toBeInTheDocument();
+      expect(screen.getByText('Clear All Data')).toBeInTheDocument();
     });
 
     // 进入确认状态
-    fireEvent.click(screen.getByText('清空所有数据'));
-    expect(screen.getByText('确认清空')).toBeInTheDocument();
-    expect(screen.getByText('取消')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Clear All Data'));
+    expect(screen.getByText('Confirm Clear')).toBeInTheDocument();
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
 
     // 取消后回到初始状态
-    fireEvent.click(screen.getByText('取消'));
-    expect(screen.getByText('清空所有数据')).toBeInTheDocument();
-    expect(screen.queryByText('确认清空')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(screen.getByText('Clear All Data')).toBeInTheDocument();
+    expect(screen.queryByText('Confirm Clear')).not.toBeInTheDocument();
   });
 });
 
@@ -206,7 +215,7 @@ describe('BackendCard', () => {
     jest.restoreAllMocks();
   });
 
-  it('renders three radio options with the default backend marked as 当前', () => {
+  it('renders three radio options with the default backend marked as Current', () => {
     renderWithI18n(<StorageSettings />);
 
     const radios = screen.getAllByRole('radio', { name: /IndexedDB|LocalStorage|In-Memory/ });
@@ -216,8 +225,8 @@ describe('BackendCard', () => {
     const idbRadio = screen.getByRole('radio', { name: /IndexedDB/ });
     expect(idbRadio).toBeChecked();
 
-    // "当前" 标签只出现在 idb 那一行
-    expect(screen.getByText('当前')).toBeInTheDocument();
+    // "Current" 标签只出现在 idb 那一行
+    expect(screen.getByText('Current')).toBeInTheDocument();
   });
 
   it('shows the persisted backend from LocalStorage as current', () => {
@@ -234,17 +243,17 @@ describe('BackendCard', () => {
     renderWithI18n(<StorageSettings />);
 
     // 一开始没有确认按钮
-    expect(screen.queryByText('确认切换')).not.toBeInTheDocument();
+    expect(screen.queryByText('Confirm Switch')).not.toBeInTheDocument();
 
     // 点 In-Memory radio
     const memRadio = screen.getByRole('radio', { name: /In-Memory/ });
     fireEvent.click(memRadio);
 
     // 进入 pending：显示确认 + 取消
-    expect(screen.getByText('确认切换')).toBeInTheDocument();
-    expect(screen.getByText('取消')).toBeInTheDocument();
+    expect(screen.getByText('Confirm Switch')).toBeInTheDocument();
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
     // pending 文案里出现目标 backend 名字
-    expect(screen.getByText(/确定切到 In-Memory/)).toBeInTheDocument();
+    expect(screen.getByText(/Switch to In-Memory/)).toBeInTheDocument();
   });
 
   it('clicking the current radio does NOT enter pending state', () => {
@@ -253,7 +262,7 @@ describe('BackendCard', () => {
     const idbRadio = screen.getByRole('radio', { name: /IndexedDB/ });
     fireEvent.click(idbRadio);
 
-    expect(screen.queryByText('确认切换')).not.toBeInTheDocument();
+    expect(screen.queryByText('Confirm Switch')).not.toBeInTheDocument();
   });
 
   it('confirming the switch calls switchStorageBackend and reloads', async () => {
@@ -276,10 +285,10 @@ describe('BackendCard', () => {
 
     // 切到 LocalStorage
     fireEvent.click(screen.getByRole('radio', { name: /LocalStorage/ }));
-    expect(screen.getByText('确认切换')).toBeInTheDocument();
+    expect(screen.getByText('Confirm Switch')).toBeInTheDocument();
 
     // 确认切换
-    fireEvent.click(screen.getByText('确认切换'));
+    fireEvent.click(screen.getByText('Confirm Switch'));
 
     await waitFor(() => {
       expect(setSpy).toHaveBeenCalledWith('localStorage');
@@ -292,11 +301,11 @@ describe('BackendCard', () => {
     renderWithI18n(<StorageSettings />);
 
     fireEvent.click(screen.getByRole('radio', { name: /In-Memory/ }));
-    expect(screen.getByText('确认切换')).toBeInTheDocument();
+    expect(screen.getByText('Confirm Switch')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('取消'));
-    expect(screen.queryByText('确认切换')).not.toBeInTheDocument();
-    expect(screen.queryByText('取消')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(screen.queryByText('Confirm Switch')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
   });
 
   it('updates UI when backend changes from another source (subscription)', async () => {
@@ -363,8 +372,8 @@ describe('BackupCard', () => {
 
   it('renders export and import buttons', () => {
     renderWithI18n(<StorageSettings />);
-    expect(screen.getByTestId('backup-export')).toHaveTextContent('导出全量数据');
-    expect(screen.getByTestId('backup-import-trigger')).toHaveTextContent('从备份恢复');
+    expect(screen.getByTestId('backup-export')).toHaveTextContent('Export All Data');
+    expect(screen.getByTestId('backup-import-trigger')).toHaveTextContent('Restore from Backup');
   });
 
   it('triggers download when export is clicked', async () => {
@@ -424,7 +433,7 @@ describe('BackupCard', () => {
     await waitFor(() => {
       expect(screen.getByTestId('backup-error')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('backup-error').textContent).toMatch(/备份文件无效/);
+    expect(screen.getByTestId('backup-error').textContent).toMatch(/Invalid backup file/);
   });
 
   it('cancels preview', async () => {
@@ -451,7 +460,7 @@ describe('BackupCard', () => {
       expect(screen.getByTestId('backup-preview')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('取消'));
+    fireEvent.click(screen.getByText('Cancel'));
     expect(screen.queryByTestId('backup-preview')).not.toBeInTheDocument();
   });
 });

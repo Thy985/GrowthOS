@@ -330,5 +330,112 @@
     "great": "Great",
     "okay": "Okay",
     "not_good": "Not Good"
+  },
+  "storage": {
+    "pageTitle": "Storage Settings",
+    "pageSubtitle": "View browser storage usage, or clear all data to reset the app.",
+    "backendCard": {
+      "title": "Storage Backend",
+      "subtitle": "Determines where all business data is stored (persists across restarts).",
+      "current": "Current",
+      "indexeddbLabel": "IndexedDB (Recommended)",
+      "indexeddbDescription": "Large capacity, supports indexes, cross-tab sync, auto-persistence",
+      "localStorageLabel": "LocalStorage",
+      "localStorageDescription": "~5MB per store limit, cross-tab instant sync, simple and reliable",
+      "localStorageWarning": "Small capacity, not suitable for large records/chat messages",
+      "inMemoryLabel": "In-Memory",
+      "inMemoryDescription": "RAM only, cleared on refresh, for testing / debugging",
+      "inMemoryWarning": "Data lost on refresh or route switch",
+      "confirmTitle": "Switch to {{name}}?",
+      "confirmEstimate": "(will copy {{count}} items)",
+      "confirmReloads": "This will reload the page.",
+      "confirmButton": "Confirm Switch",
+      "migrating": "Migrating data",
+      "migratingProgress": " ({{done}}/{{total}})",
+      "migratingTable": " · {{table}}",
+      "switchFailed": "Switch failed",
+      "migrationFailed": "Migration failed: {{tables}}",
+      "close": "Close"
+    },
+    "backupCard": {
+      "title": "Data Backup",
+      "subtitle": "Export all data as a JSON file, or restore from a backup",
+      "export": "Export All Data",
+      "exporting": "Exporting…",
+      "import": "Restore from Backup",
+      "reading": "Reading…",
+      "invalidFile": "Invalid backup file: {{message}}",
+      "fileLabel": "📄 {{name}}",
+      "backupTime": "Backup time: {{time}}",
+      "schemaInfo": "schema v{{schema}} · format v{{format}}",
+      "totalItems": "Total {{count}} business items",
+      "tableCount": {
+        "records": "Records: {{count}}",
+        "goals": "Goals: {{count}}",
+        "reminders": "Reminders: {{count}}",
+        "trees": "Skill trees: {{count}}",
+        "users": "Users (with credentials): {{count}}",
+        "chatSessions": "Chat sessions: {{count}}",
+        "chatMessages": "Chat messages: {{count}}"
+      },
+      "preferenceIncluded": {
+        "llmConfig": "LLM config: ✓",
+        "aiSettings": "AI settings: ✓",
+        "currentUser": "Current login: ✓"
+      },
+      "restoreOptions": "Restore Options",
+      "modeMerge": "Merge (keep existing data, insert new IDs only)",
+      "modeOverwrite": "Overwrite (clear existing tables first) ⚠ irreversible",
+      "includePreferences": "Restore preferences (LLM config, AI settings, current login)",
+      "includeCredentials": "Restore user accounts (with password hashes)",
+      "confirmRestore": "Confirm Restore",
+      "partialFailure": "Some tables failed to restore, see details below",
+      "restoreComplete": "✓ Restore complete: {{count}} items",
+      "tableResult": "{{table}}: {{count}} items",
+      "tableResultFailed": "{{table}}: {{count}} items ✗ {{error}}",
+      "preferenceRestored": {
+        "llmConfig": "LLM config: {{value}}",
+        "aiSettings": "AI settings: {{value}}",
+        "currentUser": "Current login: {{value}}"
+      },
+      "yes": "✓",
+      "no": "—"
+    },
+    "quotaCard": {
+      "title": "Storage Quota",
+      "subtitle": "Retrieved via navigator.storage.estimate()",
+      "loading": "Loading...",
+      "notSupported": "Current browser does not support navigator.storage.estimate (older Safari, some mobile browsers)",
+      "used": "Used {{size}}",
+      "total": "Total {{size}}",
+      "level": {
+        "ok": "OK",
+        "warn": "Near limit",
+        "critical": "Almost full",
+        "exceeded": "Exceeded"
+      }
+    },
+    "storeStatsCard": {
+      "title": "IndexedDB Store Counts",
+      "subtitle": "Item counts for each business entity",
+      "storeHeader": "Store",
+      "countHeader": "Count",
+      "total": "Total",
+      "loading": "Loading..."
+    },
+    "dangerCard": {
+      "title": "Dangerous Operations",
+      "subtitle": "Clearing all data is irreversible. Export first.",
+      "intro": "This will:",
+      "step1": "Delete the entire IndexedDB database (all records, goals, reminders, AI conversations)",
+      "step2": "Clear LocalStorage (user settings, theme, tokens)",
+      "step3": "Clear SessionStorage",
+      "step4": "Reload the page, rebuilding all services",
+      "clearAll": "Clear All Data",
+      "confirm": "Confirm Clear",
+      "confirmHint": "Click again to confirm",
+      "cancel": "Cancel"
+    },
+    "readError": "Failed to read storage info: {{message}}"
   }
 }

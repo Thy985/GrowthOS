@@ -53,7 +53,9 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-(window as any).scrollTo = jest.fn();
+// jsdom 默认 scrollTo 是 noop；mock 掉以便测相关组件
+type ScrollableWindow = Window & { scrollTo: jest.Mock };
+(window as unknown as ScrollableWindow).scrollTo = jest.fn();
 
 const originalError = console.error;
 beforeAll(() => {

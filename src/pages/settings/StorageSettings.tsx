@@ -4,10 +4,11 @@
  * 用途：
  * 1. 显示当前存储配额（navigator.storage.estimate）
  * 2. 显示每个 IndexedDB store 的记录数
- * 3. 提供"清空所有数据"按钮（清 IDB + LocalStorage 后 reload）
+ * 3. 切换 storage backend（IDB / LS / In-Memory）— 带数据迁移
+ * 4. 备份与恢复（导出全量数据 / 从 JSON 恢复）
+ * 5. "清空所有数据" 按钮（清 IDB + LocalStorage 后 reload）
  *
- * 这是 dev/工具型功能。生产用户偶尔用（"我想重置应用"）。
- * 真正的"运行时切换 backend"留作后续（见 ARCHITECTURE.md）。
+ * 所有用户可见文案走 i18n（storage.* 命名空间）
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -104,7 +105,6 @@ export async function clearAllStorage(): Promise<void> {
   await resetDatabase();
   localStorage.clear();
   sessionStorage.clear();
-  // 强制重载，让所有 service 单例重建
   try {
     window.location.reload();
   } catch {
@@ -114,14 +114,6 @@ export async function clearAllStorage(): Promise<void> {
 
 /**
  * 切换 storage backend（带数据迁移）
- *
- * 流程：
- * 1. 估算要迁移的数据量
- * 2. 把 fromKind 的数据复制到 toKind
- * 3. 持久化新 backend 选择到 LocalStorage
- * 4. 重新加载页面（让所有 service 单例重建）
- *
- * 失败处理：返回结果，不修改 config（用户可重试或保留旧 backend）
  */
 export interface SwitchBackendResult {
   success: boolean,
@@ -131,7 +123,6 @@ export interface SwitchBackendResult {
 }
 
 export interface SwitchBackendOptions {
-  /** 进度回调（每完成一个表调用一次） */
   onProgress?: (done: number, total: number, currentTable: string) => void,
 }
 
@@ -146,7 +137,6 @@ export async function switchStorageBackend(
     return { success: true, results: [], totalItems: 0 };
   }
 
-  // 1. 迁移数据
   const results = await migrateBetweenBackends(fromKind, kind, {
     onProgress: options?.onProgress,
   });
@@ -162,10 +152,8 @@ export async function switchStorageBackend(
     };
   }
 
-  // 2. 持久化新 backend 选择
   config.setStorageBackend(kind);
 
-  // 3. Reload（让所有 service 单例按新 backend 重建）
   try {
     window.location.reload();
   } catch {
@@ -184,28 +172,17 @@ export async function estimateSwitchSize(kind: StorageBackendKind): Promise<numb
   return totalItems;
 }
 
-/** BackendCard：选 IDB / LS / In-Memory */
-const BACKEND_OPTIONS: { kind: StorageBackendKind, label: string, description: string, warning?: string }[] = [
-  {
-    kind: 'indexeddb',
-    label: 'IndexedDB（推荐）',
-    description: '容量大、支持索引、跨 tab 同步、自动持久化',
-  },
-  {
-    kind: 'localStorage',
-    label: 'LocalStorage',
-    description: '单 store ~5MB 上限、跨 tab 即时同步、简单可靠',
-    warning: '容量小，不适合大量记录/聊天消息',
-  },
-  {
-    kind: 'inMemory',
-    label: 'In-Memory（内存）',
-    description: '纯内存、刷新清空、用于测试 / 调试',
-    warning: '刷新或切换路由后数据丢失',
-  },
-];
+/* ============================================================ */
+/* BackendCard                                                  */
+/* ============================================================ */
+
+type BackendLabelKey =
+  | 'storage.backendCard.indexeddbLabel'
+  | 'storage.backendCard.localStorageLabel'
+  | 'storage.backendCard.inMemoryLabel';
 
 const BackendCard: React.FC = () => {
+  const { t } = useTranslation();
   const config = getStorageBackendConfig();
   const [current, setCurrent] = useState<StorageBackendKind>(config.getStorageBackend());
   const [pending, setPending] = useState<StorageBackendKind | null>(null);
@@ -214,13 +191,31 @@ const BackendCard: React.FC = () => {
   const [progress, setProgress] = useState<{ done: number, total: number, currentTable: string } | null>(null);
   const [result, setResult] = useState<SwitchBackendResult | null>(null);
 
-  // 订阅 backend 变化（应对其他来源的切换）
+  const BACKEND_OPTIONS: { kind: StorageBackendKind, labelKey: BackendLabelKey, descKey: string, warnKey?: string }[] = [
+    {
+      kind: 'indexeddb',
+      labelKey: 'storage.backendCard.indexeddbLabel',
+      descKey: 'storage.backendCard.indexeddbDescription',
+    },
+    {
+      kind: 'localStorage',
+      labelKey: 'storage.backendCard.localStorageLabel',
+      descKey: 'storage.backendCard.localStorageDescription',
+      warnKey: 'storage.backendCard.localStorageWarning',
+    },
+    {
+      kind: 'inMemory',
+      labelKey: 'storage.backendCard.inMemoryLabel',
+      descKey: 'storage.backendCard.inMemoryDescription',
+      warnKey: 'storage.backendCard.inMemoryWarning',
+    },
+  ];
+
   useEffect(() => {
     const unsubscribe = config.subscribe((kind) => setCurrent(kind));
     return unsubscribe;
   }, [config]);
 
-  // 选中候选时，估算要迁移的数据量
   useEffect(() => {
     let cancelled = false;
     if (pending && pending !== current) {
@@ -250,7 +245,6 @@ const BackendCard: React.FC = () => {
         onProgress: (done, total, currentTable) => setProgress({ done, total, currentTable }),
       });
       setResult(r);
-      // 成功时 reload 会自动发生；失败则停留在当前页面显示结果
       if (!r.success) {
         setMigrating(false);
       }
@@ -267,8 +261,8 @@ const BackendCard: React.FC = () => {
 
   return (
     <Card
-      title="数据后端"
-      subtitle="决定所有业务数据存哪里（重启后保持）"
+      title={t('storage.backendCard.title')}
+      subtitle={t('storage.backendCard.subtitle')}
     >
       <div className="space-y-3">
         {BACKEND_OPTIONS.map((opt) => {
@@ -293,14 +287,18 @@ const BackendCard: React.FC = () => {
               />
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-[var(--color-text-primary)]">
-                  {opt.label}
-                  {isCurrent && <span className="ml-2 text-xs text-emerald-600">当前</span>}
+                  {t(opt.labelKey)}
+                  {isCurrent && (
+                    <span className="ml-2 text-xs text-emerald-600">
+                      {t('storage.backendCard.current')}
+                    </span>
+                  )}
                 </div>
                 <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
-                  {opt.description}
+                  {t(opt.descKey)}
                 </div>
-                {opt.warning && (
-                  <div className="text-xs text-amber-600 mt-1">⚠ {opt.warning}</div>
+                {opt.warnKey && (
+                  <div className="text-xs text-amber-600 mt-1">⚠ {t(opt.warnKey)}</div>
                 )}
               </div>
             </label>
@@ -310,20 +308,24 @@ const BackendCard: React.FC = () => {
         {pending && !migrating && !result && (
           <div className="flex flex-col gap-2 pt-2 border-t border-[var(--color-border-subtle)]">
             <div className="text-sm text-amber-600">
-              确定切到 {BACKEND_OPTIONS.find((o) => o.kind === pending)?.label}？
+              {t('storage.backendCard.confirmTitle', {
+                name: t(BACKEND_OPTIONS.find((o) => o.kind === pending)?.labelKey ?? ''),
+              })}
               {estimate !== null && estimate > 0 && (
                 <span className="text-[var(--color-text-secondary)] ml-1">
-                  （将复制 {estimate} 条数据）
+                  {t('storage.backendCard.confirmEstimate', { count: estimate })}
                 </span>
               )}
-              <span className="block text-xs mt-0.5">这会重新加载页面。</span>
+              <span className="block text-xs mt-0.5">
+                {t('storage.backendCard.confirmReloads')}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="primary" size="small" onClick={() => void handleConfirm()}>
-                确认切换
+                {t('storage.backendCard.confirmButton')}
               </Button>
               <Button variant="ghost" size="small" onClick={() => setPending(null)}>
-                取消
+                {t('common.cancel')}
               </Button>
             </div>
           </div>
@@ -333,9 +335,12 @@ const BackendCard: React.FC = () => {
           <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border-subtle)] text-sm text-[var(--color-text-secondary)]">
             <span className="inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
             <span>
-              正在迁移数据
-              {progress && progress.total > 0 && ` (${progress.done}/${progress.total})`}
-              {progress?.currentTable && ` · ${progress.currentTable}`}…
+              {t('storage.backendCard.migrating')}
+              {progress && progress.total > 0 &&
+                t('storage.backendCard.migratingProgress', { done: progress.done, total: progress.total })}
+              {progress?.currentTable &&
+                t('storage.backendCard.migratingTable', { table: progress.currentTable })}
+              …
             </span>
           </div>
         )}
@@ -343,7 +348,7 @@ const BackendCard: React.FC = () => {
         {result && !result.success && (
           <div className="pt-2 border-t border-[var(--color-border-subtle)]">
             <div className="text-sm text-red-600">
-              ✗ {result.error ?? '切换失败'}
+              ✗ {result.error ?? t('storage.backendCard.switchFailed')}
             </div>
             {result.results.filter((r) => !r.success).length > 0 && (
               <ul className="text-xs text-red-500 mt-1 list-disc list-inside">
@@ -363,7 +368,7 @@ const BackendCard: React.FC = () => {
               }}
               className="mt-2"
             >
-              关闭
+              {t('storage.backendCard.close')}
             </Button>
           </div>
         )}
@@ -373,7 +378,7 @@ const BackendCard: React.FC = () => {
 };
 
 /* ============================================================ */
-/* 备份与恢复（BackupCard）                                     */
+/* BackupCard                                                   */
 /* ============================================================ */
 
 interface BackupPreview {
@@ -382,6 +387,7 @@ interface BackupPreview {
 }
 
 const BackupCard: React.FC = () => {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState<'export' | 'import' | null>(null);
   const [restoreMode, setRestoreMode] = useState<'merge' | 'overwrite'>('merge');
   const [restorePrefs, setRestorePrefs] = useState(true);
@@ -417,13 +423,12 @@ const BackupCard: React.FC = () => {
       setPreview({ fileName: file.name, backup });
     } catch (err) {
       if (err instanceof BackupFormatError) {
-        setError(`备份文件无效：${err.message}`);
+        setError(t('storage.backupCard.invalidFile', { message: err.message }));
       } else {
         setError(err instanceof Error ? err.message : String(err));
       }
     } finally {
       setBusy(null);
-      // 清空 input，允许重选同一文件
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -440,11 +445,8 @@ const BackupCard: React.FC = () => {
       };
       const result = await restoreFromBackup(preview.backup, options);
       setRestoreResult(result);
-      // 成功后保留 preview，让用户看到结果
-      if (result.success) {
-        // 不清 preview，让用户看结果摘要
-      } else {
-        setError('部分表恢复失败，详情见下方');
+      if (!result.success) {
+        setError(t('storage.backupCard.partialFailure'));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -469,10 +471,13 @@ const BackupCard: React.FC = () => {
       preview.backup.data.chatMessages.length
     : 0;
 
+  const yes = t('storage.backupCard.yes');
+  const no = t('storage.backupCard.no');
+
   return (
     <Card
-      title="数据备份"
-      subtitle="导出全量数据为 JSON 文件，或从备份恢复"
+      title={t('storage.backupCard.title')}
+      subtitle={t('storage.backupCard.subtitle')}
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -483,7 +488,7 @@ const BackupCard: React.FC = () => {
             disabled={busy !== null}
             data-testid="backup-export"
           >
-            {busy === 'export' ? '正在导出…' : '导出全量数据'}
+            {busy === 'export' ? t('storage.backupCard.exporting') : t('storage.backupCard.export')}
           </Button>
           <Button
             variant="ghost"
@@ -492,7 +497,7 @@ const BackupCard: React.FC = () => {
             disabled={busy !== null}
             data-testid="backup-import-trigger"
           >
-            {busy === 'import' ? '正在读取…' : '从备份恢复'}
+            {busy === 'import' ? t('storage.backupCard.reading') : t('storage.backupCard.import')}
           </Button>
           <input
             ref={fileInputRef}
@@ -516,28 +521,39 @@ const BackupCard: React.FC = () => {
             data-testid="backup-preview"
           >
             <div className="text-sm">
-              <div className="font-medium">📄 {preview.fileName}</div>
+              <div className="font-medium">{t('storage.backupCard.fileLabel', { name: preview.fileName })}</div>
               <div className="text-xs text-[var(--color-text-secondary)] mt-1 space-y-0.5">
-                <div>备份时间：{new Date(preview.backup.timestamp).toLocaleString()}</div>
-                <div>schema v{preview.backup.schemaVersion} · 格式 v{preview.backup.$version}</div>
-                <div>共 <span className="font-semibold">{totalItems}</span> 条业务数据</div>
+                <div>
+                  {t('storage.backupCard.backupTime', {
+                    time: new Date(preview.backup.timestamp).toLocaleString(),
+                  })}
+                </div>
+                <div>
+                  {t('storage.backupCard.schemaInfo', {
+                    schema: preview.backup.schemaVersion,
+                    format: preview.backup.$version,
+                  })}
+                </div>
+                <div>
+                  {t('storage.backupCard.totalItems', { count: totalItems })}
+                </div>
                 <ul className="list-disc list-inside ml-2">
-                  <li>记录：{preview.backup.data.records.length}</li>
-                  <li>目标：{preview.backup.data.goals.length}</li>
-                  <li>提醒：{preview.backup.data.reminders.length}</li>
-                  <li>技能树：{preview.backup.data.trees.length}</li>
-                  <li>用户（含凭证）：{preview.backup.data.users.length}</li>
-                  <li>聊天会话：{preview.backup.data.chatSessions.length}</li>
-                  <li>聊天消息：{preview.backup.data.chatMessages.length}</li>
-                  {preview.backup.data.preferences.llmConfig && <li>LLM 配置：✓</li>}
-                  {preview.backup.data.preferences.aiSettings && <li>AI 设置：✓</li>}
-                  {preview.backup.data.preferences.currentUser && <li>当前登录态：✓</li>}
+                  <li>{t('storage.backupCard.tableCount.records', { count: preview.backup.data.records.length })}</li>
+                  <li>{t('storage.backupCard.tableCount.goals', { count: preview.backup.data.goals.length })}</li>
+                  <li>{t('storage.backupCard.tableCount.reminders', { count: preview.backup.data.reminders.length })}</li>
+                  <li>{t('storage.backupCard.tableCount.trees', { count: preview.backup.data.trees.length })}</li>
+                  <li>{t('storage.backupCard.tableCount.users', { count: preview.backup.data.users.length })}</li>
+                  <li>{t('storage.backupCard.tableCount.chatSessions', { count: preview.backup.data.chatSessions.length })}</li>
+                  <li>{t('storage.backupCard.tableCount.chatMessages', { count: preview.backup.data.chatMessages.length })}</li>
+                  {preview.backup.data.preferences.llmConfig && <li>{t('storage.backupCard.preferenceIncluded.llmConfig')}</li>}
+                  {preview.backup.data.preferences.aiSettings && <li>{t('storage.backupCard.preferenceIncluded.aiSettings')}</li>}
+                  {preview.backup.data.preferences.currentUser && <li>{t('storage.backupCard.preferenceIncluded.currentUser')}</li>}
                 </ul>
               </div>
             </div>
 
             <div className="space-y-2 border-t border-[var(--color-border-subtle)] pt-2">
-              <div className="text-sm font-medium">恢复选项</div>
+              <div className="text-sm font-medium">{t('storage.backupCard.restoreOptions')}</div>
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
@@ -546,7 +562,7 @@ const BackupCard: React.FC = () => {
                   checked={restoreMode === 'merge'}
                   onChange={() => setRestoreMode('merge')}
                 />
-                <span>合并（保留现有数据，仅插入新 ID）</span>
+                <span>{t('storage.backupCard.modeMerge')}</span>
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -556,9 +572,7 @@ const BackupCard: React.FC = () => {
                   checked={restoreMode === 'overwrite'}
                   onChange={() => setRestoreMode('overwrite')}
                 />
-                <span className="text-amber-600">
-                  覆盖（清空现有表后写入）⚠ 不可逆
-                </span>
+                <span className="text-amber-600">{t('storage.backupCard.modeOverwrite')}</span>
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -566,7 +580,7 @@ const BackupCard: React.FC = () => {
                   checked={restorePrefs}
                   onChange={(e) => setRestorePrefs(e.target.checked)}
                 />
-                <span>恢复偏好（LLM 配置、AI 设置、当前登录态）</span>
+                <span>{t('storage.backupCard.includePreferences')}</span>
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -574,7 +588,7 @@ const BackupCard: React.FC = () => {
                   checked={restoreCreds}
                   onChange={(e) => setRestoreCreds(e.target.checked)}
                 />
-                <span>恢复用户账号（含密码哈希）</span>
+                <span>{t('storage.backupCard.includeCredentials')}</span>
               </label>
             </div>
 
@@ -586,10 +600,10 @@ const BackupCard: React.FC = () => {
                 disabled={busy !== null}
                 data-testid="backup-confirm"
               >
-                确认恢复
+                {t('storage.backupCard.confirmRestore')}
               </Button>
               <Button variant="ghost" size="small" onClick={handleCancelPreview}>
-                取消
+                {t('common.cancel')}
               </Button>
             </div>
           </div>
@@ -601,17 +615,19 @@ const BackupCard: React.FC = () => {
             data-testid="backup-result"
           >
             <div className="text-sm font-medium text-emerald-700">
-              ✓ 恢复完成：{restoreResult.totalItems} 条数据
+              {t('storage.backupCard.restoreComplete', { count: restoreResult.totalItems })}
             </div>
             <ul className="text-xs space-y-0.5 text-[var(--color-text-secondary)]">
               {restoreResult.tableResults.map((r) => (
                 <li key={r.tableId}>
-                  {r.tableId}：{r.count} 条 {r.success ? '✓' : `✗ ${r.error}`}
+                  {r.success
+                    ? t('storage.backupCard.tableResult', { table: r.tableId, count: r.count })
+                    : t('storage.backupCard.tableResultFailed', { table: r.tableId, count: r.count, error: r.error })}
                 </li>
               ))}
-              <li>LLM 配置：{restoreResult.preferencesRestored.llmConfig ? '✓' : '—'}</li>
-              <li>AI 设置：{restoreResult.preferencesRestored.aiSettings ? '✓' : '—'}</li>
-              <li>当前登录态：{restoreResult.preferencesRestored.currentUser ? '✓' : '—'}</li>
+              <li>{t('storage.backupCard.preferenceRestored.llmConfig', { value: restoreResult.preferencesRestored.llmConfig ? yes : no })}</li>
+              <li>{t('storage.backupCard.preferenceRestored.aiSettings', { value: restoreResult.preferencesRestored.aiSettings ? yes : no })}</li>
+              <li>{t('storage.backupCard.preferenceRestored.currentUser', { value: restoreResult.preferencesRestored.currentUser ? yes : no })}</li>
             </ul>
             <Button
               variant="ghost"
@@ -619,7 +635,7 @@ const BackupCard: React.FC = () => {
               onClick={handleCancelPreview}
               className="mt-2"
             >
-              关闭
+              {t('storage.backendCard.close')}
             </Button>
           </div>
         )}
@@ -628,9 +644,12 @@ const BackupCard: React.FC = () => {
   );
 };
 
+/* ============================================================ */
+/* StorageSettings (page)                                      */
+/* ============================================================ */
+
 const StorageSettings: React.FC = () => {
-  // t 是 i18n hook 的返回值；当前页面文案固定中文，未使用
-  const { t: _t } = useTranslation();
+  const { t } = useTranslation();
   const { storeStats, quota, loading, error, refresh } = useStorageStats();
   const [confirming, setConfirming] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -643,8 +662,6 @@ const StorageSettings: React.FC = () => {
     setClearing(true);
     try {
       await clearAllStorage();
-      // 强制重载，让所有 service 单例重建
-      // （jsdom 等环境 reload 是 read-only，try-catch 容错）
       try {
         window.location.reload();
       } catch {
@@ -657,28 +674,21 @@ const StorageSettings: React.FC = () => {
     }
   };
 
-  const quotaLevelText = {
-    ok: '充足',
-    warn: '接近上限',
-    critical: '即将耗尽',
-    exceeded: '已超出',
-  } as const;
-
-  const quotaColor = {
+  const quotaColor: Record<QuotaInfo['level'], string> = {
     ok: 'text-emerald-600',
     warn: 'text-amber-600',
     critical: 'text-orange-600',
     exceeded: 'text-red-600',
-  } as const;
+  };
 
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
-          存储设置
+          {t('storage.pageTitle')}
         </h1>
         <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-          查看浏览器存储用量，或清空所有数据重置应用。
+          {t('storage.pageSubtitle')}
         </p>
       </div>
 
@@ -688,16 +698,21 @@ const StorageSettings: React.FC = () => {
 
       {error && (
         <Card>
-          <div className="text-red-600">读取存储信息失败：{error}</div>
+          <div className="text-red-600">{t('storage.readError', { message: error })}</div>
         </Card>
       )}
 
-      <Card title="存储配额" subtitle="通过 navigator.storage.estimate() 获取">
+      <Card
+        title={t('storage.quotaCard.title')}
+        subtitle={t('storage.quotaCard.subtitle')}
+      >
         {loading && !quota ? (
-          <div className="text-sm text-[var(--color-text-secondary)]">加载中...</div>
+          <div className="text-sm text-[var(--color-text-secondary)]">
+            {t('storage.quotaCard.loading')}
+          </div>
         ) : !quota?.isSupported ? (
           <div className="text-sm text-[var(--color-text-secondary)]">
-            当前浏览器不支持 navigator.storage.estimate（Safari 旧版、部分移动浏览器）
+            {t('storage.quotaCard.notSupported')}
           </div>
         ) : (
           <div className="space-y-3">
@@ -706,7 +721,7 @@ const StorageSettings: React.FC = () => {
                 {quota.percent.toFixed(1)}%
               </span>
               <span className="text-sm text-[var(--color-text-secondary)]">
-                {quotaLevelText[quota.level]}
+                {t(`storage.quotaCard.level.${quota.level}`)}
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
@@ -721,8 +736,8 @@ const StorageSettings: React.FC = () => {
               />
             </div>
             <div className="flex justify-between text-xs text-[var(--color-text-secondary)]">
-              <span>已用 {formatBytes(quota.usage)}</span>
-              <span>总计 {formatBytes(quota.quota)}</span>
+              <span>{t('storage.quotaCard.used', { size: formatBytes(quota.usage) })}</span>
+              <span>{t('storage.quotaCard.total', { size: formatBytes(quota.quota) })}</span>
             </div>
             <Button
               variant="ghost"
@@ -730,15 +745,15 @@ const StorageSettings: React.FC = () => {
               onClick={() => void refresh()}
               loading={loading}
             >
-              刷新
+              {t('components.button.refresh')}
             </Button>
           </div>
         )}
       </Card>
 
       <Card
-        title="IndexedDB 各 store 记录数"
-        subtitle="每个业务实体的数据条数"
+        title={t('storage.storeStatsCard.title')}
+        subtitle={t('storage.storeStatsCard.subtitle')}
         headerAction={
           <Button
             variant="ghost"
@@ -746,18 +761,20 @@ const StorageSettings: React.FC = () => {
             onClick={() => void refresh()}
             loading={loading}
           >
-            刷新
+            {t('components.button.refresh')}
           </Button>
         }
       >
         {loading && storeStats.length === 0 ? (
-          <div className="text-sm text-[var(--color-text-secondary)]">加载中...</div>
+          <div className="text-sm text-[var(--color-text-secondary)]">
+            {t('storage.storeStatsCard.loading')}
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-[var(--color-text-secondary)]">
-                <th className="py-2 font-medium">Store</th>
-                <th className="py-2 font-medium text-right">记录数</th>
+                <th className="py-2 font-medium">{t('storage.storeStatsCard.storeHeader')}</th>
+                <th className="py-2 font-medium text-right">{t('storage.storeStatsCard.countHeader')}</th>
               </tr>
             </thead>
             <tbody>
@@ -768,7 +785,7 @@ const StorageSettings: React.FC = () => {
                 </tr>
               ))}
               <tr className="border-t-2 border-[var(--color-border)]">
-                <td className="py-2 font-semibold">合计</td>
+                <td className="py-2 font-semibold">{t('storage.storeStatsCard.total')}</td>
                 <td className="py-2 text-right font-bold">
                   {storeStats.reduce((sum, s) => sum + s.count, 0)}
                 </td>
@@ -779,18 +796,18 @@ const StorageSettings: React.FC = () => {
       </Card>
 
       <Card
-        title="危险操作"
-        subtitle="清空所有数据不可恢复，建议先导出"
+        title={t('storage.dangerCard.title')}
+        subtitle={t('storage.dangerCard.subtitle')}
         className="border-red-200"
       >
         <div className="space-y-3">
           <p className="text-sm text-[var(--color-text-secondary)]">
-            此操作会：
+            {t('storage.dangerCard.intro')}
             <ul className="list-disc list-inside mt-1 space-y-0.5">
-              <li>删除整个 IndexedDB 数据库（所有记录、目标、提醒、AI 对话）</li>
-              <li>清空 LocalStorage（用户设置、主题、token）</li>
-              <li>清空 SessionStorage</li>
-              <li>重新加载页面，让所有 service 重建</li>
+              <li>{t('storage.dangerCard.step1')}</li>
+              <li>{t('storage.dangerCard.step2')}</li>
+              <li>{t('storage.dangerCard.step3')}</li>
+              <li>{t('storage.dangerCard.step4')}</li>
             </ul>
           </p>
 
@@ -802,20 +819,20 @@ const StorageSettings: React.FC = () => {
                 loading={clearing}
                 disabled={clearing}
               >
-                确认清空
+                {t('storage.dangerCard.confirm')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setConfirming(false)}
                 disabled={clearing}
               >
-                取消
+                {t('storage.dangerCard.cancel')}
               </Button>
-              <span className="text-xs text-amber-600">再点一次确认</span>
+              <span className="text-xs text-amber-600">{t('storage.dangerCard.confirmHint')}</span>
             </div>
           ) : (
             <Button variant="danger" onClick={() => setConfirming(true)}>
-              清空所有数据
+              {t('storage.dangerCard.clearAll')}
             </Button>
           )}
         </div>

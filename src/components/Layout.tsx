@@ -8,6 +8,7 @@ import {
 import { toggleTheme as _toggleTheme, setTheme } from '../store/slices/themeSlice';
 import { logout } from '../store/slices/authSlice';
 import type { RootState } from '../types';
+import type { AppDispatch } from '../store';
 
 interface LayoutProps {
   children: React.ReactNode,
@@ -15,7 +16,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const dispatch = useDispatch<any>();
+  const dispatch = useDispatch<AppDispatch>();
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -31,11 +32,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   const handleToggleTheme = () => {
-    dispatch(setTheme(isDarkMode ? 'light' : 'dark'));
+    void dispatch(setTheme(isDarkMode ? 'light' : 'dark'));
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    void dispatch(logout());
   };
 
   const isActive = (path: string) => location.pathname === path;
