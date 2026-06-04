@@ -31,7 +31,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // 沙箱/CI 兼容：跳过 sandbox + 用全量 chromium 二进制（避免缺 headless shell）
+        launchOptions: {
+          executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH
+            ?? '/root/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome',
+          args: ['--no-sandbox', '--disable-dev-shm-usage'],
+        },
+      },
     },
   ],
 });

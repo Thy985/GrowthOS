@@ -28,6 +28,7 @@ import {
   createIndexedDbRepository,
   createLocalStorageRepository,
   createInMemoryRepository,
+  createSqliteRepository,
   type ReadWriteRepository,
 } from '../../common/repositories/repository';
 import type { BaseEntity } from '../types';
@@ -92,6 +93,8 @@ export interface MigrationOptions {
  *
  * - 不启用 cache（migration 是一次性操作，缓存无意义）
  * - 不启用 sync（不需要广播变更）
+ * - 不传 client：SQLite 路径默认走 InMemorySqliteClient 兜底
+ *   （真实 native 部署时，迁移 UI 应在 native 容器内启动，无需 web 兜底）
  */
 function createScratchRepository<T extends BaseEntity>(
   kind: StorageBackendKind,
@@ -104,6 +107,8 @@ function createScratchRepository<T extends BaseEntity>(
       return createLocalStorageRepository<T>(table.lsKey, { cache: false, sync: false });
     case 'inMemory':
       return createInMemoryRepository<T>({ cache: false, sync: false });
+    case 'sqlite':
+      return createSqliteRepository<T>(table.store, { cache: false, sync: false });
   }
 }
 

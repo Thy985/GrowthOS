@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import type { Goal, CreateGoalDTO, UpdateGoalDTO } from '../../types';
-import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, type ReadWriteRepository } from '../repositories/repository';
+import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, createSqliteRepository, type ReadWriteRepository } from '../repositories/repository';
 import { getStorageBackendConfig } from '../../storage/config';
 import { StorageError } from '../../storage';
 
@@ -35,6 +35,9 @@ function getRepository(): ReadWriteRepository<Goal> {
         break;
       case 'inMemory':
         repositoryInstance = createInMemoryRepository<Goal>({ cache: false, sync: false });
+        break;
+      case 'sqlite':
+        repositoryInstance = createSqliteRepository<Goal>('goals', { cache: true, sync: true });
         break;
     }
   }

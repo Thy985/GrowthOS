@@ -19,10 +19,13 @@ import {
   IndexedDbAdapter,
   InMemoryAdapter,
   LocalStorageAdapter,
+  SqliteAdapter,
+  InMemorySqliteClient,
   type BaseEntity,
   type StorageAdapter,
   type StorageError,
 } from '../../storage';
+import type { SqliteClient } from '../../storage/backends/sqlite';
 import type { EntityStore } from '../../storage/schema/types';
 import { CachingRepository, type CachingRepositoryOptions } from '../../storage/cache/cachingRepository';
 import { SyncedRepository } from '../../storage/sync/syncedRepository';
@@ -177,6 +180,24 @@ export function createInMemoryRepository<T extends BaseEntity>(
   const base = new Repository<T>(new InMemoryAdapter<T>());
   return decorators.cache || decorators.sync
     ? decorateRepository(base, 'inMemory', decorators)
+    : base;
+}
+
+/**
+ * 创建 SQLite Repository（Native: Capacitor iOS/Android / Web 降级: InMemory）
+ *
+ * - 注入 SqliteClient，默认为 InMemorySqliteClient（web 兜底）
+ * - 真实 native 部署时，调用方应传 createPlatformSqliteClient() 的结果
+ */
+export function createSqliteRepository<T extends BaseEntity>(
+  table: string,
+  decorators: RepositoryDecorators = {},
+  client?: SqliteClient,
+): ReadWriteRepository<T> {
+  const sqliteClient = client ?? new InMemorySqliteClient();
+  const base = new Repository<T>(new SqliteAdapter<T>(sqliteClient, table));
+  return decorators.cache || decorators.sync
+    ? decorateRepository(base, `sqlite:${table}`, decorators)
     : base;
 }
 

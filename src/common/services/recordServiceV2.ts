@@ -1,6 +1,12 @@
 import { Capacitor } from '@capacitor/core';
 import type { GrowthRecord as GrowthRecordEntity, Mood } from '../../types';
-import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, type ReadWriteRepository } from '../repositories/repository';
+import {
+  createIndexedDbRepository,
+  createLocalStorageRepository,
+  createInMemoryRepository,
+  createSqliteRepository,
+  type ReadWriteRepository,
+} from '../repositories/repository';
 import { getStorageBackendConfig } from '../../storage/config';
 import { StorageError } from '../../storage';
 
@@ -52,6 +58,8 @@ function createRepositoryForBackend<T extends { id: string }>(
       return createLocalStorageRepository<T>(lsKey, { cache: true, sync: true });
     case 'inMemory':
       return createInMemoryRepository<T>({ cache: false, sync: false });
+    case 'sqlite':
+      return createSqliteRepository<T>(storeKey, { cache: true, sync: true });
   }
 }
 

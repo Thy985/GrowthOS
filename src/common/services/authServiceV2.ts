@@ -32,6 +32,7 @@ import {
   createIndexedDbRepository,
   createLocalStorageRepository,
   createInMemoryRepository,
+  createSqliteRepository,
 } from '../repositories/repository';
 import type { ReadWriteRepository } from '../repositories/repository';
 import { getStorageBackendConfig } from '../../storage/config';
@@ -76,9 +77,12 @@ function getUserRepository(): ReadWriteRepository<StoredUser> {
       case 'inMemory':
         userRepoInstance = createInMemoryRepository<StoredUser>({ cache: false, sync: false });
         break;
+      case 'sqlite':
+        userRepoInstance = createSqliteRepository<StoredUser>('users', { cache: true, sync: true });
+        break;
     }
   }
-  return userRepoInstance;
+  return userRepoInstance as ReadWriteRepository<StoredUser>;
 }
 
 function getCurrentUserRepository(): ReadWriteRepository<User> {

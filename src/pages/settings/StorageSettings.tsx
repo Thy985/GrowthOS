@@ -27,6 +27,8 @@ import {
 import {
   createBackup,
   restoreFromBackup,
+  downloadBackup,
+  readBackupFile,
   BackupFormatError,
   type BackupData,
   type RestoreOptions,
@@ -402,7 +404,6 @@ const BackupCard: React.FC = () => {
     setError(null);
     try {
       const backup = await createBackup();
-      const { downloadBackup } = await import('../../storage/backup');
       downloadBackup(backup);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -418,7 +419,6 @@ const BackupCard: React.FC = () => {
     setError(null);
     setRestoreResult(null);
     try {
-      const { readBackupFile } = await import('../../storage/backup');
       const backup = await readBackupFile(file);
       setPreview({ fileName: file.name, backup });
     } catch (err) {

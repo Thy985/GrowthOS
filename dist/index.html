@@ -2,38 +2,22 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GrowthOS</title>
-    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#3b82f6" />
-    <link rel="apple-touch-icon" href="/logo192.png" />
-    <meta name="description" content="一个帮助你跟踪个人成长的应用" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+    <meta name="description" content="A personal growth tracking app — fully offline" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/js/index-Co6KbRAJ.js"></script>
+    <script type="module" crossorigin src="/assets/js/index-DR70GmBJ.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/js/vendor-redux-0vMaRe-K.js">
     <link rel="modulepreload" crossorigin href="/assets/js/vendor-react-DHtKZ40W.js">
     <link rel="modulepreload" crossorigin href="/assets/js/vendor-i18n-qzzRyfAb.js">
     <link rel="modulepreload" crossorigin href="/assets/js/vendor-charts-CFRBn1Ab.js">
     <link rel="stylesheet" crossorigin href="/assets/css/index-CsO4Qaaj.css">
-  </head>
+  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
-    <script>
-      // 注册 Service Worker
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then((registration) => {
-              console.log('Service Worker 注册成功:', registration.scope);
-            })
-            .catch((error) => {
-              console.error('Service Worker 注册失败:', error);
-            });
-        });
-      }
-    </script>
   </body>
 </html>

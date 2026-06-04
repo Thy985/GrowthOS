@@ -16,7 +16,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import type { Tree, TreeNode } from '../../types';
-import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, type ReadWriteRepository } from '../repositories/repository';
+import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, createSqliteRepository, type ReadWriteRepository } from '../repositories/repository';
 import { getStorageBackendConfig } from '../../storage/config';
 import { StorageError } from '../../storage';
 
@@ -53,6 +53,9 @@ function getRepository(): ReadWriteRepository<Tree> {
         break;
       case 'inMemory':
         repositoryInstance = createInMemoryRepository<Tree>({ cache: false, sync: false });
+        break;
+      case 'sqlite':
+        repositoryInstance = createSqliteRepository<Tree>('trees', { cache: true, sync: true });
         break;
     }
   }

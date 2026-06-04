@@ -13,6 +13,15 @@ export { InMemoryAdapter } from './backends/InMemoryAdapter';
 export { MemoryAdapter } from './backends/MemoryAdapter';
 export { LocalStorageAdapter } from './backends/LocalStorageAdapter';
 export { IndexedDbAdapter } from './backends/IndexedDbAdapter';
+export {
+  SqliteAdapter,
+  InMemorySqliteClient,
+  isNativePlatform,
+  createPlatformSqliteClient,
+  type SqliteClient,
+  type SqliteSchema,
+  type SqliteTableName,
+} from './backends/sqlite';
 
 export {
   openGrowthDB,

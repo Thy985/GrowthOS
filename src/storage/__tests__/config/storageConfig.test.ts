@@ -97,16 +97,18 @@ describe('helpers', () => {
     expect(isLargeCapacityBackend('indexeddb')).toBe(true);
     expect(isLargeCapacityBackend('localStorage')).toBe(false);
     expect(isLargeCapacityBackend('inMemory')).toBe(false);
+    expect(isLargeCapacityBackend('sqlite')).toBe(true);
   });
 
   it('isPersistentBackend', () => {
     expect(isPersistentBackend('indexeddb')).toBe(true);
     expect(isPersistentBackend('localStorage')).toBe(true);
     expect(isPersistentBackend('inMemory')).toBe(false);
+    expect(isPersistentBackend('sqlite')).toBe(true);
   });
 
-  it('STORAGE_BACKEND_KINDS contains all three kinds', () => {
-    expect(STORAGE_BACKEND_KINDS).toEqual(['indexeddb', 'localStorage', 'inMemory']);
+  it('STORAGE_BACKEND_KINDS contains all four kinds', () => {
+    expect(STORAGE_BACKEND_KINDS).toEqual(['indexeddb', 'localStorage', 'inMemory', 'sqlite']);
   });
 });
 
@@ -140,7 +142,7 @@ describe('privacy mode tolerance', () => {
 });
 
 describe('regression: each kind round-trips', () => {
-  it.each<StorageBackendKind>(['indexeddb', 'localStorage', 'inMemory'])(
+  it.each<StorageBackendKind>(['indexeddb', 'localStorage', 'inMemory', 'sqlite'])(
     'kind %s can be set and read back',
     (kind) => {
       _resetStorageBackendConfig();

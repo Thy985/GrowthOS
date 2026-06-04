@@ -18,6 +18,7 @@ import {
   createIndexedDbRepository,
   createLocalStorageRepository,
   createInMemoryRepository,
+  createSqliteRepository,
 } from '../repositories/repository';
 import type { ReadWriteRepository } from '../repositories/repository';
 import { getStorageBackendConfig } from '../../storage/config';
@@ -114,7 +115,7 @@ function getSessionRepository(): ReadWriteRepository<ChatSession> {
         break;
     }
   }
-  return sessionRepo;
+  return sessionRepo as ReadWriteRepository<ChatSession>;
 }
 
 function getMessageRepository(): ReadWriteRepository<StoredChatMessage> {
@@ -130,9 +131,12 @@ function getMessageRepository(): ReadWriteRepository<StoredChatMessage> {
       case 'inMemory':
         messageRepo = createInMemoryRepository<StoredChatMessage>({ cache: false, sync: false });
         break;
+      case 'sqlite':
+        messageRepo = createSqliteRepository<StoredChatMessage>('chatMessages', { cache: true, sync: true });
+        break;
     }
   }
-  return messageRepo;
+  return messageRepo as ReadWriteRepository<StoredChatMessage>;
 }
 
 // === LLM Config ===

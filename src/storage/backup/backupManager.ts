@@ -21,6 +21,7 @@ import {
   createIndexedDbRepository,
   createLocalStorageRepository,
   createInMemoryRepository,
+  createSqliteRepository,
   type ReadWriteRepository,
 } from '../../common/repositories/repository';
 import type { BaseEntity } from '../types';
@@ -80,6 +81,8 @@ function createScratchRepository<T extends BaseEntity>(
       return createLocalStorageRepository<T>(lsKey, { cache: false, sync: false });
     case 'inMemory':
       return createInMemoryRepository<T>({ cache: false, sync: false });
+    case 'sqlite':
+      return createSqliteRepository<T>(store, { cache: false, sync: false });
   }
 }
 

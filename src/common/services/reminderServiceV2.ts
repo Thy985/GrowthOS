@@ -1,6 +1,12 @@
 import { Capacitor } from '@capacitor/core';
 import type { Reminder, CreateReminderDTO, UpdateReminderDTO } from '../../types';
-import { createIndexedDbRepository, createLocalStorageRepository, createInMemoryRepository, type ReadWriteRepository } from '../repositories/repository';
+import {
+  createIndexedDbRepository,
+  createLocalStorageRepository,
+  createInMemoryRepository,
+  createSqliteRepository,
+  type ReadWriteRepository,
+} from '../repositories/repository';
 import { getStorageBackendConfig } from '../../storage/config';
 import { StorageError } from '../../storage';
 
@@ -35,6 +41,9 @@ function getRepository(): ReadWriteRepository<Reminder> {
         break;
       case 'inMemory':
         repositoryInstance = createInMemoryRepository<Reminder>({ cache: false, sync: false });
+        break;
+      case 'sqlite':
+        repositoryInstance = createSqliteRepository<Reminder>('reminders', { cache: true, sync: true });
         break;
     }
   }

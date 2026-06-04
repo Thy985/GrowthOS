@@ -17,17 +17,17 @@
 
 const STORAGE_KEY = 'growthos:storageBackend';
 
-export const STORAGE_BACKEND_KINDS = ['indexeddb', 'localStorage', 'inMemory'] as const;
+export const STORAGE_BACKEND_KINDS = ['indexeddb', 'localStorage', 'inMemory', 'sqlite'] as const;
 export type StorageBackendKind = typeof STORAGE_BACKEND_KINDS[number];
 
 /** 当前 backend 是否支持 capacity 大的场景（影响 UI 警告） */
 export function isLargeCapacityBackend(kind: StorageBackendKind): boolean {
-  return kind === 'indexeddb';
+  return kind === 'indexeddb' || kind === 'sqlite';
 }
 
 /** 当前 backend 是否能跨页面刷新持久化 */
 export function isPersistentBackend(kind: StorageBackendKind): boolean {
-  return kind === 'indexeddb' || kind === 'localStorage';
+  return kind === 'indexeddb' || kind === 'localStorage' || kind === 'sqlite';
 }
 
 /** 解析为合法值，无效则返回 defaultKind */
