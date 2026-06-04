@@ -257,6 +257,18 @@ describe('BackendCard', () => {
   });
 
   it('confirming the switch calls switchStorageBackend and reloads', async () => {
+    // mock 迁移模块：让 migrateBetweenBackends 立即 resolve
+    jest.doMock('../../../storage/migration', () => ({
+      MIGRATABLE_TABLES: [],
+      migrateTable: jest.fn(),
+      migrateBetweenBackends: jest.fn(async () => []),
+      estimateMigrationSize: jest.fn(async () => ({ totalItems: 0, tables: [] })),
+    }));
+    // 重新 import 让 doMock 生效
+    jest.isolateModules(() => {
+      // no-op
+    });
+
     const config = getStorageBackendConfig();
     const setSpy = jest.spyOn(config, 'setStorageBackend');
 
@@ -269,7 +281,11 @@ describe('BackendCard', () => {
     // 确认切换
     fireEvent.click(screen.getByText('确认切换'));
 
-    expect(setSpy).toHaveBeenCalledWith('localStorage');
+    await waitFor(() => {
+      expect(setSpy).toHaveBeenCalledWith('localStorage');
+    });
+
+    jest.dontMock('../../../storage/migration');
   });
 
   it('cancel button clears the pending state', () => {
@@ -313,18 +329,22 @@ describe('switchStorageBackend', () => {
     jest.restoreAllMocks();
   });
 
-  it('persists the new kind to LocalStorage', () => {
-    switchStorageBackend('localStorage');
+  it('persists the new kind to LocalStorage (inMemory → localStorage = no migration cost)', async () => {
+    // 起步设成 inMemory，避免真实 IDB→LS 迁移路径
+    getStorageBackendConfig().setStorageBackend('inMemory');
+    await switchStorageBackend('localStorage');
     expect(localStorage.getItem('growthos:storageBackend')).toBe('localStorage');
   });
 
-  it('notifies config subscribers', () => {
+  it('notifies config subscribers', async () => {
+    // 起步设成 inMemory
+    getStorageBackendConfig().setStorageBackend('inMemory');
     const config = getStorageBackendConfig();
     const listener = jest.fn();
     config.subscribe(listener);
 
-    switchStorageBackend('inMemory');
+    await switchStorageBackend('localStorage');
 
-    expect(listener).toHaveBeenCalledWith('inMemory');
+    expect(listener).toHaveBeenCalledWith('localStorage');
   });
 });

@@ -92,6 +92,16 @@ export { CrossTabChannel, SyncedRepository, getDefaultChannelName } from './sync
 export type { CrossTabEvent, CrossTabEventType, CrossTabSubscriber } from './sync';
 export { QuotaMonitor, getQuotaMonitor } from './quota';
 export type { QuotaStatus, QuotaLevel, QuotaMonitorOptions, QuotaSubscriber } from './quota';
+// 数据迁移（backend 间）
+export {
+  MIGRATABLE_TABLES,
+  migrateTable,
+  migrateBetweenBackends,
+  estimateMigrationSize,
+  type MigratableTable,
+  type TableMigrationResult,
+  type MigrationOptions,
+} from './migration';
 // 后端配置中心
 export {
   getStorageBackendConfig,

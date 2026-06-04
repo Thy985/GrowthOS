@@ -18,6 +18,11 @@ import { getQuotaMonitor } from '../../storage/quota';
 import { getDB, resetDatabase } from '../../storage/schema';
 import { ENTITY_STORES, type EntityStore } from '../../storage/schema/types';
 import { getStorageBackendConfig, type StorageBackendKind } from '../../storage/config';
+import {
+  migrateBetweenBackends,
+  estimateMigrationSize,
+  type TableMigrationResult,
+} from '../../storage/migration';
 
 interface StoreStats {
   store: EntityStore,
@@ -100,16 +105,75 @@ export async function clearAllStorage(): Promise<void> {
 }
 
 /**
- * 切换 storage backend
- * 持久化到 LocalStorage，调用方需自行 reload。
+ * 切换 storage backend（带数据迁移）
+ *
+ * 流程：
+ * 1. 估算要迁移的数据量
+ * 2. 把 fromKind 的数据复制到 toKind
+ * 3. 持久化新 backend 选择到 LocalStorage
+ * 4. 重新加载页面（让所有 service 单例重建）
+ *
+ * 失败处理：返回结果，不修改 config（用户可重试或保留旧 backend）
  */
-export function switchStorageBackend(kind: StorageBackendKind): void {
-  getStorageBackendConfig().setStorageBackend(kind);
+export interface SwitchBackendResult {
+  success: boolean,
+  results: TableMigrationResult[],
+  totalItems: number,
+  error?: string,
+}
+
+export interface SwitchBackendOptions {
+  /** 进度回调（每完成一个表调用一次） */
+  onProgress?: (done: number, total: number, currentTable: string) => void,
+}
+
+export async function switchStorageBackend(
+  kind: StorageBackendKind,
+  options?: SwitchBackendOptions,
+): Promise<SwitchBackendResult> {
+  const config = getStorageBackendConfig();
+  const fromKind = config.getStorageBackend();
+
+  if (fromKind === kind) {
+    return { success: true, results: [], totalItems: 0 };
+  }
+
+  // 1. 迁移数据
+  const results = await migrateBetweenBackends(fromKind, kind, {
+    onProgress: options?.onProgress,
+  });
+  const totalItems = results.reduce((sum, r) => sum + r.count, 0);
+  const failed = results.filter((r) => !r.success);
+
+  if (failed.length > 0) {
+    return {
+      success: false,
+      results,
+      totalItems,
+      error: `迁移失败：${failed.map((f) => f.tableId).join(', ')}`,
+    };
+  }
+
+  // 2. 持久化新 backend 选择
+  config.setStorageBackend(kind);
+
+  // 3. Reload（让所有 service 单例按新 backend 重建）
   try {
     window.location.reload();
   } catch {
     /* 忽略：测试环境 */
   }
+
+  return { success: true, results, totalItems };
+}
+
+/** 估算"切换到 kind"需要迁移的数据量（用于 UI 提示） */
+export async function estimateSwitchSize(kind: StorageBackendKind): Promise<number> {
+  const config = getStorageBackendConfig();
+  const fromKind = config.getStorageBackend();
+  if (fromKind === kind) return 0;
+  const { totalItems } = await estimateMigrationSize(fromKind);
+  return totalItems;
 }
 
 /** BackendCard：选 IDB / LS / In-Memory */
@@ -137,6 +201,10 @@ const BackendCard: React.FC = () => {
   const config = getStorageBackendConfig();
   const [current, setCurrent] = useState<StorageBackendKind>(config.getStorageBackend());
   const [pending, setPending] = useState<StorageBackendKind | null>(null);
+  const [estimate, setEstimate] = useState<number | null>(null);
+  const [migrating, setMigrating] = useState(false);
+  const [progress, setProgress] = useState<{ done: number, total: number, currentTable: string } | null>(null);
+  const [result, setResult] = useState<SwitchBackendResult | null>(null);
 
   // 订阅 backend 变化（应对其他来源的切换）
   useEffect(() => {
@@ -144,15 +212,48 @@ const BackendCard: React.FC = () => {
     return unsubscribe;
   }, [config]);
 
+  // 选中候选时，估算要迁移的数据量
+  useEffect(() => {
+    let cancelled = false;
+    if (pending && pending !== current) {
+      estimateSwitchSize(pending).then((n) => {
+        if (!cancelled) setEstimate(n);
+      }).catch(() => {
+        if (!cancelled) setEstimate(null);
+      });
+    } else {
+      setEstimate(null);
+    }
+    return () => { cancelled = true; };
+  }, [pending, current]);
+
   const handleSelect = (kind: StorageBackendKind) => {
     if (kind === current) return;
     setPending(kind);
+    setResult(null);
   };
 
-  const handleConfirm = () => {
-    if (pending) {
-      switchStorageBackend(pending);
-      // reload 触发，下面不执行
+  const handleConfirm = async () => {
+    if (!pending) return;
+    setMigrating(true);
+    setResult(null);
+    try {
+      const r = await switchStorageBackend(pending, {
+        onProgress: (done, total, currentTable) => setProgress({ done, total, currentTable }),
+      });
+      setResult(r);
+      // 成功时 reload 会自动发生；失败则停留在当前页面显示结果
+      if (!r.success) {
+        setMigrating(false);
+      }
+    } catch (err) {
+      setResult({
+        success: false,
+        results: [],
+        totalItems: 0,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      setMigrating(false);
     }
   };
 
@@ -179,6 +280,7 @@ const BackendCard: React.FC = () => {
                 value={opt.kind}
                 checked={isCurrent}
                 onChange={() => handleSelect(opt.kind)}
+                disabled={migrating}
                 className="mt-1"
               />
               <div className="flex-1 min-w-0">
@@ -197,18 +299,63 @@ const BackendCard: React.FC = () => {
           );
         })}
 
-        {pending && (
-          <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border-subtle)]">
-            <span className="text-sm text-amber-600">
-              确定切到 {
-                BACKEND_OPTIONS.find((o) => o.kind === pending)?.label
-              }？这会重新加载页面。
+        {pending && !migrating && !result && (
+          <div className="flex flex-col gap-2 pt-2 border-t border-[var(--color-border-subtle)]">
+            <div className="text-sm text-amber-600">
+              确定切到 {BACKEND_OPTIONS.find((o) => o.kind === pending)?.label}？
+              {estimate !== null && estimate > 0 && (
+                <span className="text-[var(--color-text-secondary)] ml-1">
+                  （将复制 {estimate} 条数据）
+                </span>
+              )}
+              <span className="block text-xs mt-0.5">这会重新加载页面。</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="primary" size="small" onClick={() => void handleConfirm()}>
+                确认切换
+              </Button>
+              <Button variant="ghost" size="small" onClick={() => setPending(null)}>
+                取消
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {migrating && (
+          <div className="flex items-center gap-2 pt-2 border-t border-[var(--color-border-subtle)] text-sm text-[var(--color-text-secondary)]">
+            <span className="inline-block w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <span>
+              正在迁移数据
+              {progress && progress.total > 0 && ` (${progress.done}/${progress.total})`}
+              {progress?.currentTable && ` · ${progress.currentTable}`}…
             </span>
-            <Button variant="primary" size="small" onClick={handleConfirm}>
-              确认切换
-            </Button>
-            <Button variant="ghost" size="small" onClick={() => setPending(null)}>
-              取消
+          </div>
+        )}
+
+        {result && !result.success && (
+          <div className="pt-2 border-t border-[var(--color-border-subtle)]">
+            <div className="text-sm text-red-600">
+              ✗ {result.error ?? '切换失败'}
+            </div>
+            {result.results.filter((r) => !r.success).length > 0 && (
+              <ul className="text-xs text-red-500 mt-1 list-disc list-inside">
+                {result.results.filter((r) => !r.success).map((r) => (
+                  <li key={r.tableId}>
+                    {r.tableId}: {r.error}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Button
+              variant="ghost"
+              size="small"
+              onClick={() => {
+                setResult(null);
+                setPending(null);
+              }}
+              className="mt-2"
+            >
+              关闭
             </Button>
           </div>
         )}
