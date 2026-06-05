@@ -19,14 +19,14 @@ describe('themeSlice', () => {
   });
 
   it('initial state reads dark from localStorage when set', async () => {
-    localStorage.setItem('theme', 'dark');
+    localStorage.setItem('growthos-theme', 'dark');
     const reducer = await loadSlice();
     const store = configureStore({ reducer: { theme: reducer } });
     expect(store.getState().theme.isDarkMode).toBe(true);
   });
 
   it('initial state reads light from localStorage when set', async () => {
-    localStorage.setItem('theme', 'light');
+    localStorage.setItem('growthos-theme', 'light');
     const reducer = await loadSlice();
     const store = configureStore({ reducer: { theme: reducer } });
     expect(store.getState().theme.isDarkMode).toBe(false);
@@ -53,10 +53,10 @@ describe('themeSlice', () => {
     expect(store.getState().theme.isDarkMode).toBe(false);
     store.dispatch(toggleTheme());
     expect(store.getState().theme.isDarkMode).toBe(true);
-    expect(localStorage.getItem('theme')).toBe('dark');
+    expect(localStorage.getItem('growthos-theme')).toBe('dark');
     store.dispatch(toggleTheme());
     expect(store.getState().theme.isDarkMode).toBe(false);
-    expect(localStorage.getItem('theme')).toBe('light');
+    expect(localStorage.getItem('growthos-theme')).toBe('light');
   });
 
   it('setTheme explicitly sets isDarkMode and persists', async () => {
@@ -65,9 +65,9 @@ describe('themeSlice', () => {
     const store = configureStore({ reducer: { theme: reducer } });
     store.dispatch(setTheme(true));
     expect(store.getState().theme.isDarkMode).toBe(true);
-    expect(localStorage.getItem('theme')).toBe('dark');
+    expect(localStorage.getItem('growthos-theme')).toBe('dark');
     store.dispatch(setTheme(false));
     expect(store.getState().theme.isDarkMode).toBe(false);
-    expect(localStorage.getItem('theme')).toBe('light');
+    expect(localStorage.getItem('growthos-theme')).toBe('light');
   });
 });

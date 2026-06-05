@@ -6,7 +6,7 @@ import type { ThemeState } from '../../../shared/types';
 // 从localStorage读取初始主题
 const getInitialTheme = (): boolean => {
   try {
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = localStorage.getItem('growthos-theme');
     return savedTheme ? savedTheme === 'dark' : false;
   } catch {
     return false;
@@ -26,12 +26,12 @@ const themeSlice = createSlice({
     toggleTheme: (state) => {
       state.isDarkMode = !state.isDarkMode;
       // 保存到localStorage
-      localStorage.setItem('theme', state.isDarkMode ? 'dark' : 'light');
+      localStorage.setItem('growthos-theme', state.isDarkMode ? 'dark' : 'light');
     },
     setTheme: (state, action: PayloadAction<boolean>) => {
       state.isDarkMode = action.payload;
       // 保存到localStorage
-      localStorage.setItem('theme', state.isDarkMode ? 'dark' : 'light');
+      localStorage.setItem('growthos-theme', state.isDarkMode ? 'dark' : 'light');
     },
   },
 });

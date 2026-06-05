@@ -75,7 +75,10 @@ class SecureStorage {
         // 仅清理本应用已知使用的 key 前缀/模式
         if (
           key &&
-          (key.startsWith('growth') || key.startsWith('auth') || key.startsWith('theme'))
+          (key.startsWith('growth') ||
+            key.startsWith('auth') ||
+            key.startsWith('theme') ||
+            key.startsWith('growthos'))
         ) {
           keysToRemove.push(key);
         }
