@@ -44,6 +44,7 @@ vi.mock('reactflow', () => ({
   Background: () => <div data-testid="background" />,
   Controls: () => <div data-testid="controls" />,
   MiniMap: () => <div data-testid="minimap" />,
+  BackgroundVariant: { Dots: 'dots' },
 }));
 
 describe('TreeVisualization', () => {

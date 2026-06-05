@@ -36,17 +36,47 @@ export const loadData = createAsyncThunk('growth/loadData', async () => {
 });
 
 // 导入数据
+// 验证 Record 基本结构
+const isValidRecord = (item: unknown): item is Record => {
+  if (typeof item !== 'object' || item === null) return false;
+  const r = item as Record;
+  return typeof r.id === 'string' && typeof r.createdAt === 'string';
+};
+
+// 验证 Tag 基本结构
+const isValidTag = (item: unknown): item is Tag => {
+  return typeof item === 'string';
+};
+
+// 验证 Tree 基本结构
+const isValidTree = (item: unknown): item is Tree => {
+  if (typeof item !== 'object' || item === null) return false;
+  const t = item as Tree;
+  return typeof t.id === 'string' && typeof t.name === 'string';
+};
+
 export const importData = createAsyncThunk(
   'growth/importData',
   async (data: { records?: Record[]; tags?: Tag[]; trees?: Tree[]; goals?: unknown[] }) => {
     if (data.records && Array.isArray(data.records)) {
-      secureStorage.setItem('growth-records', data.records);
+      // 校验导入数据，防止恶意注入
+      const validatedRecords = data.records.filter(isValidRecord);
+      if (validatedRecords.length !== data.records.length) {
+        logger.warn('导入数据校验', {
+          total: data.records.length,
+          valid: validatedRecords.length,
+          rejected: data.records.length - validatedRecords.length,
+        });
+      }
+      secureStorage.setItem('growth-records', validatedRecords);
     }
     if (data.tags && Array.isArray(data.tags)) {
-      secureStorage.setItem('growth-tags', data.tags);
+      const validatedTags = data.tags.filter(isValidTag);
+      secureStorage.setItem('growth-tags', validatedTags);
     }
     if (data.trees && Array.isArray(data.trees)) {
-      secureStorage.setItem('growth-trees', data.trees);
+      const validatedTrees = data.trees.filter(isValidTree);
+      secureStorage.setItem('growth-trees', validatedTrees);
     }
     if (data.goals && Array.isArray(data.goals)) {
       secureStorage.setItem('growth-goals', data.goals);

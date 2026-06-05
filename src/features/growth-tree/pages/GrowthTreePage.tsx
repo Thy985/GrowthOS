@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck - reactflow v11→v12 类型升级,留 PR3 处理
-import React, { useState, useCallback, useEffect } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import type { Node, Edge, Connection } from 'reactflow';
 import {
@@ -14,6 +13,7 @@ import {
   useEdgesState,
   addEdge,
   ConnectionLineType,
+  BackgroundVariant,
 } from 'reactflow';
 
 import 'reactflow/dist/style.css';
@@ -22,13 +22,20 @@ import type { RootState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
 
+// 定义 NodeData 类型
+interface NodeData {
+  label: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
 const GrowthTree = () => {
-  const { records, tags } = useSelector((state: RootState) => state.records);
+  const { tags } = useSelector((state: RootState) => state.records);
 
   // 从tags和records生成树节点
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
   const [showAddNodeModal, setShowAddNodeModal] = useState(false);
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [nodeFormData, setNodeFormData] = useState({ label: '', description: '' });
@@ -37,11 +44,11 @@ const GrowthTree = () => {
   useEffect(() => {
     // 从本地存储加载树结构
     try {
-      const savedNodes = secureStorage.getItem('growth-tree-nodes');
-      const savedEdges = secureStorage.getItem('growth-tree-edges');
+      const savedNodes = secureStorage.getItem<Node<NodeData>[]>('growth-tree-nodes');
+      const savedEdges = secureStorage.getItem<Edge[]>('growth-tree-edges');
 
       if (savedNodes && savedEdges) {
-        setNodes(savedNodes);
+        setNodes(savedNodes as any);
         setEdges(savedEdges);
         logger.info('成长树结构加载成功', {
           nodesCount: savedNodes.length,
@@ -49,7 +56,7 @@ const GrowthTree = () => {
         });
       } else {
         // 从标签生成节点
-        const generatedNodes = tags.map((tag, index) => ({
+        const generatedNodes = tags.map((tag: string, index: number) => ({
           id: `node-${tag}`,
           type: 'default',
           position: {
@@ -63,7 +70,7 @@ const GrowthTree = () => {
         }));
 
         // 生成边（简单示例，实际应用中可能需要更复杂的逻辑）
-        const generatedEdges = [];
+        const generatedEdges: Edge[] = [];
         for (let i = 1; i < generatedNodes.length; i++) {
           generatedEdges.push({
             id: `edge-${i}`,
@@ -73,7 +80,7 @@ const GrowthTree = () => {
           });
         }
 
-        setNodes(generatedNodes);
+        setNodes(generatedNodes as any);
         setEdges(generatedEdges);
         // 保存到本地存储
         secureStorage.setItem('growth-tree-nodes', generatedNodes);
@@ -98,14 +105,17 @@ const GrowthTree = () => {
   }, [nodes, edges]);
 
   // 处理节点点击
-  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node<NodeData>) => {
     setSelectedNode(node);
   }, []);
 
   // 处理边的添加
-  const handleConnect = useCallback((params: Connection) => {
-    setEdges((eds) => addEdge(params, eds));
-  }, []);
+  const handleConnect = useCallback(
+    (params: Connection) => {
+      setEdges((eds) => addEdge(params, eds));
+    },
+    [setEdges],
+  );
 
   // 处理表单输入变化
   const handleNodeInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -119,7 +129,7 @@ const GrowthTree = () => {
   // 处理添加节点
   const handleAddNode = () => {
     if (nodeFormData.label) {
-      const newNode = {
+      const newNode: Node<NodeData> = {
         id: `node-${Date.now()}`,
         type: 'default',
         position: { x: 200, y: 200 },
@@ -128,7 +138,7 @@ const GrowthTree = () => {
           description: nodeFormData.description || `关于 ${nodeFormData.label} 的学习内容`,
         },
       };
-      setNodes((prev) => [...prev, newNode]);
+      setNodes((prev: any) => [...prev, newNode]);
       setNodeFormData({ label: '', description: '' });
       setShowAddNodeModal(false);
       logger.info('节点添加成功', { nodeLabel: nodeFormData.label });
@@ -138,8 +148,8 @@ const GrowthTree = () => {
   // 处理编辑节点
   const handleEditNode = () => {
     if (selectedNode && nodeFormData.label) {
-      setNodes((prev) =>
-        prev.map((node) => {
+      setNodes((prev: any) =>
+        prev.map((node: Node<NodeData>) => {
           if (node.id === selectedNode.id) {
             return {
               ...node,
@@ -162,9 +172,11 @@ const GrowthTree = () => {
   const handleDeleteNode = () => {
     if (selectedNode) {
       // 删除节点及其相关的边
-      setNodes((prev) => prev.filter((node) => node.id !== selectedNode.id));
-      setEdges((prev) =>
-        prev.filter((edge) => edge.source !== selectedNode.id && edge.target !== selectedNode.id),
+      setNodes((prev: any) => prev.filter((node: Node) => node.id !== selectedNode.id));
+      setEdges((prev: any) =>
+        prev.filter(
+          (edge: Edge) => edge.source !== selectedNode.id && edge.target !== selectedNode.id,
+        ),
       );
       setSelectedNode(null);
       logger.info('节点删除成功', { nodeId: selectedNode.id });
@@ -182,11 +194,18 @@ const GrowthTree = () => {
     if (selectedNode) {
       setNodeFormData({
         label: selectedNode.data.label,
-        description: selectedNode.data.description,
+        description: selectedNode.data.description ?? '',
       });
       setShowEditNodeModal(true);
     }
   };
+
+  // 记录数量统计
+  const { records } = useSelector((state: RootState) => state.records);
+  const relatedRecords = useMemo(() => {
+    if (!selectedNode) return [];
+    return records.filter((record) => record.tags && record.tags.includes(selectedNode.data.label));
+  }, [selectedNode, records]);
 
   return (
     <ErrorBoundary>
@@ -204,12 +223,11 @@ const GrowthTree = () => {
               onNodeClick={handleNodeClick}
               onConnect={handleConnect}
               connectionLineType={ConnectionLineType.Bezier}
-              defaultZoom={1.2}
               minZoom={0.5}
               maxZoom={2}
             >
               <Controls />
-              <Background variant="dots" gap={16} size={1} />
+              <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
               <MiniMap />
               <Panel position="top-right">
                 <div className="text-sm">
@@ -247,19 +265,15 @@ const GrowthTree = () => {
               <div className="mt-4">
                 <h4>相关记录</h4>
                 <ul>
-                  {records
-                    .filter(
-                      (record) => record.tags && record.tags.includes(selectedNode.data.label),
-                    )
-                    .map((record) => (
-                      <li key={record.id} className="mb-2">
-                        <p className="font-medium">{record.activity}</p>
-                        <p className="text-sm text-gray-600">{record.learning}</p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(record.createdAt).toLocaleDateString()}
-                        </p>
-                      </li>
-                    ))}
+                  {relatedRecords.map((record) => (
+                    <li key={record.id} className="mb-2">
+                      <p className="font-medium">{record.activity}</p>
+                      <p className="text-sm text-gray-600">{record.learning}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(record.createdAt).toLocaleDateString()}
+                      </p>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>

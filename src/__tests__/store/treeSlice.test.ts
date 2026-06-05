@@ -107,7 +107,7 @@ describe('growthSlice (orchestration)', () => {
     const store = configureStore({ reducer: { growth: growthReducer } });
     await store.dispatch(
       importData({
-        records: [{ id: 'r1' }] as never,
+        records: [{ id: 'r1', createdAt: '2024-01-01' }] as never,
         tags: ['a'] as never,
         trees: sampleTrees as never,
         goals: [{ id: 'g1' }] as never,

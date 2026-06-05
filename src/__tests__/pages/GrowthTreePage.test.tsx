@@ -23,6 +23,7 @@ vi.mock('reactflow', () => ({
   useEdgesState: (initial: unknown[]) => [initial, vi.fn(), vi.fn()],
   addEdge: vi.fn(),
   ConnectionLineType: { SmoothStep: 'smoothstep' },
+  BackgroundVariant: { Dots: 'dots' },
 }));
 
 import GrowthTreePage from '../../features/growth-tree/pages/GrowthTreePage.tsx';

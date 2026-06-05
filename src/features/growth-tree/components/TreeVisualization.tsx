@@ -1,91 +1,107 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck - reactflow v11→v12 类型升级,留 PR3 处理
-import { useState, useEffect } from 'react';
-import { ReactFlow, addEdge, Background, Controls, MiniMap } from 'reactflow';
-import 'reactflow/dist/style.css';
+import { useState, useEffect, useCallback } from 'react';
+import { ReactFlow, addEdge, Background, Controls, MiniMap, BackgroundVariant } from 'reactflow';
+import type { Node, Edge, OnConnect } from 'reactflow';
 
-const TreeVisualization = ({ treeData }) => {
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
+interface TreeNode {
+  id: string;
+  name: string;
+  type?: string;
+  children?: TreeNode[];
+}
 
-  // 当树数据变化时更新ReactFlow数据
+interface NodeData {
+  label: string;
+  [key: string]: unknown;
+}
+
+interface TreeVisualizationProps {
+  treeData: TreeNode | null;
+}
+
+// 根据节点类型返回不同的颜色
+const getNodeColor = (type?: string): string => {
+  switch (type) {
+    case 'skill':
+      return '#4CAF50';
+    case 'cognition':
+      return '#2196F3';
+    case 'habit':
+      return '#FFC107';
+    case 'life':
+      return '#9C27B0';
+    default:
+      return '#757575';
+  }
+};
+
+// 将树数据转换为 ReactFlow 节点和边
+const convertTreeToReactFlow = (tree: TreeNode): { nodes: Node<NodeData>[]; edges: Edge[] } => {
+  const newNodes: Node<NodeData>[] = [];
+  const newEdges: Edge[] = [];
+
+  const traverseTree = (node: TreeNode, x = 500, y = 100) => {
+    newNodes.push({
+      id: node.id,
+      data: { label: node.name },
+      position: { x, y },
+      style: {
+        backgroundColor: getNodeColor(node.type),
+        color: '#fff',
+        borderRadius: '8px',
+        padding: '10px',
+      },
+    });
+
+    if (node.children && node.children.length > 0) {
+      const childXStart = x - ((node.children.length - 1) * 150) / 2;
+      node.children.forEach((child, index) => {
+        const childX = childXStart + index * 150;
+        const childY = y + 150;
+
+        newEdges.push({
+          id: `edge-${node.id}-${child.id}`,
+          source: node.id,
+          target: child.id,
+          type: 'smoothstep',
+          animated: true,
+        });
+
+        traverseTree(child, childX, childY);
+      });
+    }
+  };
+
+  traverseTree(tree);
+  return { nodes: newNodes, edges: newEdges };
+};
+
+const TreeVisualization = ({ treeData }: TreeVisualizationProps) => {
+  const [nodes, setNodes] = useState<Node<NodeData>[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+
+  // 当树数据变化时更新 ReactFlow 数据
+  const updateReactFlowData = useCallback((tree: TreeNode) => {
+    const { nodes: newNodes, edges: newEdges } = convertTreeToReactFlow(tree);
+    setNodes(newNodes);
+    setEdges(newEdges);
+  }, []);
+
   useEffect(() => {
     if (treeData) {
       updateReactFlowData(treeData);
     }
-  }, [treeData]);
+  }, [treeData, updateReactFlowData]);
 
-  // 将树数据转换为reactflow的节点和边
-  const updateReactFlowData = (tree) => {
-    const newNodes = [];
-    const newEdges = [];
-
-    // 递归遍历树，创建节点和边
-    const traverseTree = (node, x = 500, y = 100, level = 0) => {
-      // 创建节点
-      newNodes.push({
-        id: node.id,
-        data: { label: node.name },
-        position: { x, y },
-        style: {
-          backgroundColor: getNodeColor(node.type),
-          color: '#fff',
-          borderRadius: '8px',
-          padding: '10px',
-        },
-      });
-
-      // 如果有子节点，创建边并递归
-      if (node.children && node.children.length > 0) {
-        const childXStart = x - ((node.children.length - 1) * 150) / 2;
-        node.children.forEach((child, index) => {
-          const childX = childXStart + index * 150;
-          const childY = y + 150;
-
-          // 创建边
-          newEdges.push({
-            id: `edge-${node.id}-${child.id}`,
-            source: node.id,
-            target: child.id,
-            type: 'smoothstep',
-            animated: true,
-          });
-
-          // 递归处理子节点
-          traverseTree(child, childX, childY, level + 1);
-        });
-      }
-    };
-
-    traverseTree(tree);
-    setNodes(newNodes);
-    setEdges(newEdges);
-  };
-
-  // 根据节点类型返回不同的颜色
-  const getNodeColor = (type) => {
-    switch (type) {
-      case 'skill':
-        return '#4CAF50'; // 绿色
-      case 'cognition':
-        return '#2196F3'; // 蓝色
-      case 'habit':
-        return '#FFC107'; // 黄色
-      case 'life':
-        return '#9C27B0'; // 紫色
-      default:
-        return '#757575'; // 灰色
-    }
-  };
+  const onConnect: OnConnect = useCallback(
+    (params) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges],
+  );
 
   return (
     <div className="h-96 bg-gray-100 rounded">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onConnect={(params) => setEdges((eds) => addEdge(params, eds))}
-      >
-        <Background variant="dots" gap={12} size={1} />
+      <ReactFlow nodes={nodes} edges={edges} onConnect={onConnect}>
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         <Controls />
         <MiniMap />
       </ReactFlow>

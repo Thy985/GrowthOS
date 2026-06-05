@@ -12,15 +12,14 @@ interface User {
   passwordHash?: string;
 }
 
-// 简单的密码哈希函数（非加密级，但比明文好）
-const hashPassword = (password: string): string => {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // 转为 32bit 整数
-  }
-  return `h_${Math.abs(hash).toString(36)}_${btoa(password).substring(0, 8)}`;
+// 使用 Web Crypto API 进行密码哈希（SHA-256）
+const hashPassword = async (password: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
 };
 
 // 初始状态
@@ -37,7 +36,7 @@ export const login = createAsyncThunk(
   async ({ username, password }: { username: string; password: string }) => {
     try {
       logger.info('用户登录', { username });
-      const passwordHash = hashPassword(password);
+      const passwordHash = await hashPassword(password);
       const users = (secureStorage.getItem<User[]>('auth-users') || []) as User[];
       const user = users.find(
         (u: User) => u.username === username && u.passwordHash === passwordHash,
@@ -99,7 +98,7 @@ export const register = createAsyncThunk(
         id: Date.now().toString(),
         username,
         email: `${username}@example.com`,
-        passwordHash: hashPassword(password),
+        passwordHash: await hashPassword(password),
       };
 
       const updatedUsers = [...users, newUser];

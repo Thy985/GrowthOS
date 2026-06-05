@@ -41,13 +41,19 @@ describe('secureStorage', () => {
     expect(secureStorage.getItem('test')).toBeNull();
   });
 
-  it('clear removes all keys', () => {
-    secureStorage.setItem('a', 1);
-    secureStorage.setItem('b', 2);
+  it('clear removes all keys with app prefixes', () => {
+    secureStorage.setItem('growth-records', 1);
+    secureStorage.setItem('auth-user', 2);
+    secureStorage.setItem('theme', 3);
+    // This key should NOT be cleared (doesn't match any app prefix)
+    secureStorage.setItem('other-key', 4);
     const ok = secureStorage.clear();
     expect(ok).toBe(true);
-    expect(secureStorage.getItem('a')).toBeNull();
-    expect(secureStorage.getItem('b')).toBeNull();
+    expect(secureStorage.getItem('growth-records')).toBeNull();
+    expect(secureStorage.getItem('auth-user')).toBeNull();
+    expect(secureStorage.getItem('theme')).toBeNull();
+    // Keys not matching app prefixes should remain
+    expect(secureStorage.getItem('other-key')).toBe(4);
   });
 
   it('setItem returns false when encryption returns null', () => {
@@ -82,8 +88,9 @@ describe('secureStorage', () => {
     expect(ok).toBe(false);
   });
 
-  it('clear returns false when localStorage.clear throws', () => {
-    vi.spyOn(Storage.prototype, 'clear').mockImplementationOnce(() => {
+  it('clear returns false when localStorage.key throws', () => {
+    secureStorage.setItem('growth-test', 1);
+    vi.spyOn(Storage.prototype, 'key').mockImplementationOnce(() => {
       throw new Error('error');
     });
     const ok = secureStorage.clear();

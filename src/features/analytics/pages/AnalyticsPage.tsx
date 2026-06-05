@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck - recharts v2→v3 类型升级 + analytics 重构较大,留 PR3 处理
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -33,7 +32,11 @@ import type { RootState } from '../../../shared/types';
 import { exportData, importData } from '../../../store/slices/growthSlice';
 
 // 自定义工具提示组件
-const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) => {
+const CustomTooltip: React.FC<{
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string }>;
+  label?: string;
+}> = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 rounded shadow-md border border-gray-200">
@@ -62,23 +65,58 @@ const chartColors = {
 };
 
 // 情绪标签映射
-const moodLabels = {
+const moodLabels: Record<number, string> = {
   0: '不太好',
   1: '一般',
   2: '很好',
 };
 
+// 图表数据类型
+interface ChartData {
+  dailyRecords: Array<{ date: string; count: number }>;
+  moodTrend: Array<{ day: string; mood: number; moodLabel: string }>;
+  activityDistribution: Array<{ name: string; value: number }>;
+  weeklyTrend: Array<{ week: string; records: number; avgMood: number }>;
+  skillsRadar: Array<{ subject: string; A: number; fullMark: number }>;
+  categoryBreakdown: Array<{ name: string; value: number }>;
+  studyTimeData: Array<{ date: string; hours: number }>;
+  scatterData: Array<{ x: number; y: number; z: number }>;
+  heatmapData: Array<{ week: string; activity: string; intensity: number }>;
+}
+
+// 导出选项类型
+interface ExportOptions {
+  format: 'json' | 'csv' | 'markdown';
+  dataTypes: string[];
+  startDate: string;
+  endDate: string;
+}
+
+// 从记录中获取情绪值
+const getMoodValue = (mood: string): number => {
+  switch (mood) {
+    case '很好':
+      return 2;
+    case '一般':
+      return 1;
+    case '不太好':
+      return 0;
+    default:
+      return 0;
+  }
+};
+
 const Analytics = () => {
   const [importStatus, setImportStatus] = useState({ success: false, message: '' });
   const [showExportModal, setShowExportModal] = useState(false);
-  const [exportOptions, setExportOptions] = useState({
+  const [exportOptions, setExportOptions] = useState<ExportOptions>({
     format: 'json',
     dataTypes: ['records', 'goals', 'tags', 'trees'],
     startDate: '',
     endDate: '',
   });
   const [activeChart, setActiveChart] = useState('daily');
-  const [timeRange, setTimeRange] = useState('7d'); // 7d, 30d, 90d
+  const [timeRange, setTimeRange] = useState('7d');
   const dispatch = useDispatch<any>();
   const { records } = useSelector((state: RootState) => state.records);
 
@@ -95,67 +133,18 @@ const Analytics = () => {
 
     const totalRecords = records.length;
 
-    const moodSum = records.reduce((sum, record) => {
-      let moodValue = 0;
-      switch (record.mood) {
-        case '很好':
-          moodValue = 2;
-          break;
-        case '一般':
-          moodValue = 1;
-          break;
-        case '不太好':
-          moodValue = 0;
-          break;
-      }
-      return sum + moodValue;
-    }, 0);
+    const moodSum = records.reduce((sum, record) => sum + getMoodValue(record.mood), 0);
 
     const averageMood = totalRecords > 0 ? (moodSum / totalRecords).toFixed(1) : '0.0';
 
-    return {
-      weeklyRecords,
-      totalRecords,
-      averageMood,
-    };
+    return { weeklyRecords, totalRecords, averageMood };
   }, [records]);
 
   // 处理图表数据
-  const chartData = useMemo(() => {
-    return processChartData(records, timeRange);
-  }, [records, timeRange]);
-
-  // 处理文件导入
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target?.result as string);
-        dispatch(importData(data));
-        setImportStatus({ success: true, message: '数据导入成功！' });
-        setTimeout(() => {
-          setImportStatus({ success: false, message: '' });
-        }, 3000);
-      } catch (error) {
-        setImportStatus({ success: false, message: '数据导入失败，文件格式错误。' });
-        setTimeout(() => {
-          setImportStatus({ success: false, message: '' });
-        }, 3000);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  // 处理图表数据
-  const processChartData = (records: any[], timeRange: string) => {
-    // 计算记录数
+  const chartData: ChartData = useMemo(() => {
     const now = new Date();
-    const dailyData = [];
 
-    // 根据时间范围确定天数
+    // 计算天数
     let days = 7;
     switch (timeRange) {
       case '30d':
@@ -164,57 +153,31 @@ const Analytics = () => {
       case '90d':
         days = 90;
         break;
-      default:
-        days = 7;
     }
 
+    // 每日记录数据
+    const dailyRecords: ChartData['dailyRecords'] = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-
-      const dayRecords = records.filter((record) => {
-        return record.createdAt.startsWith(dateStr);
-      });
-
-      dailyData.push({
-        date: dateStr,
-        count: dayRecords.length,
-      });
+      const dayRecords = records.filter((r) => r.createdAt.startsWith(dateStr));
+      dailyRecords.push({ date: dateStr, count: dayRecords.length });
     }
 
-    // 计算情绪趋势
-    const moodData = [];
-    records
+    // 情绪趋势
+    const moodTrend: ChartData['moodTrend'] = records
       .slice(0, 10)
       .reverse()
-      .forEach((record) => {
-        let moodValue = 0;
-        switch (record.mood) {
-          case '很好':
-            moodValue = 2;
-            break;
-          case '一般':
-            moodValue = 1;
-            break;
-          case '不太好':
-            moodValue = 0;
-            break;
-        }
-
-        // 获取记录日期
+      .map((record) => {
+        const moodValue = getMoodValue(record.mood);
         const recordDate = record.createdAt ? new Date(record.createdAt) : new Date();
         const dateStr = recordDate.toISOString().split('T')[0];
-
-        moodData.push({
-          day: dateStr,
-          mood: moodValue,
-          moodLabel: moodLabels[moodValue],
-        });
+        return { day: dateStr, mood: moodValue, moodLabel: moodLabels[moodValue] };
       });
 
-    // 计算活动分布
-    const activityCounts = {};
+    // 活动分布
+    const activityCounts: Record<string, number> = {};
     records.forEach((record) => {
       if (record.activity) {
         const activities = record.activity.split(' ').filter((word) => word.startsWith('#'));
@@ -224,16 +187,12 @@ const Analytics = () => {
         });
       }
     });
+    const activityDistribution: ChartData['activityDistribution'] = Object.entries(activityCounts)
+      .map(([name, value]) => ({ name, value }))
+      .slice(0, 5);
 
-    const activityData = Object.entries(activityCounts)
-      .map(([name, value]) => ({
-        name,
-        value,
-      }))
-      .slice(0, 5); // 只取前5个
-
-    // 计算每周趋势
-    const weeklyData = [];
+    // 每周趋势
+    const weeklyTrend: ChartData['weeklyTrend'] = [];
     for (let i = 3; i >= 0; i--) {
       const weekStart = new Date(now);
       weekStart.setDate(weekStart.getDate() - i * 7);
@@ -245,31 +204,16 @@ const Analytics = () => {
         return recordDate >= weekStart && recordDate <= weekEnd;
       });
 
-      const weekMood = weekRecords.reduce((sum, record) => {
-        let moodValue = 0;
-        switch (record.mood) {
-          case '很好':
-            moodValue = 2;
-            break;
-          case '一般':
-            moodValue = 1;
-            break;
-          case '不太好':
-            moodValue = 0;
-            break;
-        }
-        return sum + moodValue;
-      }, 0);
-
-      weeklyData.push({
+      const weekMood = weekRecords.reduce((sum, record) => sum + getMoodValue(record.mood), 0);
+      weeklyTrend.push({
         week: `第${4 - i}周`,
         records: weekRecords.length,
         avgMood: weekRecords.length > 0 ? weekMood / weekRecords.length : 0,
       });
     }
 
-    // 技能雷达图数据
-    const skillsData = [
+    // 技能雷达图
+    const skillsRadar: ChartData['skillsRadar'] = [
       {
         subject: '编程',
         A: Math.min(records.filter((r) => r.tags?.includes('编程')).length + 3, 10),
@@ -304,7 +248,7 @@ const Analytics = () => {
 
     // 分类分布
     const categories = ['技能', '认知', '习惯', '生活'];
-    const categoryData = categories.map((category) => {
+    const categoryBreakdown: ChartData['categoryBreakdown'] = categories.map((category) => {
       const categoryRecords = records.filter((record) => {
         const tags = record.tags || [];
         return tags.some(
@@ -315,49 +259,27 @@ const Analytics = () => {
             (category === '生活' && ['家庭', '社交', '旅行'].includes(tag)),
         );
       });
-      return {
-        name: category,
-        value: categoryRecords.length,
-      };
+      return { name: category, value: categoryRecords.length };
     });
 
     // 学习时间分布（模拟数据）
-    const studyTimeData = [];
+    const studyTimeData: ChartData['studyTimeData'] = [];
     for (let i = 7; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-
-      studyTimeData.push({
-        date: dateStr,
-        hours: Math.random() * 5 + 1, // 1-6小时
-      });
+      studyTimeData.push({ date: dateStr, hours: Math.random() * 5 + 1 });
     }
 
-    // 散点图数据（情绪 vs 学习时间）
-    const scatterData = records.slice(0, 20).map((record) => {
-      let moodValue = 0;
-      switch (record.mood) {
-        case '很好':
-          moodValue = 2;
-          break;
-        case '一般':
-          moodValue = 1;
-          break;
-        case '不太好':
-          moodValue = 0;
-          break;
-      }
+    // 散点图数据
+    const scatterData: ChartData['scatterData'] = records.slice(0, 20).map((record) => ({
+      x: getMoodValue(record.mood),
+      y: Math.random() * 6 + 1,
+      z: record.tags?.length || 0,
+    }));
 
-      return {
-        x: moodValue,
-        y: Math.random() * 6 + 1, // 模拟学习时间
-        z: record.tags?.length || 0, // 标签数量作为大小
-      };
-    });
-
-    // 热力图数据（每周活动热力图）
-    const heatmapData = [];
+    // 热力图数据
+    const heatmapData: ChartData['heatmapData'] = [];
     const activities = ['编程', '阅读', '运动', '学习', '社交'];
     for (let week = 1; week <= 4; week++) {
       activities.forEach((activity) => {
@@ -370,16 +292,36 @@ const Analytics = () => {
     }
 
     return {
-      dailyRecords: dailyData,
-      moodTrend: moodData,
-      activityDistribution: activityData,
-      weeklyTrend: weeklyData,
-      skillsRadar: skillsData,
-      categoryBreakdown: categoryData,
+      dailyRecords,
+      moodTrend,
+      activityDistribution,
+      weeklyTrend,
+      skillsRadar,
+      categoryBreakdown,
       studyTimeData,
       scatterData,
       heatmapData,
     };
+  }, [records, timeRange]);
+
+  // 处理文件导入
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        dispatch(importData(data));
+        setImportStatus({ success: true, message: '数据导入成功！' });
+        setTimeout(() => setImportStatus({ success: false, message: '' }), 3000);
+      } catch {
+        setImportStatus({ success: false, message: '数据导入失败，文件格式错误。' });
+        setTimeout(() => setImportStatus({ success: false, message: '' }), 3000);
+      }
+    };
+    reader.readAsText(file);
   };
 
   // 渲染不同的图表
@@ -390,7 +332,7 @@ const Analytics = () => {
           <div className="col-span-1 lg:col-span-2">
             <h3 className="font-medium mb-3">过去7天记录趋势</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData.dailyRecords} animationDuration={1500}>
+              <BarChart data={chartData.dailyRecords}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
@@ -401,7 +343,6 @@ const Analytics = () => {
                   fill={chartColors.primary}
                   name="记录数"
                   radius={[4, 4, 0, 0]}
-                  animationEasing="ease-in-out"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -413,7 +354,7 @@ const Analytics = () => {
           <div className="col-span-1 lg:col-span-2">
             <h3 className="font-medium mb-3">每周趋势</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={chartData.weeklyTrend} animationDuration={1500}>
+              <AreaChart data={chartData.weeklyTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="week" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
@@ -447,7 +388,7 @@ const Analytics = () => {
           <div className="col-span-1 lg:col-span-2">
             <h3 className="font-medium mb-3">技能雷达图</h3>
             <ResponsiveContainer width="100%" height={350}>
-              <RadarChart data={chartData.skillsRadar} animationDuration={1500}>
+              <RadarChart data={chartData.skillsRadar}>
                 <PolarGrid stroke="#f0f0f0" />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
                 <PolarRadiusAxis angle={90} domain={[0, 10]} />
@@ -470,11 +411,7 @@ const Analytics = () => {
           <div className="col-span-1 lg:col-span-2">
             <h3 className="font-medium mb-3">分类分布</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={chartData.categoryBreakdown}
-                animationDuration={1500}
-                layout="vertical"
-              >
+              <BarChart data={chartData.categoryBreakdown} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
@@ -485,7 +422,6 @@ const Analytics = () => {
                   fill={chartColors.secondary}
                   name="记录数"
                   radius={[0, 4, 4, 0]}
-                  animationEasing="ease-in-out"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -497,7 +433,7 @@ const Analytics = () => {
           <div className="col-span-1 lg:col-span-2">
             <h3 className="font-medium mb-3">学习时间趋势</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData.studyTimeData} animationDuration={1500}>
+              <LineChart data={chartData.studyTimeData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
@@ -510,7 +446,6 @@ const Analytics = () => {
                   name="学习时间（小时）"
                   activeDot={{ r: 8, fill: chartColors.accent }}
                   strokeWidth={2}
-                  animationEasing="ease-in-out"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -522,14 +457,14 @@ const Analytics = () => {
           <div className="col-span-1 lg:col-span-2">
             <h3 className="font-medium mb-3">情绪与学习时间关系</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <ScatterChart animationDuration={1500}>
+              <ScatterChart>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   type="number"
                   dataKey="x"
                   name="情绪"
                   domain={[0, 2]}
-                  tickFormatter={(value) => moodLabels[value]}
+                  tickFormatter={(value: number) => moodLabels[value]}
                 />
                 <YAxis type="number" dataKey="y" name="学习时间（小时）" domain={[0, 7]} />
                 <ZAxis type="number" dataKey="z" name="标签数量" />
@@ -564,7 +499,6 @@ const Analytics = () => {
                 data={chartData.heatmapData}
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                animationDuration={1500}
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" />
@@ -584,12 +518,7 @@ const Analytics = () => {
                   }}
                 />
                 <Legend />
-                <Bar
-                  dataKey="intensity"
-                  name="活动强度"
-                  fill={chartColors.primary}
-                  animationEasing="ease-in-out"
-                >
+                <Bar dataKey="intensity" name="活动强度" fill={chartColors.primary}>
                   {chartData.heatmapData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
@@ -639,7 +568,10 @@ const Analytics = () => {
                         className="input w-full"
                         value={exportOptions.format}
                         onChange={(e) =>
-                          setExportOptions({ ...exportOptions, format: e.target.value })
+                          setExportOptions({
+                            ...exportOptions,
+                            format: e.target.value as 'json' | 'csv' | 'markdown',
+                          })
                         }
                       >
                         <option value="json">JSON</option>
@@ -650,58 +582,29 @@ const Analytics = () => {
                     <div>
                       <label className="block text-sm font-medium mb-2">数据类型</label>
                       <div className="space-y-2">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={exportOptions.dataTypes.includes('records')}
-                            onChange={(e) => {
-                              const newDataTypes = e.target.checked
-                                ? [...exportOptions.dataTypes, 'records']
-                                : exportOptions.dataTypes.filter((t) => t !== 'records');
-                              setExportOptions({ ...exportOptions, dataTypes: newDataTypes });
-                            }}
-                          />
-                          <span className="ml-2 text-sm">记录</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={exportOptions.dataTypes.includes('goals')}
-                            onChange={(e) => {
-                              const newDataTypes = e.target.checked
-                                ? [...exportOptions.dataTypes, 'goals']
-                                : exportOptions.dataTypes.filter((t) => t !== 'goals');
-                              setExportOptions({ ...exportOptions, dataTypes: newDataTypes });
-                            }}
-                          />
-                          <span className="ml-2 text-sm">目标</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={exportOptions.dataTypes.includes('tags')}
-                            onChange={(e) => {
-                              const newDataTypes = e.target.checked
-                                ? [...exportOptions.dataTypes, 'tags']
-                                : exportOptions.dataTypes.filter((t) => t !== 'tags');
-                              setExportOptions({ ...exportOptions, dataTypes: newDataTypes });
-                            }}
-                          />
-                          <span className="ml-2 text-sm">标签</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={exportOptions.dataTypes.includes('trees')}
-                            onChange={(e) => {
-                              const newDataTypes = e.target.checked
-                                ? [...exportOptions.dataTypes, 'trees']
-                                : exportOptions.dataTypes.filter((t) => t !== 'trees');
-                              setExportOptions({ ...exportOptions, dataTypes: newDataTypes });
-                            }}
-                          />
-                          <span className="ml-2 text-sm">成长树</span>
-                        </label>
+                        {['records', 'goals', 'tags', 'trees'].map((type) => (
+                          <label key={type} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={exportOptions.dataTypes.includes(type)}
+                              onChange={(e) => {
+                                const newDataTypes = e.target.checked
+                                  ? [...exportOptions.dataTypes, type]
+                                  : exportOptions.dataTypes.filter((t) => t !== type);
+                                setExportOptions({ ...exportOptions, dataTypes: newDataTypes });
+                              }}
+                            />
+                            <span className="ml-2 text-sm">
+                              {type === 'records'
+                                ? '记录'
+                                : type === 'goals'
+                                  ? '目标'
+                                  : type === 'tags'
+                                    ? '标签'
+                                    : '成长树'}
+                            </span>
+                          </label>
+                        ))}
                       </div>
                     </div>
                     <div>
@@ -785,73 +688,36 @@ const Analytics = () => {
           </div>
 
           <div className="flex flex-wrap gap-4 mb-6">
-            {/* 时间范围选择器 */}
             <div className="flex gap-2">
               <span className="text-sm text-gray-600 self-center">时间范围：</span>
-              <button
-                className={`btn ${timeRange === '7d' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setTimeRange('7d')}
-              >
-                7天
-              </button>
-              <button
-                className={`btn ${timeRange === '30d' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setTimeRange('30d')}
-              >
-                30天
-              </button>
-              <button
-                className={`btn ${timeRange === '90d' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setTimeRange('90d')}
-              >
-                90天
-              </button>
+              {['7d', '30d', '90d'].map((range) => (
+                <button
+                  key={range}
+                  className={`btn ${timeRange === range ? 'btn-primary' : 'btn-outline'} btn-sm`}
+                  onClick={() => setTimeRange(range)}
+                >
+                  {range === '7d' ? '7天' : range === '30d' ? '30天' : '90天'}
+                </button>
+              ))}
             </div>
-
-            {/* 图表切换按钮 */}
             <div className="flex flex-wrap gap-2">
-              <button
-                className={`btn ${activeChart === 'daily' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setActiveChart('daily')}
-              >
-                日趋势
-              </button>
-              <button
-                className={`btn ${activeChart === 'weekly' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setActiveChart('weekly')}
-              >
-                周趋势
-              </button>
-              <button
-                className={`btn ${activeChart === 'skills' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setActiveChart('skills')}
-              >
-                技能雷达
-              </button>
-              <button
-                className={`btn ${activeChart === 'categories' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setActiveChart('categories')}
-              >
-                分类分布
-              </button>
-              <button
-                className={`btn ${activeChart === 'study-time' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setActiveChart('study-time')}
-              >
-                学习时间
-              </button>
-              <button
-                className={`btn ${activeChart === 'scatter' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setActiveChart('scatter')}
-              >
-                情绪与学习
-              </button>
-              <button
-                className={`btn ${activeChart === 'heatmap' ? 'btn-primary' : 'btn-outline'} btn-sm`}
-                onClick={() => setActiveChart('heatmap')}
-              >
-                活动热力图
-              </button>
+              {[
+                { key: 'daily', label: '日趋势' },
+                { key: 'weekly', label: '周趋势' },
+                { key: 'skills', label: '技能雷达' },
+                { key: 'categories', label: '分类分布' },
+                { key: 'study-time', label: '学习时间' },
+                { key: 'scatter', label: '情绪与学习' },
+                { key: 'heatmap', label: '活动热力图' },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`btn ${activeChart === key ? 'btn-primary' : 'btn-outline'} btn-sm`}
+                  onClick={() => setActiveChart(key)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -860,7 +726,7 @@ const Analytics = () => {
             <div>
               <h3 className="font-medium mb-3">情绪趋势</h3>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData.moodTrend} animationDuration={1500}>
+                <LineChart data={chartData.moodTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
                     dataKey="day"
@@ -872,7 +738,7 @@ const Analytics = () => {
                   <YAxis
                     domain={[0, 2]}
                     tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => moodLabels[value]}
+                    tickFormatter={(value: number) => moodLabels[value]}
                   />
                   <Tooltip
                     content={({ active, payload, label }) => {
@@ -896,7 +762,6 @@ const Analytics = () => {
                     name="情绪"
                     activeDot={{ r: 8, fill: chartColors.secondary }}
                     strokeWidth={2}
-                    animationEasing="ease-in-out"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -905,7 +770,7 @@ const Analytics = () => {
           <div className="mt-6">
             <h3 className="font-medium mb-3">活动分布</h3>
             <ResponsiveContainer width="100%" height={400}>
-              <PieChart animationDuration={1500}>
+              <PieChart>
                 <Pie
                   data={chartData.activityDistribution}
                   cx="50%"
@@ -915,10 +780,11 @@ const Analytics = () => {
                   fill="#8884d8"
                   dataKey="value"
                   nameKey="name"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  animationEasing="ease-in-out"
+                  label={({ name, percent }: { name: string; percent: number }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
                 >
-                  {chartData.activityDistribution.map((entry, index) => (
+                  {chartData.activityDistribution.map((_entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={

@@ -66,10 +66,21 @@ class SecureStorage {
     }
   }
 
-  // 清空所有数据
+  // 清空所有数据（仅清理本应用使用的 key）
   clear(): boolean {
     try {
-      localStorage.clear();
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        // 仅清理本应用已知使用的 key 前缀/模式
+        if (
+          key &&
+          (key.startsWith('growth') || key.startsWith('auth') || key.startsWith('theme'))
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
       return true;
     } catch (error) {
       console.error('清空数据失败:', error);
