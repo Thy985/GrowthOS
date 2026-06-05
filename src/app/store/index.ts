@@ -1,5 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 
+import recordsReducer from '../../features/records/store/recordsSlice';
+import treeReducer from '../../features/growth-tree/store/treeSlice';
 import authReducer from '../../features/auth/store/authSlice';
 import goalReducer from '../../features/goals/store/goalSlice';
 import growthReducer from '../../store/slices/growthSlice';
@@ -9,11 +11,13 @@ import themeReducer from '../../features/theme/store/themeSlice';
 export const store = configureStore({
   reducer: {
     growth: growthReducer,
+    records: recordsReducer,
+    tree: treeReducer,
     auth: authReducer,
     theme: themeReducer,
     goal: goalReducer,
-    reminder: reminderReducer
-  }
+    reminder: reminderReducer,
+  },
 });
 
 // 导出类型

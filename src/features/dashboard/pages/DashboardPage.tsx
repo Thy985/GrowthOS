@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, memo, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import type { RootState } from '../../../shared/types/index.ts';
-import { addRecord } from '../../../store/slices/growthSlice.ts';
+import { addRecord } from '../../records/store/recordsSlice.ts';
 
 interface FormData {
   activity: string;
@@ -26,7 +26,7 @@ const Dashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const dispatch = useDispatch();
-  const { records, error } = useSelector((state: RootState) => state.growth);
+  const { records, error } = useSelector((state: RootState) => state.records);
   const feedbackRef = useRef<HTMLDivElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
 

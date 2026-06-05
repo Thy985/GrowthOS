@@ -26,7 +26,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 
-import type { GrowthState, GoalState } from '../../../shared/types';
+import type { RootState, GoalState } from '../../../shared/types';
 import ErrorBoundary from '../../../shared/components/ErrorBoundary';
 import { exportData, importData } from '../../../store/slices/growthSlice';
 
@@ -78,7 +78,7 @@ const Analytics = () => {
   const [activeChart, setActiveChart] = useState('daily');
   const [timeRange, setTimeRange] = useState('7d'); // 7d, 30d, 90d
   const dispatch = useDispatch();
-  const { records } = useSelector((state: { growth: GrowthState, goal: GoalState }) => state.growth);
+  const { records } = useSelector((state: RootState) => state.records);
 
   // 计算统计数据
   const stats = useMemo(() => {

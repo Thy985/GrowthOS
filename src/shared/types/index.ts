@@ -42,10 +42,22 @@ export interface ThemeState {
   isDarkMode: boolean;
 }
 
-// 成长状态类型
+// 成长状态类型(阶段 E 后,实际只保留 orchestration isLoading/error)
 export interface GrowthState {
+  isLoading: boolean;
+  error: string | null;
+}
+
+// 记录状态类型
+export interface RecordsState {
   records: Record[];
   tags: Tag[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+// 技能树状态类型
+export interface TreeState {
   trees: Tree[];
   isLoading: boolean;
   error: string | null;
@@ -96,6 +108,8 @@ export interface ReminderState {
 export interface RootState {
   auth: AuthState;
   growth: GrowthState;
+  records: RecordsState;
+  tree: TreeState;
   theme: ThemeState;
   goal: GoalState;
   reminder: ReminderState;

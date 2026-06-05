@@ -10,7 +10,7 @@ const RecordList = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   
-  const { records, tags } = useSelector((state: RootState) => state.growth);
+  const { records, tags } = useSelector((state: RootState) => state.records);
   
   const allTags = tags;
   const allMoods = ['很好', '一般', '不太好'] as const;

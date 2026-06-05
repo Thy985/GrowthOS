@@ -4,13 +4,13 @@ import type { Node, Edge, Connection } from 'reactflow';
 import { ReactFlow, Controls, Background, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType } from 'reactflow';
 
 import 'reactflow/dist/style.css';
-import type { GrowthState } from '../../../shared/types';
+import type { RootState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
 import ErrorBoundary from '../../../shared/components/ErrorBoundary';
 
 const GrowthTree = () => {
-  const { records, tags } = useSelector((state: { growth: GrowthState }) => state.growth);
+  const { records, tags } = useSelector((state: RootState) => state.records);
   
   // 从tags和records生成树节点
   const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
