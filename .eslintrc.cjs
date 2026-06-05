@@ -41,6 +41,14 @@ module.exports = {
         'react/no-unescaped-entities': 'off',
       },
     },
+    {
+      // 测试文件中 mock 和类型断言使用 any 是合理的
+      files: ['src/__tests__/**/*.{ts,tsx}'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+        'react/prop-types': 'off',
+      },
+    },
   ],
   ignorePatterns: ['dist', 'node_modules', 'coverage', '*.cjs', '*.config.*'],
 };

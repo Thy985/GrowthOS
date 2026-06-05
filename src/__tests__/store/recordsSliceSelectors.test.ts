@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, test, expect, beforeEach } from 'vitest';
 
 import recordsReducer, {
   setRecords,

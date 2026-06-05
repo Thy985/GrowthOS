@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import RecordsPage from '../../features/records/pages/RecordsPage.tsx';
 import recordsReducer from '../../features/records/store/recordsSlice.ts';
 import growthReducer from '../../store/slices/growthSlice.ts';
 
-function renderWithStore(preloaded?: { records: { records: never[]; tags: never[]; isLoading: false; error: null } }) {
+function renderWithStore(preloaded?: Record<string, unknown>) {
   const store = configureStore({
     reducer: { records: recordsReducer, growth: growthReducer },
-    preloadedState: preloaded as never,
+    preloadedState: preloaded as Parameters<typeof configureStore>[0]['preloadedState'],
   });
   return render(
     <Provider store={store}>

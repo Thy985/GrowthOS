@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import RemindersPage from '../../features/reminders/pages/RemindersPage.tsx';
 
@@ -10,12 +10,14 @@ function makeStore(preloadedReminders: any[] = []) {
   return configureStore({
     reducer: {
       auth: (state = { isAuthenticated: true, isLoading: false, user: null, error: null }) => state,
-      reminder: (state = {
-        reminders: preloadedReminders,
-        isLoading: false,
-        error: null,
-        categories: [],
-      }) => state,
+      reminder: (
+        state = {
+          reminders: preloadedReminders,
+          isLoading: false,
+          error: null,
+          categories: [],
+        },
+      ) => state,
       records: (state = { records: [], tags: [], isLoading: false, error: null }) => state,
       theme: (state = { isDarkMode: false }) => state,
     },
@@ -79,46 +81,52 @@ describe('RemindersPage interactions', () => {
   });
 
   it('shows reminders in pending list when not completed', () => {
-    renderPage([{
-      id: '1',
-      title: 'Test Reminder',
-      description: 'Test desc',
-      date: '2024-06-01',
-      time: '10:00',
-      isCompleted: false,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-01',
-    }]);
+    renderPage([
+      {
+        id: '1',
+        title: 'Test Reminder',
+        description: 'Test desc',
+        date: '2024-06-01',
+        time: '10:00',
+        isCompleted: false,
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      },
+    ]);
     expect(screen.getByText('待完成')).toBeInTheDocument();
     expect(screen.getByText('Test Reminder')).toBeInTheDocument();
   });
 
   it('shows completed reminders in completed list', () => {
-    renderPage([{
-      id: '1',
-      title: 'Completed Reminder',
-      description: 'Test desc',
-      date: '2024-06-01',
-      time: '10:00',
-      isCompleted: true,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-01',
-    }]);
+    renderPage([
+      {
+        id: '1',
+        title: 'Completed Reminder',
+        description: 'Test desc',
+        date: '2024-06-01',
+        time: '10:00',
+        isCompleted: true,
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      },
+    ]);
     expect(screen.getByText('已完成')).toBeInTheDocument();
     expect(screen.getByText('Completed Reminder')).toBeInTheDocument();
   });
 
   it('edit button opens modal with form filled', () => {
-    renderPage([{
-      id: '1',
-      title: 'Edit Me',
-      description: 'Edit desc',
-      date: '2024-06-01',
-      time: '10:00',
-      isCompleted: false,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-01',
-    }]);
+    renderPage([
+      {
+        id: '1',
+        title: 'Edit Me',
+        description: 'Edit desc',
+        date: '2024-06-01',
+        time: '10:00',
+        isCompleted: false,
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      },
+    ]);
     const editButton = screen.getByText('编辑');
     fireEvent.click(editButton);
     // Modal should open with title "编辑提醒"
@@ -128,32 +136,36 @@ describe('RemindersPage interactions', () => {
 
   it('delete button confirms and dispatches delete', () => {
     mockConfirm.mockReturnValueOnce(true);
-    renderPage([{
-      id: '1',
-      title: 'Delete Me',
-      description: '',
-      date: '2024-06-01',
-      time: '10:00',
-      isCompleted: false,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-01',
-    }]);
+    renderPage([
+      {
+        id: '1',
+        title: 'Delete Me',
+        description: '',
+        date: '2024-06-01',
+        time: '10:00',
+        isCompleted: false,
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      },
+    ]);
     const deleteButton = screen.getByText('删除');
     fireEvent.click(deleteButton);
     expect(mockConfirm).toHaveBeenCalled();
   });
 
   it('checkbox dispatches completeReminder', () => {
-    renderPage([{
-      id: '1',
-      title: 'Complete Me',
-      description: '',
-      date: '2024-06-01',
-      time: '10:00',
-      isCompleted: false,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-01',
-    }]);
+    renderPage([
+      {
+        id: '1',
+        title: 'Complete Me',
+        description: '',
+        date: '2024-06-01',
+        time: '10:00',
+        isCompleted: false,
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+      },
+    ]);
     const checkbox = screen.getByRole('checkbox');
     fireEvent.click(checkbox);
     // State should update

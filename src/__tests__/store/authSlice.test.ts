@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import authReducer, {
   login,
@@ -60,9 +60,7 @@ describe('authSlice', () => {
 
     it('rejects when username exists', async () => {
       const store = makeStore();
-      await store.dispatch(
-        register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }),
-      );
+      await store.dispatch(register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }));
       const result = await store.dispatch(
         register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }),
       );
@@ -74,9 +72,7 @@ describe('authSlice', () => {
   describe('login', () => {
     it('authenticates existing user', async () => {
       const store = makeStore();
-      await store.dispatch(
-        register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }),
-      );
+      await store.dispatch(register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }));
       // 清空 store + 重新构造(因为 register 后 state 已 authenticated)
       localStorage.clear();
       const newStore = makeStore();
@@ -84,18 +80,14 @@ describe('authSlice', () => {
       secureStorage.setItem('auth-users', [
         { id: '1', username: 'alice', email: 'a@e.com', password: 'pw' },
       ]);
-      const result = await newStore.dispatch(
-        login({ username: 'alice', password: 'pw' }),
-      );
+      const result = await newStore.dispatch(login({ username: 'alice', password: 'pw' }));
       expect(result.type).toBe('auth/login/fulfilled');
       expect(newStore.getState().auth.isAuthenticated).toBe(true);
     });
 
     it('rejects with invalid credentials', async () => {
       const store = makeStore();
-      const result = await store.dispatch(
-        login({ username: 'nobody', password: 'wrong' }),
-      );
+      const result = await store.dispatch(login({ username: 'nobody', password: 'wrong' }));
       expect(result.type).toBe('auth/login/rejected');
       expect(store.getState().auth.error).toBe('用户名或密码错误');
       expect(store.getState().auth.isAuthenticated).toBe(false);
@@ -105,9 +97,7 @@ describe('authSlice', () => {
   describe('logout', () => {
     it('clears user and isAuthenticated', async () => {
       const store = makeStore();
-      await store.dispatch(
-        register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }),
-      );
+      await store.dispatch(register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }));
       expect(store.getState().auth.isAuthenticated).toBe(true);
       const result = await store.dispatch(logout());
       expect(result.type).toBe('auth/logout/fulfilled');

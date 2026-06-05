@@ -1,11 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 
 import KeyboardShortcutsHelp from '../../shared/components/KeyboardShortcutsHelp.tsx';
 
 describe('KeyboardShortcutsHelp', () => {
   it('renders nothing when isOpen=false', () => {
-    const { container } = render(<KeyboardShortcutsHelp isOpen={false} onClose={() => undefined} />);
+    const { container } = render(
+      <KeyboardShortcutsHelp isOpen={false} onClose={() => undefined} />,
+    );
     expect(container.firstChild).toBeNull();
   });
 

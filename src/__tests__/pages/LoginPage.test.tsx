@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import LoginPage from '../../features/auth/pages/LoginPage.tsx';
 import authReducer from '../../features/auth/store/authSlice.ts';

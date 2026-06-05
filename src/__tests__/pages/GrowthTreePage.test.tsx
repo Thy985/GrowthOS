@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock reactflow to avoid jsdom issues with SVG/canvas rendering
 vi.mock('reactflow', () => ({
@@ -15,9 +15,7 @@ vi.mock('reactflow', () => ({
   Controls: () => <div data-testid="controls" />,
   Background: () => <div data-testid="background" />,
   MiniMap: () => <div data-testid="minimap" />,
-  Panel: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="panel">{children}</div>
-  ),
+  Panel: ({ children }: { children: React.ReactNode }) => <div data-testid="panel">{children}</div>,
   NodeToolbar: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="node-toolbar">{children}</div>
   ),
@@ -28,8 +26,8 @@ vi.mock('reactflow', () => ({
 }));
 
 import GrowthTreePage from '../../features/growth-tree/pages/GrowthTreePage.tsx';
-import recordsReducer from '../../features/records/store/recordsSlice.ts';
 import treeReducer from '../../features/growth-tree/store/treeSlice.ts';
+import recordsReducer from '../../features/records/store/recordsSlice.ts';
 import growthReducer from '../../store/slices/growthSlice.ts';
 
 function renderWithStore() {

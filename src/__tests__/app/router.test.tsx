@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { render, screen } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { describe, it, expect } from 'vitest';
 
 import { ProtectedRoute, AppRoutes } from '../../app/router.tsx';
 
@@ -23,7 +23,9 @@ describe('ProtectedRoute', () => {
     render(
       <Provider store={store}>
         <MemoryRouter>
-          <ProtectedRoute><div>protected content</div></ProtectedRoute>
+          <ProtectedRoute>
+            <div>protected content</div>
+          </ProtectedRoute>
         </MemoryRouter>
       </Provider>,
     );
@@ -57,7 +59,9 @@ describe('ProtectedRoute', () => {
     render(
       <Provider store={store}>
         <MemoryRouter>
-          <ProtectedRoute><div>protected content</div></ProtectedRoute>
+          <ProtectedRoute>
+            <div>protected content</div>
+          </ProtectedRoute>
         </MemoryRouter>
       </Provider>,
     );

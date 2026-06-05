@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { AuthProvider, useAuth } from '../../features/auth/contexts/AuthContext.tsx';
 import { secureStorage } from '../../shared/utils/secureStorage.ts';
@@ -9,7 +9,7 @@ const Probe = () => {
   return (
     <div>
       <span data-testid="user">{user ? user.username : 'none'}</span>
-      <span data-testid="role">{user ? user.role ?? 'norole' : 'norole'}</span>
+      <span data-testid="role">{user ? (user.role ?? 'norole') : 'norole'}</span>
       <span data-testid="loading">{String(isLoading)}</span>
       <span data-testid="error">{error ?? 'noerror'}</span>
       <button onClick={() => login('alice', 'pw')}>loginAlice</button>
@@ -74,11 +74,9 @@ describe('AuthContext', () => {
   });
 
   it('handles error from secureStorage gracefully', async () => {
-    const spy = vi
-      .spyOn(secureStorage, 'getItem')
-      .mockImplementationOnce(() => {
-        throw new Error('boom');
-      });
+    const spy = vi.spyOn(secureStorage, 'getItem').mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
       <AuthProvider>

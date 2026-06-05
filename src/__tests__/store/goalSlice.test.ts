@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import goalReducer, {
   loadGoals,
@@ -80,9 +80,7 @@ describe('goalSlice', () => {
       const store = makeStore();
       const added = await store.dispatch(addGoal(sampleGoal));
       const goalId = (added.payload as { id: string }).id;
-      const result = await store.dispatch(
-        updateGoal({ id: goalId, title: '新标题' }),
-      );
+      const result = await store.dispatch(updateGoal({ id: goalId, title: '新标题' }));
       expect(result.type).toBe('goal/updateGoal/fulfilled');
       expect(store.getState().goal.goals[0].title).toBe('新标题');
     });

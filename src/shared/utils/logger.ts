@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // 日志级别
-enum LOG_LEVELS {
+export enum LOG_LEVELS {
   DEBUG = 'debug',
   INFO = 'info',
   WARN = 'warn',

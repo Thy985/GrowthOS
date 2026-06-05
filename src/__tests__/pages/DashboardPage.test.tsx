@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect } from 'vitest';
 
 import DashboardPage from '../../features/dashboard/pages/DashboardPage.tsx';
 import recordsReducer from '../../features/records/store/recordsSlice.ts';

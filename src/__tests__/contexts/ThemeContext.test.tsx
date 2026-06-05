@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { ThemeProvider, useTheme } from '../../features/theme/contexts/ThemeContext.tsx';
 

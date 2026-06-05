@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import reminderReducer, {
   loadReminders,
@@ -95,10 +95,17 @@ describe('reminderSlice', () => {
       );
       const store = makeStore();
       const added = await store.dispatch(addReminder(sampleReminder));
-      const reminder = added.payload as { id: string; title: string };
-      const result = await store.dispatch(
-        updateReminder({ ...reminder, title: '新标题' }),
-      );
+      const reminder = added.payload as {
+        id: string;
+        title: string;
+        description: string;
+        date: string;
+        time: string;
+        isCompleted: boolean;
+        createdAt: string;
+        updatedAt: string;
+      };
+      const result = await store.dispatch(updateReminder({ ...reminder, title: '新标题' }));
       expect(result.type).toBe('reminder/updateReminder/fulfilled');
       expect(store.getState().reminder.reminders[0].title).toBe('新标题');
     });

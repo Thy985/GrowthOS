@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import DashboardPage from '../../features/dashboard/pages/DashboardPage.tsx';
 
@@ -22,7 +22,8 @@ function makeStore() {
   return configureStore({
     reducer: {
       auth: (state = { isAuthenticated: true, isLoading: false, user: null, error: null }) => state,
-      records: (state = { records: mockRecords, tags: ['React'], isLoading: false, error: null }) => state,
+      records: (state = { records: mockRecords, tags: ['React'], isLoading: false, error: null }) =>
+        state,
       tree: (state = { trees: [], isLoading: false, error: null }) => state,
       goal: (state = { goals: [], isLoading: false, error: null }) => state,
       theme: (state = { isDarkMode: false }) => state,
@@ -61,7 +62,7 @@ describe('DashboardPage', () => {
 
   it('shows record count from state', () => {
     renderPage();
-    // The totalRecords value is rendered in a stats card; check that the value "1" 
+    // The totalRecords value is rendered in a stats card; check that the value "1"
     // appears among the stat numbers (totalRecords = 1 with mockRecords)
     const statElements = screen.getAllByText('1');
     expect(statElements.length).toBeGreaterThan(0);

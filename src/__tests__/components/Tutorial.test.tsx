@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import Tutorial from '../../shared/components/Tutorial.tsx';
 import { secureStorage } from '../../shared/utils/secureStorage.ts';

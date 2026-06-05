@@ -1,14 +1,18 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import App from '../../app/App.tsx';
 
 // Mock complex child modules
 vi.mock('reactflow', () => ({
   __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <div data-testid="reactflow">{children}</div>,
-  ReactFlow: ({ children }: { children: React.ReactNode }) => <div data-testid="reactflow">{children}</div>,
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="reactflow">{children}</div>
+  ),
+  ReactFlow: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="reactflow">{children}</div>
+  ),
   useNodesState: () => [[], () => {}],
   useEdgesState: () => [[], () => {}],
   Controls: () => null,

@@ -1,13 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import treeReducer, { setTrees, clearError } from '../../features/growth-tree/store/treeSlice.ts';
-import growthReducer, {
-  loadData,
-  importData,
-} from '../../store/slices/growthSlice.ts';
 import type { Tree } from '../../shared/types/index.ts';
 import { secureStorage } from '../../shared/utils/secureStorage.ts';
+import growthReducer, { loadData, importData } from '../../store/slices/growthSlice.ts';
 
 function makeStore() {
   return configureStore({
@@ -16,7 +13,17 @@ function makeStore() {
 }
 
 const sampleTrees: Tree[] = [
-  { id: 't1', name: 'Web 技能树', nodes: [], createdAt: '2024-01-01' },
+  {
+    id: 't1',
+    name: 'Web 技能树',
+    parentId: null,
+    description: '',
+    icon: '',
+    progress: 0,
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01',
+    children: [],
+  },
 ];
 
 describe('treeSlice', () => {

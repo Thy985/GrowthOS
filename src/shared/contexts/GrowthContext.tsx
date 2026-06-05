@@ -18,6 +18,8 @@ interface GrowthContextValue {
   filterRecordsByMood: (moods: string[]) => Record[];
   filterRecordsByTags: (tags: string[]) => Record[];
   getAllTags: () => string[];
+  getStats: () => { weeklyRecords: number; totalRecords: number; growthProgress: number };
+  getAverageMood: () => string;
   exportData: () => void;
   importData: (data: Record<string, unknown>) => void;
 }
@@ -219,6 +221,9 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
         type: 'shadow',
         children: [],
       };
+      if (!suitableParent.children) {
+        suitableParent.children = [];
+      }
       suitableParent.children.push(newNode);
     }
   };

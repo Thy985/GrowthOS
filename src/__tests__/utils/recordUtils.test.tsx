@@ -1,9 +1,13 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import React from 'react';
+import { describe, it, expect } from 'vitest';
 
-import { formatDate, getMoodColor, highlightSearchTerm, filterRecords } from '../../shared/utils/recordUtils.tsx';
 import type { Record } from '../../shared/types/index.ts';
+import {
+  formatDate,
+  getMoodColor,
+  highlightSearchTerm,
+  filterRecords,
+} from '../../shared/utils/recordUtils.tsx';
 
 const sampleRecords: Record[] = [
   {
@@ -123,10 +127,7 @@ describe('recordUtils', () => {
     });
 
     it('excludes records without tags when filtering by tags', () => {
-      const records: Record[] = [
-        { ...sampleRecords[0], tags: [] },
-        sampleRecords[1],
-      ];
+      const records: Record[] = [{ ...sampleRecords[0], tags: [] }, sampleRecords[1]];
       const result = filterRecords(records, '', [], ['Redux'], { start: '', end: '' });
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('2');

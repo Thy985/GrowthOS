@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 
 import Card from '../../shared/components/common/Card.tsx';
 
@@ -15,7 +15,11 @@ describe('Card', () => {
   });
 
   it('renders subtitle when provided', () => {
-    render(<Card title="t" subtitle="sub">body</Card>);
+    render(
+      <Card title="t" subtitle="sub">
+        body
+      </Card>,
+    );
     expect(screen.getByText('sub')).toBeInTheDocument();
   });
 

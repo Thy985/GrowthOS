@@ -1,18 +1,42 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import TreeVisualization from '../../features/growth-tree/components/TreeVisualization.tsx';
 
 // Mock reactflow
 vi.mock('reactflow', () => ({
   __esModule: true,
-  default: ({ children, nodes, edges, onConnect }: { children: React.ReactNode; nodes: any[]; edges: any[]; onConnect: (p: any) => void }) => (
-    <div data-testid="reactflow" data-nodes={JSON.stringify(nodes.map(n => n.id))} data-edges={JSON.stringify(edges.map(e => e.id))}>
+  default: ({
+    children,
+    nodes,
+    edges,
+  }: {
+    children: React.ReactNode;
+    nodes: any[];
+    edges: any[];
+  }) => (
+    <div
+      data-testid="reactflow"
+      data-nodes={JSON.stringify(nodes.map((n) => n.id))}
+      data-edges={JSON.stringify(edges.map((e) => e.id))}
+    >
       {children}
     </div>
   ),
-  ReactFlow: ({ children, nodes, edges }: { children: React.ReactNode; nodes: any[]; edges: any[] }) => (
-    <div data-testid="reactflow" data-nodes={JSON.stringify(nodes.map(n => n.id))} data-edges={JSON.stringify(edges.map(e => e.id))}>
+  ReactFlow: ({
+    children,
+    nodes,
+    edges,
+  }: {
+    children: React.ReactNode;
+    nodes: any[];
+    edges: any[];
+  }) => (
+    <div
+      data-testid="reactflow"
+      data-nodes={JSON.stringify(nodes.map((n) => n.id))}
+      data-edges={JSON.stringify(edges.map((e) => e.id))}
+    >
       {children}
     </div>
   ),

@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import secureStorage, { secureStorage as namedSecureStorage } from '../../shared/utils/secureStorage.ts';
 import encryption from '../../shared/utils/encryption.ts';
+import secureStorage, {
+  secureStorage as namedSecureStorage,
+} from '../../shared/utils/secureStorage.ts';
 
 describe('secureStorage', () => {
   beforeEach(() => {
@@ -73,7 +75,7 @@ describe('secureStorage', () => {
   });
 
   it('removeItem returns false when localStorage.removeItem throws', () => {
-    const spy = vi.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
       throw new Error('error');
     });
     const ok = secureStorage.removeItem('test');
@@ -81,7 +83,7 @@ describe('secureStorage', () => {
   });
 
   it('clear returns false when localStorage.clear throws', () => {
-    const spy = vi.spyOn(Storage.prototype, 'clear').mockImplementationOnce(() => {
+    vi.spyOn(Storage.prototype, 'clear').mockImplementationOnce(() => {
       throw new Error('error');
     });
     const ok = secureStorage.clear();
@@ -111,7 +113,7 @@ describe('secureStorage', () => {
   });
 
   it('getItem returns defaultValue when localStorage.getItem throws', () => {
-    const spy = vi.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementationOnce(() => {
       throw new Error('error');
     });
     const got = secureStorage.getItem('test', 'fallback');

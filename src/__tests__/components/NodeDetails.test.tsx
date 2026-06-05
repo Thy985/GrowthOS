@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 
 import NodeDetails from '../../features/growth-tree/components/NodeDetails.tsx';
 

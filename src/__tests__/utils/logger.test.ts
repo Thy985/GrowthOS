@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import logger from '../../shared/utils/logger.ts';
+import logger, { LOG_LEVELS } from '../../shared/utils/logger.ts';
 
 describe('logger', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    logger.setLogLevel('debug');
+    logger.setLogLevel(LOG_LEVELS.DEBUG);
   });
 
   it('debug calls console.debug with formatted message', () => {
@@ -44,14 +44,14 @@ describe('logger', () => {
   });
 
   it('does not call console.debug when level is INFO and above', () => {
-    logger.setLogLevel('info');
+    logger.setLogLevel(LOG_LEVELS.INFO);
     const spy = vi.spyOn(console, 'debug').mockImplementation(() => {});
     logger.debug('hidden');
     expect(spy).not.toHaveBeenCalled();
   });
 
   it('does not call console.info when level is WARN', () => {
-    logger.setLogLevel('warn');
+    logger.setLogLevel(LOG_LEVELS.WARN);
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     logger.info('hidden-info');
@@ -61,7 +61,7 @@ describe('logger', () => {
   });
 
   it('does not call console.warn/debug/info when level is ERROR', () => {
-    logger.setLogLevel('error');
+    logger.setLogLevel(LOG_LEVELS.ERROR);
     const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -74,7 +74,7 @@ describe('logger', () => {
   });
 
   it('ignores invalid log level', () => {
-    logger.setLogLevel('info');
+    logger.setLogLevel(LOG_LEVELS.INFO);
     // @ts-expect-error - invalid level
     logger.setLogLevel('invalid');
     // level should remain 'info', so debug is hidden

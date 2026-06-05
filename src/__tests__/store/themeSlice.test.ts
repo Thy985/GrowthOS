@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('themeSlice', () => {
   beforeEach(() => {

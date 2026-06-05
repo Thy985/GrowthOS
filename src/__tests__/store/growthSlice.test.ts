@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
+import { secureStorage } from '../../shared/utils/secureStorage.ts';
 import growthReducer, {
   loadData,
   importData,
   exportData,
   clearGrowthError,
 } from '../../store/slices/growthSlice.ts';
-import { secureStorage } from '../../shared/utils/secureStorage.ts';
 
 // Mock logger to avoid console noise
 vi.mock('../../shared/utils/logger.ts', () => ({
@@ -76,27 +76,62 @@ describe('growthSlice', () => {
     secureStorage.setItem('growth-trees', [{ id: 't1', name: 'test' }]);
     const store = makeStore();
     const result = await store.dispatch(loadData());
-    expect(result.payload.records).toHaveLength(1);
-    expect(result.payload.tags).toEqual(['a', 'b']);
-    expect(result.payload.trees).toHaveLength(1);
+    expect((result.payload as any).records).toHaveLength(1);
+    expect((result.payload as any).tags).toEqual(['a', 'b']);
+    expect((result.payload as any).trees).toHaveLength(1);
   });
 
   it('loadData handles empty storage', async () => {
     const store = makeStore();
     const result = await store.dispatch(loadData());
-    expect(result.payload.records).toEqual([]);
-    expect(result.payload.tags).toEqual([]);
-    expect(result.payload.trees).toEqual([]);
+    expect((result.payload as any).records).toEqual([]);
+    expect((result.payload as any).tags).toEqual([]);
+    expect((result.payload as any).trees).toEqual([]);
   });
 
   it('importData writes to secureStorage', async () => {
     const store = makeStore();
     await store.dispatch(
       importData({
-        records: [{ id: 'x' }],
+        records: [
+          {
+            id: 'x',
+            activity: '',
+            learning: '',
+            reflection: '',
+            mood: '一般',
+            tags: [],
+            createdAt: '',
+          },
+        ],
         tags: ['tag1'],
-        trees: [{ id: 't2' }],
-        goals: [{ id: 'g1' }],
+        trees: [
+          {
+            id: 't2',
+            name: '',
+            parentId: null,
+            description: '',
+            icon: '',
+            progress: 0,
+            createdAt: '',
+            updatedAt: '',
+            children: [],
+          },
+        ],
+        goals: [
+          {
+            id: 'g1',
+            title: '',
+            description: '',
+            targetValue: 0,
+            currentValue: 0,
+            startDate: '',
+            endDate: '',
+            status: 'active',
+            createdAt: '',
+            updatedAt: '',
+          },
+        ],
       }),
     );
     const records = secureStorage.getItem<{ id: string }[]>('growth-records') || [];
@@ -143,7 +178,15 @@ describe('growthSlice', () => {
 
   it('exportData csv generates csv content', async () => {
     secureStorage.setItem('growth-records', [
-      { id: 'r1', activity: 'test', learning: 'learn', reflection: 'ref', mood: '很好', tags: ['t1'], createdAt: '2024-01-01' },
+      {
+        id: 'r1',
+        activity: 'test',
+        learning: 'learn',
+        reflection: 'ref',
+        mood: '很好',
+        tags: ['t1'],
+        createdAt: '2024-01-01',
+      },
     ]);
     const recordsReducer = (state = { records: [], tags: [] }) => state;
     const treeReducer = (state = { trees: [] }) => state;
@@ -168,7 +211,15 @@ describe('growthSlice', () => {
 
   it('exportData markdown generates markdown content', async () => {
     secureStorage.setItem('growth-records', [
-      { id: 'r1', activity: 'test', learning: 'learn', reflection: 'ref', mood: '很好', tags: ['t1'], createdAt: '2024-01-01' },
+      {
+        id: 'r1',
+        activity: 'test',
+        learning: 'learn',
+        reflection: 'ref',
+        mood: '很好',
+        tags: ['t1'],
+        createdAt: '2024-01-01',
+      },
     ]);
     secureStorage.setItem('growth-tags', ['t1']);
     const recordsReducer = (state = { records: [], tags: [] }) => state;

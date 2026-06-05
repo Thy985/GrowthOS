@@ -1,11 +1,23 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { GrowthProvider, useGrowth } from '../../shared/contexts/GrowthContext.tsx';
 import { secureStorage } from '../../shared/utils/secureStorage.ts';
 
 const Probe = () => {
-  const { records, treeData, isLoading, error, getStats, getAverageMood, getAllTags, searchRecords, filterRecordsByMood, filterRecordsByTags, filterRecordsByDateRange } = useGrowth();
+  const {
+    records,
+    treeData,
+    isLoading,
+    error,
+    getStats,
+    getAverageMood,
+    getAllTags,
+    searchRecords,
+    filterRecordsByMood,
+    filterRecordsByTags,
+    filterRecordsByDateRange,
+  } = useGrowth();
   const stats = getStats();
   const avgMood = getAverageMood();
   const tags = getAllTags();
@@ -65,8 +77,24 @@ describe('GrowthContext', () => {
 
   it('loads saved records and tree from secureStorage', async () => {
     const savedRecords = [
-      { id: '1', activity: '学习React', learning: 'hooks', reflection: '', mood: '很好', tags: ['React'], createdAt: '2024-06-01T10:00:00.000Z' },
-      { id: '2', activity: '写代码', learning: '', reflection: '', mood: '一般', tags: ['编程'], createdAt: '2024-06-03T10:00:00.000Z' },
+      {
+        id: '1',
+        activity: '学习React',
+        learning: 'hooks',
+        reflection: '',
+        mood: '很好',
+        tags: ['React'],
+        createdAt: '2024-06-01T10:00:00.000Z',
+      },
+      {
+        id: '2',
+        activity: '写代码',
+        learning: '',
+        reflection: '',
+        mood: '一般',
+        tags: ['编程'],
+        createdAt: '2024-06-03T10:00:00.000Z',
+      },
     ];
     const savedTree = {
       id: '1',
@@ -111,8 +139,24 @@ describe('GrowthContext', () => {
 
   it('getStats returns correct stats', async () => {
     const recentRecords = [
-      { id: '1', activity: 'test', learning: '', reflection: '', mood: '很好', tags: [], createdAt: new Date().toISOString() },
-      { id: '2', activity: 'test2', learning: '', reflection: '', mood: '一般', tags: [], createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+      {
+        id: '1',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '很好',
+        tags: [],
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: '2',
+        activity: 'test2',
+        learning: '',
+        reflection: '',
+        mood: '一般',
+        tags: [],
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
     ];
     secureStorage.setItem('growthos-records', recentRecords);
 
@@ -130,9 +174,33 @@ describe('GrowthContext', () => {
 
   it('getAverageMood computes correctly', async () => {
     const records = [
-      { id: '1', activity: 'test', learning: '', reflection: '', mood: '很好', tags: [], createdAt: '2024-01-01' },
-      { id: '2', activity: 'test', learning: '', reflection: '', mood: '一般', tags: [], createdAt: '2024-01-02' },
-      { id: '3', activity: 'test', learning: '', reflection: '', mood: '不太好', tags: [], createdAt: '2024-01-03' },
+      {
+        id: '1',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '很好',
+        tags: [],
+        createdAt: '2024-01-01',
+      },
+      {
+        id: '2',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '一般',
+        tags: [],
+        createdAt: '2024-01-02',
+      },
+      {
+        id: '3',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '不太好',
+        tags: [],
+        createdAt: '2024-01-03',
+      },
     ];
     secureStorage.setItem('growthos-records', records);
 
@@ -162,8 +230,24 @@ describe('GrowthContext', () => {
 
   it('getAllTags returns unique tags from records', async () => {
     const records = [
-      { id: '1', activity: 'test', learning: '', reflection: '', mood: '很好', tags: ['React', '前端'], createdAt: '2024-01-01' },
-      { id: '2', activity: 'test', learning: '', reflection: '', mood: '一般', tags: ['React', '后端'], createdAt: '2024-01-02' },
+      {
+        id: '1',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '很好',
+        tags: ['React', '前端'],
+        createdAt: '2024-01-01',
+      },
+      {
+        id: '2',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '一般',
+        tags: ['React', '后端'],
+        createdAt: '2024-01-02',
+      },
     ];
     secureStorage.setItem('growthos-records', records);
 
@@ -180,9 +264,33 @@ describe('GrowthContext', () => {
 
   it('filterRecordsByMood filters correctly', async () => {
     const records = [
-      { id: '1', activity: 'test', learning: '', reflection: '', mood: '很好', tags: [], createdAt: '2024-01-01' },
-      { id: '2', activity: 'test', learning: '', reflection: '', mood: '一般', tags: [], createdAt: '2024-01-02' },
-      { id: '3', activity: 'test', learning: '', reflection: '', mood: '很好', tags: [], createdAt: '2024-01-03' },
+      {
+        id: '1',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '很好',
+        tags: [],
+        createdAt: '2024-01-01',
+      },
+      {
+        id: '2',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '一般',
+        tags: [],
+        createdAt: '2024-01-02',
+      },
+      {
+        id: '3',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '很好',
+        tags: [],
+        createdAt: '2024-01-03',
+      },
     ];
     secureStorage.setItem('growthos-records', records);
 
@@ -199,8 +307,24 @@ describe('GrowthContext', () => {
 
   it('filterRecordsByTags filters correctly', async () => {
     const records = [
-      { id: '1', activity: 'test', learning: '', reflection: '', mood: '很好', tags: ['React', '前端'], createdAt: '2024-01-01' },
-      { id: '2', activity: 'test', learning: '', reflection: '', mood: '一般', tags: ['Vue', '前端'], createdAt: '2024-01-02' },
+      {
+        id: '1',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '很好',
+        tags: ['React', '前端'],
+        createdAt: '2024-01-01',
+      },
+      {
+        id: '2',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '一般',
+        tags: ['Vue', '前端'],
+        createdAt: '2024-01-02',
+      },
     ];
     secureStorage.setItem('growthos-records', records);
 
@@ -217,8 +341,24 @@ describe('GrowthContext', () => {
 
   it('filterRecordsByDateRange filters correctly', async () => {
     const records = [
-      { id: '1', activity: 'test', learning: '', reflection: '', mood: '很好', tags: [], createdAt: '2024-01-01' },
-      { id: '2', activity: 'test', learning: '', reflection: '', mood: '一般', tags: [], createdAt: '2025-06-01' },
+      {
+        id: '1',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '很好',
+        tags: [],
+        createdAt: '2024-01-01',
+      },
+      {
+        id: '2',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '一般',
+        tags: [],
+        createdAt: '2025-06-01',
+      },
     ];
     secureStorage.setItem('growthos-records', records);
 
@@ -235,7 +375,15 @@ describe('GrowthContext', () => {
 
   it('searchRecords returns all records when searchTerm is empty', async () => {
     const records = [
-      { id: '1', activity: 'test', learning: '', reflection: '', mood: '很好', tags: [], createdAt: '2024-01-01' },
+      {
+        id: '1',
+        activity: 'test',
+        learning: '',
+        reflection: '',
+        mood: '很好',
+        tags: [],
+        createdAt: '2024-01-01',
+      },
     ];
     secureStorage.setItem('growthos-records', records);
 
