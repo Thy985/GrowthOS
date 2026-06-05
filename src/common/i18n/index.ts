@@ -1,7 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import zhCN from './zh-CN.json';
+
 import enUS from './en-US.json';
+import zhCN from './zh-CN.json';
 
 // 检测用户的浏览器语言
 const detectUserLanguage = (): string => {

@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+
 import growthReducer, { 
   addRecord, 
   searchRecords, 

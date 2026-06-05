@@ -1,7 +1,9 @@
-import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { secureStorage } from '../../common/utils/secureStorage';
-import { GrowthState, Record, Tag, Tree, GoalState } from '../../common/types';
+import type { PayloadAction} from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+
+import type { GrowthState, Record, Tag, Tree, GoalState } from '../../common/types';
 import logger from '../../common/utils/logger';
+import { secureStorage } from '../../common/utils/secureStorage';
 
 // 初始状态
 const initialState: GrowthState = {

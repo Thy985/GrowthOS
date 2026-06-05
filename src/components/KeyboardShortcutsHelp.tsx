@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Badge } from './common/index.ts';
 
 interface KeyboardShortcutsHelpProps {

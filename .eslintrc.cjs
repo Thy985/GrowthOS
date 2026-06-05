@@ -1,32 +1,25 @@
 module.exports = {
-  env: {
-    browser: true,
-    es2021: true,
-    jest: true,
-  },
+  root: true,
+  env: { browser: true, es2022: true, node: true },
+  parser: '@typescript-eslint/parser',
+  parserOptions: { ecmaVersion: 'latest', sourceType: 'module', ecmaFeatures: { jsx: true } },
+  plugins: ['@typescript-eslint', 'react', 'react-hooks', 'import'],
   extends: [
     'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
     'plugin:import/recommended',
+    'plugin:import/typescript',
+    'prettier',
   ],
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-    ecmaVersion: 12,
-    sourceType: 'module',
-  },
-  plugins: [
-    'react',
-    'import',
-  ],
+  settings: { react: { version: 'detect' } },
   rules: {
-    'no-unused-vars': 'error',
-    'import/no-unused-modules': 'error',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/consistent-type-imports': 'error',
     'react/prop-types': 'off',
-    'react/no-unescaped-entities': 'off',
+    'react/react-in-jsx-scope': 'off',
+    'import/order': ['warn', { 'newlines-between': 'always', alphabetize: { order: 'asc' } }],
   },
-  ignorePatterns: [
-    'vite.config.js',
-  ],
-}; 
+  ignorePatterns: ['dist', 'node_modules', 'coverage', '*.cjs', '*.config.*'],
+};

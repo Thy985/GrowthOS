@@ -1,5 +1,6 @@
 import React from 'react';
-import { Record } from '../types';
+
+import type { Record } from '../types';
 
 // 格式化日期
 export const formatDate = (dateStr: string): string => {

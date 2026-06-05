@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { ReactFlow, Controls, Background, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType, Node, Edge, Connection } from 'reactflow';
+import type { Node, Edge, Connection } from 'reactflow';
+import { ReactFlow, Controls, Background, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType } from 'reactflow';
+
 import 'reactflow/dist/style.css';
-import ErrorBoundary from '../../components/ErrorBoundary';
-import { secureStorage } from '../../common/utils/secureStorage';
+import type { GrowthState } from '../../common/types';
 import logger from '../../common/utils/logger';
-import { GrowthState } from '../../common/types';
+import { secureStorage } from '../../common/utils/secureStorage';
+import ErrorBoundary from '../../components/ErrorBoundary';
 
 const GrowthTree = () => {
   const { records, tags } = useSelector((state: { growth: GrowthState }) => state.growth);

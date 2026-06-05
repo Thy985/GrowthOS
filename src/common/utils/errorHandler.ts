@@ -1,4 +1,6 @@
-import React, { ComponentType, ErrorInfo, ReactNode } from 'react';
+import type { ComponentType, ErrorInfo} from 'react';
+import React, { ReactNode } from 'react';
+
 import logger from './logger';
 
 // 错误处理工具

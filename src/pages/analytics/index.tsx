@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { 
   BarChart, 
   Bar, 
@@ -24,10 +25,10 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
-import { useSelector, useDispatch } from 'react-redux';
-import { exportData, importData } from '../../store/slices/growthSlice';
+
+import type { GrowthState, GoalState } from '../../common/types';
 import ErrorBoundary from '../../components/ErrorBoundary';
-import { GrowthState, GoalState } from '../../common/types';
+import { exportData, importData } from '../../store/slices/growthSlice';
 
 // 自定义工具提示组件
 const CustomTooltip = ({ active, payload, label }) => {

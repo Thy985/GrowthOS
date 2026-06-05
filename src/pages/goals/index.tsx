@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice';
-import ErrorBoundary from '../../components/ErrorBoundary';
+
+import type { Goal, GoalState } from '../../common/types';
 import { calculateProgress, formatDate, getGoalStatusText, validateGoalForm } from '../../common/utils/goalUtils';
-import { Goal, GoalState } from '../../common/types';
+import ErrorBoundary from '../../components/ErrorBoundary';
+import { loadGoals, addGoal, updateGoal, deleteGoal, incrementGoalProgress, clearError } from '../../store/slices/goalSlice';
 
 const Goals = () => {
   const dispatch = useDispatch();

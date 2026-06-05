@@ -1,4 +1,5 @@
 import React from 'react';
+
 import logger from '../common/utils/logger.ts';
 
 interface ErrorBoundaryProps {
