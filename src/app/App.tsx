@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, lazy, useMemo, useEffect } from 'react';
+import { useState, lazy, useMemo, useEffect, useRef, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Link, useLocation, useNavigate } from 'react-router-dom';
@@ -210,6 +210,13 @@ function AppContent() {
   const navigate = useNavigate();
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  // 使用 ref 存储状态值，避免 useMemo 依赖频繁变化
+  const showShortcutsHelpRef = useRef(showShortcutsHelp);
+  const showSearchRef = useRef(showSearch);
+  useEffect(() => {
+    showShortcutsHelpRef.current = showShortcutsHelp;
+    showSearchRef.current = showSearch;
+  }, [showShortcutsHelp, showSearch]);
 
   // 初始化数据
   useEffect(() => {
@@ -265,12 +272,12 @@ function AppContent() {
       },
       {
         key: '?',
-        callback: () => setShowShortcutsHelp(!showShortcutsHelp),
+        callback: () => setShowShortcutsHelp(!showShortcutsHelpRef.current),
       },
       {
         key: 'k',
         ctrl: true,
-        callback: () => isAuthenticated && setShowSearch(!showSearch),
+        callback: () => isAuthenticated && setShowSearch(!showSearchRef.current),
       },
       {
         key: 'Escape',
@@ -280,7 +287,7 @@ function AppContent() {
         },
       },
     ],
-    [isAuthenticated, navigate, showShortcutsHelp, showSearch],
+    [isAuthenticated, navigate],
   );
 
   useKeyboardShortcuts(shortcuts);
@@ -290,7 +297,16 @@ function AppContent() {
       {isAuthenticated && <Navbar />}
       <div className="main">
         <ErrorBoundary>
-          {isAuthenticated && <Tutorial />}
+          <Suspense
+            fallback={
+              <div className="loading-container">
+                <div className="loading"></div>
+                <span>加载中...</span>
+              </div>
+            }
+          >
+            {isAuthenticated && <Tutorial />}
+          </Suspense>
           <KeyboardShortcutsHelp
             isOpen={showShortcutsHelp}
             onClose={() => setShowShortcutsHelp(false)}

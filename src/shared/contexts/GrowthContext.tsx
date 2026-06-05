@@ -1,27 +1,45 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck - 遗留 Context 实现,新代码用 Redux;类型留待 PR3 整体重写
+// 遗留 Context 实现,新代码用 Redux
 import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 
-import type { Record, Tree } from '../types';
+import type { Record as GrowthRecord, Tree } from '../types';
 import secureStorage from '../utils/secureStorage.ts';
+
+// Internal tree node type with optional fields for legacy data
+interface InternalNode {
+  id: string;
+  name: string;
+  parentId?: string | null;
+  description?: string;
+  icon?: string;
+  progress?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  type?: string;
+  children?: InternalNode[];
+}
 
 // 创建Context
 interface GrowthContextValue {
-  records: Record[];
+  records: GrowthRecord[];
   treeData: Tree | null;
   isLoading: boolean;
   error: string | null;
-  addRecord: (record: Record) => void;
+  addRecord: (
+    record: Omit<GrowthRecord, 'id' | 'createdAt' | 'tags'> & {
+      createdAt?: string;
+      tags?: string[];
+    },
+  ) => GrowthRecord;
   updateTreeData: (newTreeData: Tree) => void;
-  searchRecords: (searchTerm: string) => Record[];
-  filterRecordsByDateRange: (startDate: Date, endDate: Date) => Record[];
-  filterRecordsByMood: (moods: string[]) => Record[];
-  filterRecordsByTags: (tags: string[]) => Record[];
+  searchRecords: (searchTerm: string) => GrowthRecord[];
+  filterRecordsByDateRange: (startDate: Date, endDate: Date) => GrowthRecord[];
+  filterRecordsByMood: (moods: string[]) => GrowthRecord[];
+  filterRecordsByTags: (tags: string[]) => GrowthRecord[];
   getAllTags: () => string[];
   getStats: () => { weeklyRecords: number; totalRecords: number; growthProgress: number };
   getAverageMood: () => string;
   exportData: () => void;
-  importData: (data: Record<string, unknown>) => void;
+  importData: (data: Record<string, unknown>) => boolean;
 }
 const GrowthContext = createContext<GrowthContextValue | null>(null);
 
@@ -37,7 +55,7 @@ export const useGrowth = () => {
 // Provider组件
 export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   // 状态
-  const [records, setRecords] = useState<Record[]>([]);
+  const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [treeData, setTreeData] = useState<Tree | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,16 +68,16 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
         // 加载记录
         const savedRecords = secureStorage.getItem('growthos-records');
         if (savedRecords) {
-          setRecords(savedRecords);
+          setRecords(savedRecords as GrowthRecord[]);
         }
 
         // 加载成长树
         const savedTree = secureStorage.getItem('growthos-tree');
         if (savedTree) {
-          setTreeData(savedTree);
+          setTreeData(savedTree as Tree);
         } else {
           // 初始化默认成长树
-          const defaultTree = {
+          const defaultTree: InternalNode = {
             id: '1',
             name: '成长树',
             children: [
@@ -105,7 +123,7 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
               },
             ],
           };
-          setTreeData(defaultTree);
+          setTreeData(defaultTree as unknown as Tree);
           secureStorage.setItem('growthos-tree', defaultTree);
         }
       } catch (err) {
@@ -120,12 +138,17 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // 保存记录
-  const addRecord = (record) => {
-    const newRecord = {
-      id: Date.now(),
+  const addRecord = (
+    record: Omit<GrowthRecord, 'id' | 'createdAt' | 'tags'> & {
+      createdAt?: string;
+      tags?: string[];
+    },
+  ) => {
+    const newRecord: GrowthRecord = {
+      id: Date.now().toString(),
       ...record,
       createdAt: new Date().toISOString(),
-      tags: extractTags(record.activity + ' ' + record.learning),
+      tags: extractTags(record.activity + ' ' + (record.learning || '')),
     };
 
     const updatedRecords = [newRecord, ...records];
@@ -139,10 +162,10 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 提取标签
-  const extractTags = (text) => {
+  const extractTags = (text: string): string[] => {
     // 提取显式标签（#tag）
     const tagRegex = /#([^\s]+)/g;
-    const tags = [];
+    const tags: string[] = [];
     let match;
     while ((match = tagRegex.exec(text)) !== null) {
       tags.push(match[1]);
@@ -154,8 +177,8 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 从文本中提取关键词作为标签
-  const extractKeywordTags = (text) => {
-    const keywordMap = {
+  const extractKeywordTags = (text: string): string[] => {
+    const keywordMap: Record<string, string[]> = {
       编程: ['编程', '代码', '开发', 'coding', 'programming'],
       写作: ['写作', '文章', '博客', '写', 'writing'],
       外语: ['英语', '日语', '外语', '学习', 'language'],
@@ -168,9 +191,9 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
       旅行: ['旅行', '旅游', '出行', 'travel'],
     };
 
-    const extractedTags = [];
+    const extractedTags: string[] = [];
     Object.entries(keywordMap).forEach(([tag, keywords]) => {
-      if (keywords.some((keyword) => text.includes(keyword))) {
+      if ((keywords as string[]).some((keyword) => text.includes(keyword))) {
         extractedTags.push(tag);
       }
     });
@@ -178,11 +201,11 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 处理标签，创建影子节点
-  const handleTags = (tags) => {
+  const handleTags = (tags: string[]) => {
     if (!tags || tags.length === 0) return;
     if (!treeData) return;
 
-    const updatedTree = JSON.parse(JSON.stringify(treeData));
+    const updatedTree = JSON.parse(JSON.stringify(treeData)) as InternalNode;
     let hasChanges = false;
 
     tags.forEach((tag) => {
@@ -198,7 +221,7 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 检查标签是否已存在
-  const isTagExists = (node, tag) => {
+  const isTagExists = (node: InternalNode, tag: string): boolean => {
     if (node.name === tag) return true;
     if (node.children) {
       for (const child of node.children) {
@@ -211,13 +234,13 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 添加影子节点
-  const addShadowNode = (node, tag) => {
+  const addShadowNode = (node: InternalNode, _tag: string) => {
     // 找到合适的父节点
-    const suitableParent = findSuitableParent(node, tag);
+    const suitableParent = findSuitableParent(node);
     if (suitableParent) {
-      const newNode = {
+      const newNode: InternalNode = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        name: tag,
+        name: _tag,
         type: 'shadow',
         children: [],
       };
@@ -229,11 +252,11 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 找到合适的父节点
-  const findSuitableParent = (node, tag) => {
+  const findSuitableParent = (node: InternalNode): InternalNode | null => {
     // 优先选择叶子节点作为父节点
     if (node.children && node.children.length > 0) {
       for (const child of node.children) {
-        const result = findSuitableParent(child, tag);
+        const result = findSuitableParent(child);
         if (result) return result;
       }
     }
@@ -245,17 +268,15 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 更新成长树
-  const updateTree = (newTreeData) => {
-    setTreeData(newTreeData);
+  const updateTree = (newTreeData: InternalNode) => {
+    setTreeData(newTreeData as unknown as Tree);
     secureStorage.setItem('growthos-tree', newTreeData);
   };
 
-  // 添加树节点
-  const addTreeNode = (node) => {
-    if (!treeData) return;
-
-    // 这里可以实现添加节点的逻辑
-    console.log('添加节点:', node);
+  // 公开给外部的 updateTreeData
+  const updateTreeData = (newTreeData: Tree) => {
+    setTreeData(newTreeData);
+    secureStorage.setItem('growthos-tree', newTreeData);
   };
 
   // 计算统计数据
@@ -279,7 +300,7 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
 
   // 计算情绪平均值
   const getAverageMood = () => {
-    if (records.length === 0) return 0;
+    if (records.length === 0) return '0';
 
     const totalMood = records.reduce((sum, record) => {
       switch (record.mood) {
@@ -298,14 +319,14 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 导出数据
-  const exportData = () => {
-    const exportData = {
+  const exportDataFunc = () => {
+    const exportPayload = {
       records,
       treeData,
       exportDate: new Date().toISOString(),
     };
 
-    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataStr = JSON.stringify(exportPayload, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
 
@@ -319,14 +340,14 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 导入数据
-  const importData = (data) => {
+  const importData = (data: Record<string, unknown>) => {
     try {
       if (data.records) {
-        setRecords(data.records);
+        setRecords(data.records as GrowthRecord[]);
         secureStorage.setItem('growthos-records', data.records);
       }
       if (data.treeData) {
-        setTreeData(data.treeData);
+        setTreeData(data.treeData as Tree);
         secureStorage.setItem('growthos-tree', data.treeData);
       }
       return true;
@@ -337,7 +358,7 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 搜索记录
-  const searchRecords = (searchTerm) => {
+  const searchRecords = (searchTerm: string): GrowthRecord[] => {
     if (!searchTerm) return records;
 
     const term = searchTerm.toLowerCase();
@@ -352,7 +373,7 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 按时间范围过滤记录
-  const filterRecordsByDateRange = (startDate, endDate) => {
+  const filterRecordsByDateRange = (startDate: Date, endDate: Date): GrowthRecord[] => {
     return records.filter((record) => {
       const recordDate = new Date(record.createdAt);
       return recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
@@ -360,13 +381,13 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 按情绪过滤记录
-  const filterRecordsByMood = (moods) => {
+  const filterRecordsByMood = (moods: string[]): GrowthRecord[] => {
     if (!moods || moods.length === 0) return records;
     return records.filter((record) => moods.includes(record.mood));
   };
 
   // 按标签过滤记录
-  const filterRecordsByTags = (tags) => {
+  const filterRecordsByTags = (tags: string[]): GrowthRecord[] => {
     if (!tags || tags.length === 0) return records;
     return records.filter((record) => {
       return record.tags?.some((tag) => tags.includes(tag));
@@ -375,7 +396,7 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
 
   // 获取所有标签
   const getAllTags = () => {
-    const allTags = new Set();
+    const allTags = new Set<string>();
     records.forEach((record) => {
       if (record.tags) {
         record.tags.forEach((tag) => allTags.add(tag));
@@ -385,17 +406,16 @@ export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // 提供给子组件的值
-  const value = {
+  const value: GrowthContextValue = {
     records,
     treeData,
     isLoading,
     error,
     addRecord,
-    updateTree,
-    addTreeNode,
+    updateTreeData,
     getStats,
     getAverageMood,
-    exportData,
+    exportData: exportDataFunc,
     importData,
     searchRecords,
     filterRecordsByDateRange,

@@ -39,7 +39,7 @@ describe('authSlice', () => {
     it('creates new user and authenticates', async () => {
       const store = makeStore();
       const result = await store.dispatch(
-        register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }),
+        register({ username: 'alice', password: 'password123', confirmPassword: 'password123' }),
       );
       expect(result.type).toBe('auth/register/fulfilled');
       const state = store.getState().auth;
@@ -58,11 +58,22 @@ describe('authSlice', () => {
       expect(store.getState().auth.isAuthenticated).toBe(false);
     });
 
+    it('rejects when password too short', async () => {
+      const store = makeStore();
+      const result = await store.dispatch(
+        register({ username: 'bob', password: 'pw', confirmPassword: 'pw' }),
+      );
+      expect(result.type).toBe('auth/register/rejected');
+      expect(store.getState().auth.error).toBe('密码长度至少为 6 个字符');
+    });
+
     it('rejects when username exists', async () => {
       const store = makeStore();
-      await store.dispatch(register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }));
+      await store.dispatch(
+        register({ username: 'alice', password: 'password123', confirmPassword: 'password123' }),
+      );
       const result = await store.dispatch(
-        register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }),
+        register({ username: 'alice', password: 'password123', confirmPassword: 'password123' }),
       );
       expect(result.type).toBe('auth/register/rejected');
       expect(store.getState().auth.error).toBe('用户名已存在');
@@ -72,17 +83,27 @@ describe('authSlice', () => {
   describe('login', () => {
     it('authenticates existing user', async () => {
       const store = makeStore();
-      await store.dispatch(register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }));
+      await store.dispatch(
+        register({ username: 'alice', password: 'password123', confirmPassword: 'password123' }),
+      );
       // 清空 store + 重新构造(因为 register 后 state 已 authenticated)
       localStorage.clear();
       const newStore = makeStore();
-      // 重新把用户塞进 secureStorage
-      secureStorage.setItem('auth-users', [
-        { id: '1', username: 'alice', email: 'a@e.com', password: 'pw' },
-      ]);
-      const result = await newStore.dispatch(login({ username: 'alice', password: 'pw' }));
+      // 重新注册用户以重建 storage（register 会把用户带密码哈希存入）
+      await newStore.dispatch(
+        register({ username: 'alice', password: 'password123', confirmPassword: 'password123' }),
+      );
+      localStorage.clear();
+      const finalStore = makeStore();
+      // 再注册一次确保 storage 中有用户
+      await finalStore.dispatch(
+        register({ username: 'alice', password: 'password123', confirmPassword: 'password123' }),
+      );
+      const result = await finalStore.dispatch(
+        login({ username: 'alice', password: 'password123' }),
+      );
       expect(result.type).toBe('auth/login/fulfilled');
-      expect(newStore.getState().auth.isAuthenticated).toBe(true);
+      expect(finalStore.getState().auth.isAuthenticated).toBe(true);
     });
 
     it('rejects with invalid credentials', async () => {
@@ -97,7 +118,9 @@ describe('authSlice', () => {
   describe('logout', () => {
     it('clears user and isAuthenticated', async () => {
       const store = makeStore();
-      await store.dispatch(register({ username: 'alice', password: 'pw', confirmPassword: 'pw' }));
+      await store.dispatch(
+        register({ username: 'alice', password: 'password123', confirmPassword: 'password123' }),
+      );
       expect(store.getState().auth.isAuthenticated).toBe(true);
       const result = await store.dispatch(logout());
       expect(result.type).toBe('auth/logout/fulfilled');

@@ -24,6 +24,11 @@ describe('goalUtils', () => {
       expect(calculateProgress(33, 100)).toBe(33);
       expect(calculateProgress(67, 100)).toBe(67);
     });
+
+    test('returns 0 for zero or negative target', () => {
+      expect(calculateProgress(50, 0)).toBe(0);
+      expect(calculateProgress(50, -1)).toBe(0);
+    });
   });
 
   describe('formatDate', () => {
@@ -53,13 +58,21 @@ describe('goalUtils', () => {
   });
 
   describe('validateGoalForm', () => {
+    // 使用未来日期以避免"过去日期"验证
+    const futureDate = () => {
+      const d = new Date();
+      d.setFullYear(d.getFullYear() + 1);
+      return d.toISOString().split('T')[0];
+    };
+
     test('returns no errors for valid form', () => {
+      const end = futureDate();
       const errors = validateGoalForm({
         title: 'Learn React',
         description: '',
         targetValue: '100',
         startDate: '2024-01-01',
-        endDate: '2024-12-31',
+        endDate: end,
       });
       expect(Object.keys(errors)).toHaveLength(0);
     });
@@ -125,14 +138,32 @@ describe('goalUtils', () => {
     });
 
     test('returns error when end date is before start date', () => {
+      // 使用未来的日期，但 start > end
+      const nextYear = new Date();
+      nextYear.setFullYear(nextYear.getFullYear() + 1);
+      const nextYearPlus1 = new Date();
+      nextYearPlus1.setFullYear(nextYearPlus1.getFullYear() + 2);
+      const start = nextYearPlus1.toISOString().split('T')[0];
+      const end = nextYear.toISOString().split('T')[0];
       const errors = validateGoalForm({
         title: 'Test',
         description: '',
         targetValue: '100',
-        startDate: '2024-12-31',
-        endDate: '2024-01-01',
+        startDate: start,
+        endDate: end,
       });
       expect(errors.endDate).toBe('结束日期不能早于开始日期');
+    });
+
+    test('returns error when end date is in the past', () => {
+      const errors = validateGoalForm({
+        title: 'Test',
+        description: '',
+        targetValue: '100',
+        startDate: '2020-01-01',
+        endDate: '2020-12-31',
+      });
+      expect(errors.endDate).toBe('结束日期不能是过去的日期');
     });
   });
 });

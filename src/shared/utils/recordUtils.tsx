@@ -28,7 +28,7 @@ export const getMoodColor = (mood: '很好' | '一般' | '不太好'): string =>
   }
 };
 
-// 高亮搜索结果
+// 高亮搜索结果（支持所有匹配项）
 export const highlightSearchTerm = (
   text: string | undefined,
   searchTerm: string,
@@ -37,23 +37,30 @@ export const highlightSearchTerm = (
 
   const searchLower = searchTerm.toLowerCase();
   const textLower = text.toLowerCase();
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let matchIndex = textLower.indexOf(searchLower);
 
-  if (textLower.includes(searchLower)) {
-    const index = textLower.indexOf(searchLower);
-    const before = text.substring(0, index);
-    const match = text.substring(index, index + searchTerm.length);
-    const after = text.substring(index + searchTerm.length);
-
-    return (
-      <>
-        {before}
-        <span className="bg-yellow-200 font-medium">{match}</span>
-        {after}
-      </>
+  while (matchIndex !== -1) {
+    if (matchIndex > lastIndex) {
+      parts.push(text.substring(lastIndex, matchIndex));
+    }
+    parts.push(
+      <span key={matchIndex} className="bg-yellow-200 font-medium">
+        {text.substring(matchIndex, matchIndex + searchTerm.length)}
+      </span>,
     );
+    lastIndex = matchIndex + searchTerm.length;
+    matchIndex = textLower.indexOf(searchLower, lastIndex);
   }
 
-  return text;
+  if (parts.length === 0) return text;
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return <>{parts}</>;
 };
 
 // 过滤记录
@@ -92,15 +99,19 @@ export const filterRecords = (
     });
   }
 
-  // 日期范围过滤
-  if (dateRange.start && dateRange.end) {
-    const startDate = new Date(dateRange.start);
-    const endDate = new Date(dateRange.end);
-    endDate.setHours(23, 59, 59, 999);
+  // 日期范围过滤（支持单独设置 start 或 end）
+  if (dateRange.start || dateRange.end) {
+    const startDate = dateRange.start ? new Date(dateRange.start) : null;
+    const endDate = dateRange.end ? new Date(dateRange.end) : null;
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999);
+    }
 
     filtered = filtered.filter((record) => {
       const recordDate = new Date(record.createdAt);
-      return recordDate >= startDate && recordDate <= endDate;
+      if (startDate && recordDate < startDate) return false;
+      if (endDate && recordDate > endDate) return false;
+      return true;
     });
   }
 

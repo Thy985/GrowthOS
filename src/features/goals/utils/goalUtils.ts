@@ -2,7 +2,8 @@ import type { Goal } from '../../../shared/types';
 
 // 计算进度百分比
 export const calculateProgress = (current: number, target: number): number => {
-  return Math.min(Math.round((current / target) * 100), 100);
+  if (target <= 0) return 0; // 防止除零和负数目标
+  return Math.min(Math.max(0, Math.round((current / target) * 100)), 100);
 };
 
 // 格式化日期
@@ -49,12 +50,16 @@ export const validateGoalForm = (formData: {
   if (!formData.endDate) {
     errors.endDate = '请选择结束日期';
   }
-  if (
-    formData.startDate &&
-    formData.endDate &&
-    new Date(formData.startDate) > new Date(formData.endDate)
-  ) {
-    errors.endDate = '结束日期不能早于开始日期';
+  if (formData.startDate && formData.endDate) {
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (end < today) {
+      errors.endDate = '结束日期不能是过去的日期';
+    } else if (start > end) {
+      errors.endDate = '结束日期不能早于开始日期';
+    }
   }
   return errors;
 };

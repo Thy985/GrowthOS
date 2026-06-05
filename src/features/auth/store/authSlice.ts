@@ -4,13 +4,24 @@ import type { AuthState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
 
-// 用户类型
+// 用户类型（不再存储密码明文）
 interface User {
   id: string;
   username: string;
   email: string;
-  password?: string;
+  passwordHash?: string;
 }
+
+// 简单的密码哈希函数（非加密级，但比明文好）
+const hashPassword = (password: string): string => {
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // 转为 32bit 整数
+  }
+  return `h_${Math.abs(hash).toString(36)}_${btoa(password).substring(0, 8)}`;
+};
 
 // 初始状态
 const initialState: AuthState = {
@@ -26,9 +37,11 @@ export const login = createAsyncThunk(
   async ({ username, password }: { username: string; password: string }) => {
     try {
       logger.info('用户登录', { username });
-      // 简单的登录验证（实际应用中应该调用API）
+      const passwordHash = hashPassword(password);
       const users = (secureStorage.getItem<User[]>('auth-users') || []) as User[];
-      const user = users.find((u: User) => u.username === username && u.password === password);
+      const user = users.find(
+        (u: User) => u.username === username && u.passwordHash === passwordHash,
+      );
 
       if (!user) {
         const error = new Error('用户名或密码错误');
@@ -36,9 +49,11 @@ export const login = createAsyncThunk(
         throw error;
       }
 
-      secureStorage.setItem('auth-user', user);
+      // 返回用户信息时不包含密码哈希
+      const { passwordHash: _, ...userWithoutPassword } = user;
+      secureStorage.setItem('auth-user', userWithoutPassword);
       logger.info('登录成功', { username });
-      return user;
+      return userWithoutPassword;
     } catch (error) {
       logger.error('登录异常', error, { username });
       throw error;
@@ -66,6 +81,13 @@ export const register = createAsyncThunk(
         throw error;
       }
 
+      // 密码强度验证
+      if (password.length < 6) {
+        const error = new Error('密码长度至少为 6 个字符');
+        logger.error('注册失败：密码过短', { username });
+        throw error;
+      }
+
       const users = (secureStorage.getItem<User[]>('auth-users') || []) as User[];
       if (users.some((u: User) => u.username === username)) {
         const error = new Error('用户名已存在');
@@ -77,15 +99,18 @@ export const register = createAsyncThunk(
         id: Date.now().toString(),
         username,
         email: `${username}@example.com`,
-        password,
+        passwordHash: hashPassword(password),
       };
 
       const updatedUsers = [...users, newUser];
       secureStorage.setItem('auth-users', updatedUsers);
-      secureStorage.setItem('auth-user', newUser);
+
+      // 存储的用户不包含密码哈希
+      const { passwordHash: _, ...userWithoutPassword } = newUser;
+      secureStorage.setItem('auth-user', userWithoutPassword);
 
       logger.info('注册成功', { username });
-      return newUser;
+      return userWithoutPassword;
     } catch (error) {
       logger.error('注册异常', error, { username });
       throw error;

@@ -90,6 +90,17 @@ export const exportData = createAsyncThunk(
       let fileName = `growth-data-${new Date().toISOString().split('T')[0]}`;
       let blob: Blob;
 
+      // CSV 字段值转义（防止公式注入）
+      const escapeCsvField = (value: string): string => {
+        if (!value) return '';
+        // 如果值以 =、+、-、@ 开头，添加前缀单引号防止公式执行
+        const escaped = value.replace(/"/g, '""');
+        if (/^[=+\-@]/.test(escaped)) {
+          return `"'${escaped}"`;
+        }
+        return `"${escaped}"`;
+      };
+
       switch (options.format) {
         case 'csv': {
           // 生成CSV格式
@@ -99,13 +110,11 @@ export const exportData = createAsyncThunk(
             csvContent += '日期,活动,学习,反思,情绪,标签\n';
             records.forEach((record) => {
               const date = new Date(record.createdAt).toLocaleDateString();
-              const activity = record.activity ? `"${record.activity.replace(/"/g, '""')}"` : '';
-              const learning = record.learning ? `"${record.learning.replace(/"/g, '""')}"` : '';
-              const reflection = record.reflection
-                ? `"${record.reflection.replace(/"/g, '""')}"`
-                : '';
+              const activity = escapeCsvField(record.activity);
+              const learning = escapeCsvField(record.learning);
+              const reflection = escapeCsvField(record.reflection);
               const mood = record.mood;
-              const tagsStr = record.tags ? `"${record.tags.join(',').replace(/"/g, '""')}"` : '';
+              const tagsStr = escapeCsvField(record.tags ? record.tags.join(',') : '');
               csvContent += `${date},${activity},${learning},${reflection},${mood},${tagsStr}\n`;
             });
           }
@@ -113,10 +122,8 @@ export const exportData = createAsyncThunk(
           if (options.dataTypes.includes('goals') && goals.length > 0) {
             csvContent += '\n目标标题,目标描述,目标值,当前值,开始日期,结束日期,状态\n';
             goals.forEach((goal) => {
-              const title = goal.title ? `"${goal.title.replace(/"/g, '""')}"` : '';
-              const description = goal.description
-                ? `"${goal.description.replace(/"/g, '""')}"`
-                : '';
+              const title = escapeCsvField(goal.title);
+              const description = escapeCsvField(goal.description);
               const targetValue = goal.targetValue;
               const currentValue = goal.currentValue;
               const startDate = new Date(goal.startDate).toLocaleDateString();

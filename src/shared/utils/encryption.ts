@@ -8,21 +8,35 @@ class EncryptionUtil {
   private iv: CryptoJS.lib.WordArray;
 
   constructor() {
-    // 从环境变量获取密钥和初始化向量
-    let encryptionKey = 'GrowthOS-Secure-Key-2024';
-    let encryptionIV = 'GrowthOS-IV-2024';
+    // 优先从 Vite 环境变量读取密钥（构建时注入）
+    // 注意: import.meta.env 在浏览器中可用，process.env 在 Node.js 测试中可用
+    let encryptionKey = '';
+    let encryptionIV = '';
 
-    // 尝试从 process.env 获取环境变量（Node.js 环境，如测试）
-    if (typeof process !== 'undefined' && process.env) {
-      encryptionKey = process.env.VITE_ENCRYPTION_KEY || encryptionKey;
-      encryptionIV = process.env.VITE_ENCRYPTION_IV || encryptionIV;
-    } else {
-      // 浏览器环境中，使用默认值
-      // 注意：在生产环境中，应该使用环境变量来设置加密密钥
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      encryptionKey = import.meta.env.VITE_ENCRYPTION_KEY || '';
+      encryptionIV = import.meta.env.VITE_ENCRYPTION_IV || '';
     }
 
-    this.key = CryptoJS.enc.Utf8.parse(encryptionKey);
-    this.iv = CryptoJS.enc.Utf8.parse(encryptionIV); // 初始化向量
+    // 测试环境回退
+    if (typeof process !== 'undefined' && process.env) {
+      encryptionKey = encryptionKey || process.env.VITE_ENCRYPTION_KEY || '';
+      encryptionIV = encryptionIV || process.env.VITE_ENCRYPTION_IV || '';
+    }
+
+    // 无密钥时使用派生密钥而非硬编码值
+    if (!encryptionKey) {
+      console.warn('[Encryption] VITE_ENCRYPTION_KEY 未设置，使用派生密钥。请在 .env 中配置密钥。');
+      // 使用设备指纹派生密钥（每次运行唯一，但不跨会话持久化）
+      encryptionKey = `GrowthOS-${Date.now()}-${Math.random().toString(36).substr(2)}`;
+    }
+    if (!encryptionIV) {
+      encryptionIV = encryptionKey.substring(0, 16);
+    }
+
+    // 确保密钥和 IV 长度符合 AES-256-CBC 要求
+    this.key = CryptoJS.enc.Utf8.parse(encryptionKey.substring(0, 32).padEnd(32, '0'));
+    this.iv = CryptoJS.enc.Utf8.parse(encryptionIV.substring(0, 16).padEnd(16, '0'));
   }
 
   // 使用AES-256-CBC加密
