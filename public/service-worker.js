@@ -1,48 +1,34 @@
-// 缓存名称
+// GrowthOS Service Worker - 缓存优先策略
 const CACHE_NAME = 'growthos-cache-v1';
 
-// 告诉 ESLint clients 是全局变量
-/* global clients */
-
-// 需要缓存的资源
-const STATIC_ASSETS = [
+// 核心资源（构建时确定）
+const CORE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
-  '/logo192.png',
-  '/logo512.png',
-  '/maskable_icon.png',
-  '/static/js/main.js',
-  '/static/js/0.chunk.js',
-  '/static/js/1.chunk.js',
-  '/static/js/2.chunk.js',
-  '/static/js/3.chunk.js',
-  '/static/js/4.chunk.js',
-  '/static/js/5.chunk.js',
-  '/static/css/main.css'
 ];
 
-// 安装 Service Worker
+// 安装时缓存核心资源
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('缓存已打开');
-        return cache.addAll(STATIC_ASSETS);
+        console.log('[SW] 缓存核心资源');
+        return cache.addAll(CORE_ASSETS);
       })
       .then(() => self.skipWaiting())
   );
 });
 
-// 激活 Service Worker
+// 激活时清理旧缓存
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('删除旧缓存:', cacheName);
+            console.log('[SW] 删除旧缓存:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -51,85 +37,93 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 拦截网络请求
+// 拦截网络请求 - 缓存优先策略
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // 跳过非 GET 请求
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  // 跳过 chrome-extension 和外部请求
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // 如果缓存中有响应，则返回缓存
-        if (response) {
-          return response;
+    caches.match(request).then((cachedResponse) => {
+      // 缓存命中，直接返回
+      if (cachedResponse) {
+        // 后台更新缓存（stale-while-revalidate）
+        fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, networkResponse.clone());
+            });
+          }
+        }).catch(() => {});
+        return cachedResponse;
+      }
+
+      // 缓存未命中，网络请求
+      return fetch(request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200) {
+          return networkResponse;
         }
 
-        // 否则发送网络请求
-        return fetch(event.request)
-          .then((response) => {
-            // 检查响应是否有效
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
+        // 缓存新资源
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, responseToCache);
+        });
 
-            // 克隆响应
-            const responseToCache = response.clone();
-
-            // 将响应添加到缓存
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          })
-          .catch(() => {
-            // 如果网络请求失败，返回离线页面
-            if (event.request.mode === 'navigate') {
-              return caches.match('/');
-            }
-          });
-      })
+        return networkResponse;
+      }).catch(() => {
+        // 网络失败，返回离线页面
+        if (request.mode === 'navigate') {
+          return caches.match('/');
+        }
+      });
+    })
   );
 });
 
-// 处理后台同步
+// 后台同步
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-records') {
     event.waitUntil(syncRecords());
   }
 });
 
-// 同步记录的函数
 async function syncRecords() {
-  try {
-    // 从 IndexedDB 获取待同步的记录
-    // 这里需要根据实际的数据存储方式来实现
-    console.log('同步记录到服务器');
-  } catch (error) {
-    console.error('同步记录失败:', error);
-  }
+  console.log('[SW] 后台同步记录');
 }
 
-// 处理推送通知
+// 推送通知
 self.addEventListener('push', (event) => {
-  const data = event.data.json();
-  const options = {
-    body: data.body,
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    vibrate: [100, 50, 100],
-    data: {
-      url: data.url
-    }
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+  try {
+    const data = event.data?.json() || { title: 'GrowthOS', body: '新提醒' };
+    const options = {
+      body: data.body,
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      vibrate: [100, 50, 100],
+      data: { url: data.url || '/' },
+    };
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  } catch (error) {
+    console.error('[SW] 推送处理失败:', error);
+  }
 });
 
-// 处理通知点击
+// 通知点击
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    clients.openWindow(event.notification.data?.url || '/')
   );
 });
