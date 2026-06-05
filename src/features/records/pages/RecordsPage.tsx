@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { RootState } from '../../common/types/index.ts';
-import { formatDate, getMoodColor, highlightSearchTerm, filterRecords } from '../../common/utils/recordUtils.tsx';
+import type { RootState } from '../../../shared/types/index.ts';
+import { formatDate, getMoodColor, highlightSearchTerm, filterRecords } from '../../../shared/utils/recordUtils.tsx';
 
 const RecordList = () => {
   const [searchTerm, setSearchTerm] = useState('');

@@ -26,9 +26,9 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 
-import type { GrowthState, GoalState } from '../../common/types';
-import ErrorBoundary from '../../components/ErrorBoundary';
-import { exportData, importData } from '../../store/slices/growthSlice';
+import type { GrowthState, GoalState } from '../../../shared/types';
+import ErrorBoundary from '../../../shared/components/ErrorBoundary';
+import { exportData, importData } from '../../../store/slices/growthSlice';
 
 // 自定义工具提示组件
 const CustomTooltip = ({ active, payload, label }) => {

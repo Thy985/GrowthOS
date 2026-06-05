@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 
-import type { Reminder, ReminderState } from '../../common/types';
-import logger from '../../common/utils/logger';
-import { secureStorage } from '../../common/utils/secureStorage';
+import type { Reminder, ReminderState } from '../../../shared/types';
+import logger from '../../../shared/utils/logger';
+import { secureStorage } from '../../../shared/utils/secureStorage';
 
 // 初始状态
 const initialState: ReminderState = {

@@ -1,4 +1,4 @@
-import type { Goal } from '../types';
+import type { Goal } from '../../../shared/types';
 
 // 计算进度百分比
 export const calculateProgress = (current: number, target: number): number => {

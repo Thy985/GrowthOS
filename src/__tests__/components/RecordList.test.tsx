@@ -3,8 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { Provider } from 'react-redux';
 
-import type { Record, Tag } from '../../common/types/index.ts';
-import RecordList from '../../pages/records/index.tsx';
+import type { Record, Tag } from '../../shared/types/index.ts';
+import RecordList from '../../features/records/pages/RecordsPage.tsx';
 import growthReducer from '../../store/slices/growthSlice.ts';
 
 // 模拟的测试数据

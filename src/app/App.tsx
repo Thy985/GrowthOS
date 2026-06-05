@@ -3,27 +3,27 @@ import { useTranslation } from 'react-i18next';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 
-import './App.css';
-import useKeyboardShortcuts from './common/hooks/useKeyboardShortcuts.ts';
-import type { RootState } from './common/types/index.ts';
-import ErrorBoundary from './components/ErrorBoundary.tsx';
+import '../App.css';
+import useKeyboardShortcuts from '../shared/hooks/useKeyboardShortcuts.ts';
+import type { RootState } from '../shared/types/index.ts';
+import ErrorBoundary from '../shared/components/ErrorBoundary.tsx';
 import store from './store/index.ts';
-import { checkAuth, logout } from './store/slices/authSlice.ts';
-import { loadGoals } from './store/slices/goalSlice.ts';
-import { loadData } from './store/slices/growthSlice.ts';
-import { loadReminders } from './store/slices/reminderSlice.ts';
-import { toggleTheme } from './store/slices/themeSlice.ts';
+import { checkAuth, logout } from '../features/auth/store/authSlice.ts';
+import { loadGoals } from '../features/goals/store/goalSlice.ts';
+import { loadData } from '../store/slices/growthSlice.ts';
+import { loadReminders } from '../features/reminders/store/reminderSlice.ts';
+import { toggleTheme } from '../features/theme/store/themeSlice.ts';
 
 // 使用React.lazy实现代码分割
-const Dashboard = lazy(() => import('./pages/dashboard/index.tsx'));
-const GrowthTree = lazy(() => import('./pages/growth-tree/index.tsx'));
-const Analytics = lazy(() => import('./pages/analytics/index.tsx'));
-const RecordList = lazy(() => import('./pages/records/index.tsx'));
-const Goals = lazy(() => import('./pages/goals/index.tsx'));
-const Reminders = lazy(() => import('./pages/reminders/index.tsx'));
-const Tutorial = lazy(() => import('./components/Tutorial.tsx'));
-const Auth = lazy(() => import('./pages/auth/index.tsx'));
-const KeyboardShortcutsHelp = lazy(() => import('./components/KeyboardShortcutsHelp.tsx'));
+const Dashboard = lazy(() => import('../features/dashboard/pages/DashboardPage.tsx'));
+const GrowthTree = lazy(() => import('../features/growth-tree/pages/GrowthTreePage.tsx'));
+const Analytics = lazy(() => import('../features/analytics/pages/AnalyticsPage.tsx'));
+const RecordList = lazy(() => import('../features/records/pages/RecordsPage.tsx'));
+const Goals = lazy(() => import('../features/goals/pages/GoalsPage.tsx'));
+const Reminders = lazy(() => import('../features/reminders/pages/RemindersPage.tsx'));
+const Tutorial = lazy(() => import('../shared/components/Tutorial.tsx'));
+const Auth = lazy(() => import('../features/auth/pages/LoginPage.tsx'));
+const KeyboardShortcutsHelp = lazy(() => import('../shared/components/KeyboardShortcutsHelp.tsx'));
 
 function Navbar() {
   const location = useLocation();

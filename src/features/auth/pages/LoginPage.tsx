@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import type { AuthState } from '../../common/types';
-import { login, register } from '../../store/slices/authSlice';
+import type { AuthState } from '../../../shared/types';
+import { login, register } from '../store/authSlice';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);

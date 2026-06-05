@@ -1,10 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import authReducer from './slices/authSlice';
-import goalReducer from './slices/goalSlice';
-import growthReducer from './slices/growthSlice';
-import reminderReducer from './slices/reminderSlice';
-import themeReducer from './slices/themeSlice';
+import authReducer from '../../features/auth/store/authSlice';
+import goalReducer from '../../features/goals/store/goalSlice';
+import growthReducer from '../../store/slices/growthSlice';
+import reminderReducer from '../../features/reminders/store/reminderSlice';
+import themeReducer from '../../features/theme/store/themeSlice';
 
 export const store = configureStore({
   reducer: {

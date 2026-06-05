@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import type { Reminder, ReminderState } from '../../common/types';
-import ErrorBoundary from '../../components/ErrorBoundary';
-import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../../store/slices/reminderSlice';
+import type { Reminder, ReminderState } from '../../../shared/types';
+import ErrorBoundary from '../../../shared/components/ErrorBoundary';
+import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../store/reminderSlice';
 
 const Reminders = () => {
   const dispatch = useDispatch();

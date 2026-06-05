@@ -4,10 +4,10 @@ import type { Node, Edge, Connection } from 'reactflow';
 import { ReactFlow, Controls, Background, MiniMap, Panel, NodeToolbar, useNodesState, useEdgesState, addEdge, ConnectionLineType } from 'reactflow';
 
 import 'reactflow/dist/style.css';
-import type { GrowthState } from '../../common/types';
-import logger from '../../common/utils/logger';
-import { secureStorage } from '../../common/utils/secureStorage';
-import ErrorBoundary from '../../components/ErrorBoundary';
+import type { GrowthState } from '../../../shared/types';
+import logger from '../../../shared/utils/logger';
+import { secureStorage } from '../../../shared/utils/secureStorage';
+import ErrorBoundary from '../../../shared/components/ErrorBoundary';
 
 const GrowthTree = () => {
   const { records, tags } = useSelector((state: { growth: GrowthState }) => state.growth);

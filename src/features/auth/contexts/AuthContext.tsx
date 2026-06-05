@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
-import secureStorage from '../utils/secureStorage';
+import secureStorage from '../../../shared/utils/secureStorage';
 
 // 用户类型定义
 interface User {

@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback, memo, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import type { RootState } from '../../common/types/index.ts';
-import { addRecord } from '../../store/slices/growthSlice.ts';
+import type { RootState } from '../../../shared/types/index.ts';
+import { addRecord } from '../../../store/slices/growthSlice.ts';
 
 interface FormData {
   activity: string;
