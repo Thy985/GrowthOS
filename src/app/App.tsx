@@ -1,36 +1,23 @@
-import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, lazy, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-  Link,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Link, useLocation, useNavigate } from 'react-router-dom';
 
 import '../App.css';
-import useKeyboardShortcuts from '../shared/hooks/useKeyboardShortcuts.ts';
-import type { RootState } from '../shared/types/index.ts';
-import ErrorBoundary from '../shared/components/ErrorBoundary.tsx';
-import store from './store/index.ts';
 import { checkAuth, logout } from '../features/auth/store/authSlice.ts';
 import { loadGoals } from '../features/goals/store/goalSlice.ts';
-import { loadData } from '../store/slices/growthSlice.ts';
 import { loadReminders } from '../features/reminders/store/reminderSlice.ts';
 import { toggleTheme } from '../features/theme/store/themeSlice.ts';
+import ErrorBoundary from '../shared/components/ErrorBoundary.tsx';
+import useKeyboardShortcuts from '../shared/hooks/useKeyboardShortcuts.ts';
+import type { RootState } from '../shared/types/index.ts';
+import { loadData } from '../store/slices/growthSlice.ts';
 
-// 使用React.lazy实现代码分割
-const Dashboard = lazy(() => import('../features/dashboard/pages/DashboardPage.tsx'));
-const GrowthTree = lazy(() => import('../features/growth-tree/pages/GrowthTreePage.tsx'));
-const Analytics = lazy(() => import('../features/analytics/pages/AnalyticsPage.tsx'));
-const RecordList = lazy(() => import('../features/records/pages/RecordsPage.tsx'));
-const Goals = lazy(() => import('../features/goals/pages/GoalsPage.tsx'));
-const Reminders = lazy(() => import('../features/reminders/pages/RemindersPage.tsx'));
+import { AppRoutes } from './router.tsx';
+import store from './store/index.ts';
+
 const Tutorial = lazy(() => import('../shared/components/Tutorial.tsx'));
-const Auth = lazy(() => import('../features/auth/pages/LoginPage.tsx'));
 const KeyboardShortcutsHelp = lazy(() => import('../shared/components/KeyboardShortcutsHelp.tsx'));
 
 function Navbar() {
@@ -203,24 +190,6 @@ function Navbar() {
   );
 }
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
-
-  if (isLoading) {
-    return <div className="loading">加载中...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" />;
-  }
-
-  return children;
-}
-
 function App() {
   return (
     <ErrorBoundary>
@@ -321,90 +290,12 @@ function AppContent() {
       {isAuthenticated && <Navbar />}
       <div className="main">
         <ErrorBoundary>
-          <Suspense
-            fallback={
-              <div className="loading-container">
-                <div className="loading"></div>
-                <span>加载中...</span>
-              </div>
-            }
-          >
-            {isAuthenticated && <Tutorial />}
-            <KeyboardShortcutsHelp
-              isOpen={showShortcutsHelp}
-              onClose={() => setShowShortcutsHelp(false)}
-            />
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <Dashboard />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/records"
-                element={
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <RecordList />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/goals"
-                element={
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <Goals />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/reminders"
-                element={
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <Reminders />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/growth-tree"
-                element={
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <GrowthTree />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/analytics"
-                element={
-                  <ProtectedRoute>
-                    <ErrorBoundary>
-                      <Analytics />
-                    </ErrorBoundary>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/auth"
-                element={
-                  <ErrorBoundary>
-                    <Auth />
-                  </ErrorBoundary>
-                }
-              />
-            </Routes>
-          </Suspense>
+          {isAuthenticated && <Tutorial />}
+          <KeyboardShortcutsHelp
+            isOpen={showShortcutsHelp}
+            onClose={() => setShowShortcutsHelp(false)}
+          />
+          <AppRoutes />
         </ErrorBoundary>
       </div>
     </>
