@@ -10,7 +10,7 @@ export const formatDate = (dateStr: string): string => {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 };
 
@@ -29,18 +29,21 @@ export const getMoodColor = (mood: '很好' | '一般' | '不太好'): string =>
 };
 
 // 高亮搜索结果
-export const highlightSearchTerm = (text: string | undefined, searchTerm: string): React.ReactNode => {
+export const highlightSearchTerm = (
+  text: string | undefined,
+  searchTerm: string,
+): React.ReactNode => {
   if (!text || !searchTerm) return text;
-  
+
   const searchLower = searchTerm.toLowerCase();
   const textLower = text.toLowerCase();
-  
+
   if (textLower.includes(searchLower)) {
     const index = textLower.indexOf(searchLower);
     const before = text.substring(0, index);
     const match = text.substring(index, index + searchTerm.length);
     const after = text.substring(index + searchTerm.length);
-    
+
     return (
       <>
         {before}
@@ -49,7 +52,7 @@ export const highlightSearchTerm = (text: string | undefined, searchTerm: string
       </>
     );
   }
-  
+
   return text;
 };
 
@@ -59,47 +62,47 @@ export const filterRecords = (
   searchTerm: string,
   selectedMoods: string[],
   selectedTags: string[],
-  dateRange: { start: string; end: string }
+  dateRange: { start: string; end: string },
 ): Record[] => {
   let filtered = records;
-  
+
   // 搜索过滤
   if (searchTerm) {
     const searchLower = searchTerm.toLowerCase();
-    filtered = filtered.filter(record => {
+    filtered = filtered.filter((record) => {
       return (
         (record.activity && record.activity.toLowerCase().includes(searchLower)) ||
         (record.learning && record.learning.toLowerCase().includes(searchLower)) ||
         (record.reflection && record.reflection.toLowerCase().includes(searchLower)) ||
-        (record.tags && record.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+        (record.tags && record.tags.some((tag) => tag.toLowerCase().includes(searchLower)))
       );
     });
   }
-  
+
   // 情绪过滤
   if (selectedMoods.length > 0) {
-    filtered = filtered.filter(record => selectedMoods.includes(record.mood));
+    filtered = filtered.filter((record) => selectedMoods.includes(record.mood));
   }
-  
+
   // 标签过滤
   if (selectedTags.length > 0) {
-    filtered = filtered.filter(record => {
+    filtered = filtered.filter((record) => {
       if (!record.tags || record.tags.length === 0) return false;
-      return selectedTags.some(tag => record.tags.includes(tag));
+      return selectedTags.some((tag) => record.tags.includes(tag));
     });
   }
-  
+
   // 日期范围过滤
   if (dateRange.start && dateRange.end) {
     const startDate = new Date(dateRange.start);
     const endDate = new Date(dateRange.end);
     endDate.setHours(23, 59, 59, 999);
-    
-    filtered = filtered.filter(record => {
+
+    filtered = filtered.filter((record) => {
       const recordDate = new Date(record.createdAt);
       return recordDate >= startDate && recordDate <= endDate;
     });
   }
-  
+
   return filtered;
 };

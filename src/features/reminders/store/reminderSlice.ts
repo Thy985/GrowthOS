@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 import type { Reminder, ReminderState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
@@ -8,14 +8,14 @@ import { secureStorage } from '../../../shared/utils/secureStorage';
 const initialState: ReminderState = {
   reminders: [],
   isLoading: false,
-  error: null
+  error: null,
 };
 
 // 加载提醒数据
 export const loadReminders = createAsyncThunk('reminder/loadReminders', async () => {
   try {
     logger.info('加载提醒数据');
-    const reminders = secureStorage.getItem('growth-reminders') || [];
+    const reminders = (secureStorage.getItem<Reminder[]>('growth-reminders') || []) as Reminder[];
     logger.info('提醒数据加载完成', { remindersCount: reminders.length });
     return reminders;
   } catch (error) {
@@ -25,96 +25,113 @@ export const loadReminders = createAsyncThunk('reminder/loadReminders', async ()
 });
 
 // 添加提醒
-export const addReminder = createAsyncThunk('reminder/addReminder', async (reminder: Omit<Reminder, 'id' | 'isCompleted' | 'createdAt' | 'updatedAt'>) => {
-  try {
-    logger.info('添加提醒', { title: reminder.title, date: reminder.date, time: reminder.time });
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const newReminder: Reminder = {
-      ...reminder,
-      id: Date.now().toString(),
-      isCompleted: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    const updatedReminders = [newReminder, ...reminders];
-    secureStorage.setItem('growth-reminders', updatedReminders);
-    
-    // 设置浏览器通知
-    if ('Notification' in window) {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          const reminderDate = new Date(`${reminder.date}T${reminder.time}`);
-          const now = new Date();
-          const timeUntilReminder = reminderDate.getTime() - now.getTime();
-          
-          if (timeUntilReminder > 0) {
-            setTimeout(() => {
-              new Notification(reminder.title, {
-                body: reminder.description,
-                icon: '/favicon.ico'
-              });
-            }, timeUntilReminder);
+export const addReminder = createAsyncThunk(
+  'reminder/addReminder',
+  async (reminder: Omit<Reminder, 'id' | 'isCompleted' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      logger.info('添加提醒', { title: reminder.title, date: reminder.date, time: reminder.time });
+      const reminders = (secureStorage.getItem<Reminder[]>('growth-reminders') ||
+        []) as Reminder[];
+      const newReminder: Reminder = {
+        ...reminder,
+        id: Date.now().toString(),
+        isCompleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const updatedReminders = [newReminder, ...reminders];
+      secureStorage.setItem('growth-reminders', updatedReminders);
+
+      // 设置浏览器通知
+      if ('Notification' in window) {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            const reminderDate = new Date(`${reminder.date}T${reminder.time}`);
+            const now = new Date();
+            const timeUntilReminder = reminderDate.getTime() - now.getTime();
+
+            if (timeUntilReminder > 0) {
+              setTimeout(() => {
+                new Notification(reminder.title, {
+                  body: reminder.description,
+                  icon: '/favicon.ico',
+                });
+              }, timeUntilReminder);
+            }
           }
-        }
+        });
+      }
+
+      logger.info('提醒添加成功', { reminderId: newReminder.id });
+      return newReminder;
+    } catch (error) {
+      logger.error('添加提醒异常', error, {
+        title: reminder.title,
+        date: reminder.date,
+        time: reminder.time,
       });
+      throw error;
     }
-    
-    logger.info('提醒添加成功', { reminderId: newReminder.id });
-    return newReminder;
-  } catch (error) {
-    logger.error('添加提醒异常', error, { title: reminder.title, date: reminder.date, time: reminder.time });
-    throw error;
-  }
-});
+  },
+);
 
 // 更新提醒
-export const updateReminder = createAsyncThunk('reminder/updateReminder', async (reminder: Reminder) => {
-  try {
-    logger.info('更新提醒', { reminderId: reminder.id, title: reminder.title });
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const updatedReminders = reminders.map(r => 
-      r.id === reminder.id ? { ...reminder, updatedAt: new Date().toISOString() } : r
-    );
-    secureStorage.setItem('growth-reminders', updatedReminders);
-    logger.info('提醒更新成功', { reminderId: reminder.id });
-    return reminder;
-  } catch (error) {
-    logger.error('更新提醒异常', error, { reminderId: reminder.id });
-    throw error;
-  }
-});
+export const updateReminder = createAsyncThunk(
+  'reminder/updateReminder',
+  async (reminder: Reminder) => {
+    try {
+      logger.info('更新提醒', { reminderId: reminder.id, title: reminder.title });
+      const reminders = (secureStorage.getItem<Reminder[]>('growth-reminders') || []) as Reminder[];
+      const updatedReminders = reminders.map((r: Reminder) =>
+        r.id === reminder.id ? { ...reminder, updatedAt: new Date().toISOString() } : r,
+      );
+      secureStorage.setItem('growth-reminders', updatedReminders);
+      logger.info('提醒更新成功', { reminderId: reminder.id });
+      return reminder;
+    } catch (error) {
+      logger.error('更新提醒异常', error, { reminderId: reminder.id });
+      throw error;
+    }
+  },
+);
 
 // 删除提醒
-export const deleteReminder = createAsyncThunk('reminder/deleteReminder', async (reminderId: string) => {
-  try {
-    logger.info('删除提醒', { reminderId });
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const updatedReminders = reminders.filter(r => r.id !== reminderId);
-    secureStorage.setItem('growth-reminders', updatedReminders);
-    logger.info('提醒删除成功', { reminderId });
-    return reminderId;
-  } catch (error) {
-    logger.error('删除提醒异常', error, { reminderId });
-    throw error;
-  }
-});
+export const deleteReminder = createAsyncThunk(
+  'reminder/deleteReminder',
+  async (reminderId: string) => {
+    try {
+      logger.info('删除提醒', { reminderId });
+      const reminders = (secureStorage.getItem<Reminder[]>('growth-reminders') || []) as Reminder[];
+      const updatedReminders = reminders.filter((r: Reminder) => r.id !== reminderId);
+      secureStorage.setItem('growth-reminders', updatedReminders);
+      logger.info('提醒删除成功', { reminderId });
+      return reminderId;
+    } catch (error) {
+      logger.error('删除提醒异常', error, { reminderId });
+      throw error;
+    }
+  },
+);
 
 // 标记提醒为已完成
-export const completeReminder = createAsyncThunk('reminder/completeReminder', async (reminderId: string) => {
-  try {
-    logger.info('标记提醒为已完成', { reminderId });
-    const reminders = secureStorage.getItem('growth-reminders') || [];
-    const updatedReminders = reminders.map(r => 
-      r.id === reminderId ? { ...r, isCompleted: true, updatedAt: new Date().toISOString() } : r
-    );
-    secureStorage.setItem('growth-reminders', updatedReminders);
-    logger.info('提醒标记成功', { reminderId });
-    return reminderId;
-  } catch (error) {
-    logger.error('标记提醒异常', error, { reminderId });
-    throw error;
-  }
-});
+export const completeReminder = createAsyncThunk(
+  'reminder/completeReminder',
+  async (reminderId: string) => {
+    try {
+      logger.info('标记提醒为已完成', { reminderId });
+      const reminders = (secureStorage.getItem<Reminder[]>('growth-reminders') || []) as Reminder[];
+      const updatedReminders = reminders.map((r: Reminder) =>
+        r.id === reminderId ? { ...r, isCompleted: true, updatedAt: new Date().toISOString() } : r,
+      );
+      secureStorage.setItem('growth-reminders', updatedReminders);
+      logger.info('提醒标记成功', { reminderId });
+      return reminderId;
+    } catch (error) {
+      logger.error('标记提醒异常', error, { reminderId });
+      throw error;
+    }
+  },
+);
 
 // 创建reminder slice
 const reminderSlice = createSlice({
@@ -123,7 +140,7 @@ const reminderSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -160,8 +177,8 @@ const reminderSlice = createSlice({
       })
       .addCase(updateReminder.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.reminders = state.reminders.map(r => 
-          r.id === action.payload.id ? action.payload : r
+        state.reminders = state.reminders.map((r) =>
+          r.id === action.payload.id ? action.payload : r,
         );
       })
       .addCase(updateReminder.rejected, (state, action) => {
@@ -175,7 +192,7 @@ const reminderSlice = createSlice({
       })
       .addCase(deleteReminder.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.reminders = state.reminders.filter(r => r.id !== action.payload);
+        state.reminders = state.reminders.filter((r) => r.id !== action.payload);
       })
       .addCase(deleteReminder.rejected, (state, action) => {
         state.isLoading = false;
@@ -188,15 +205,15 @@ const reminderSlice = createSlice({
       })
       .addCase(completeReminder.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.reminders = state.reminders.map(r => 
-          r.id === action.payload ? { ...r, isCompleted: true } : r
+        state.reminders = state.reminders.map((r) =>
+          r.id === action.payload ? { ...r, isCompleted: true } : r,
         );
       })
       .addCase(completeReminder.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || '标记提醒失败';
       });
-  }
+  },
 });
 
 export const { clearError } = reminderSlice.actions;

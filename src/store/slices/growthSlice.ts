@@ -23,7 +23,11 @@ export const loadData = createAsyncThunk('growth/loadData', async () => {
     const tags = (secureStorage.getItem<Tag[]>('growth-tags') || []) as Tag[];
     const trees = (secureStorage.getItem<Tree[]>('growth-trees') || []) as Tree[];
 
-    logger.info('成长数据加载完成', { recordsCount: records.length, tagsCount: tags.length, treesCount: trees.length });
+    logger.info('成长数据加载完成', {
+      recordsCount: records.length,
+      tagsCount: tags.length,
+      treesCount: trees.length,
+    });
     return { records, tags, trees };
   } catch (error) {
     logger.error('加载成长数据异常', error);
@@ -99,7 +103,9 @@ export const exportData = createAsyncThunk(
               const date = new Date(record.createdAt).toLocaleDateString();
               const activity = record.activity ? `"${record.activity.replace(/"/g, '""')}"` : '';
               const learning = record.learning ? `"${record.learning.replace(/"/g, '""')}"` : '';
-              const reflection = record.reflection ? `"${record.reflection.replace(/"/g, '""')}"` : '';
+              const reflection = record.reflection
+                ? `"${record.reflection.replace(/"/g, '""')}"`
+                : '';
               const mood = record.mood;
               const tagsStr = record.tags ? `"${record.tags.join(',').replace(/"/g, '""')}"` : '';
               csvContent += `${date},${activity},${learning},${reflection},${mood},${tagsStr}\n`;
@@ -110,7 +116,9 @@ export const exportData = createAsyncThunk(
             csvContent += '\n目标标题,目标描述,目标值,当前值,开始日期,结束日期,状态\n';
             goals.forEach((goal) => {
               const title = goal.title ? `"${goal.title.replace(/"/g, '""')}"` : '';
-              const description = goal.description ? `"${goal.description.replace(/"/g, '""')}"` : '';
+              const description = goal.description
+                ? `"${goal.description.replace(/"/g, '""')}"`
+                : '';
               const targetValue = goal.targetValue;
               const currentValue = goal.currentValue;
               const startDate = new Date(goal.startDate).toLocaleDateString();

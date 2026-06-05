@@ -1,4 +1,18 @@
-import React from 'react';
+import type { SelectHTMLAttributes, ReactNode } from 'react';
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> {
+  label?: ReactNode;
+  error?: string;
+  helperText?: string;
+  options?: SelectOption[];
+  className?: string;
+  containerClassName?: string;
+}
 
 const Select = ({
   label,
@@ -8,17 +22,11 @@ const Select = ({
   className = '',
   containerClassName = '',
   ...props
-}) => {
+}: SelectProps) => {
   return (
     <div className={`space-y-1 ${containerClassName}`}>
-      {/* 标签 */}
-      {label && (
-        <label className="block text-sm font-medium text-gray-700">
-          {label}
-        </label>
-      )}
+      {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
 
-      {/* 选择框 */}
       <select
         className={`
           w-full px-4 py-2 rounded-lg
@@ -38,19 +46,9 @@ const Select = ({
         ))}
       </select>
 
-      {/* 辅助文本 */}
-      {helperText && !error && (
-        <p className="text-sm text-gray-500">
-          {helperText}
-        </p>
-      )}
+      {helperText && !error && <p className="text-sm text-gray-500">{helperText}</p>}
 
-      {/* 错误信息 */}
-      {error && (
-        <p className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 };

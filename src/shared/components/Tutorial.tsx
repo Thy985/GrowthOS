@@ -16,34 +16,38 @@ const Tutorial = () => {
   const tutorialSteps: TutorialStep[] = [
     {
       title: '欢迎使用 GrowthOS!',
-      content: 'GrowthOS 是一款帮助你记录成长、追踪技能、分析数据的应用。让我们开始快速熟悉一下吧！',
-      icon: '🌱'
+      content:
+        'GrowthOS 是一款帮助你记录成长、追踪技能、分析数据的应用。让我们开始快速熟悉一下吧！',
+      icon: '🌱',
     },
     {
       title: '记录你的活动',
-      content: '在仪表盘页面，你可以记录每天的活动、学习内容、心情状态和反思。使用 #标签 可以自动关联到成长树！',
-      icon: '📝'
+      content:
+        '在仪表盘页面，你可以记录每天的活动、学习内容、心情状态和反思。使用 #标签 可以自动关联到成长树！',
+      icon: '📝',
     },
     {
       title: '查看你的记录',
       content: '在记录页面，你可以查看、搜索和过滤所有的记录。支持按日期、情绪和标签进行筛选。',
-      icon: '📋'
+      icon: '📋',
     },
     {
       title: '探索成长树',
-      content: '成长树页面展示了你的技能、认知、习惯和生活等领域的发展。每个标签都会自动创建对应的节点。',
-      icon: '🌳'
+      content:
+        '成长树页面展示了你的技能、认知、习惯和生活等领域的发展。每个标签都会自动创建对应的节点。',
+      icon: '🌳',
     },
     {
       title: '分析你的数据',
-      content: '在分析页面，你可以查看数据统计、趋势图表，以及获得 AI 分析和建议。还可以导入导出数据！',
-      icon: '📊'
+      content:
+        '在分析页面，你可以查看数据统计、趋势图表，以及获得 AI 分析和建议。还可以导入导出数据！',
+      icon: '📊',
     },
     {
       title: '开始你的成长之旅！',
       content: '现在你已经了解了 GrowthOS 的基本功能。开始记录你的成长，让数据见证你的进步吧！',
-      icon: '🚀'
-    }
+      icon: '🚀',
+    },
   ];
 
   // 检查是否是第一次使用
@@ -93,7 +97,7 @@ const Tutorial = () => {
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         {/* 进度条 */}
         <div className="h-2 bg-gray-200">
-          <div 
+          <div
             className="h-full bg-green-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
           ></div>
@@ -102,9 +106,7 @@ const Tutorial = () => {
         {/* 内容 */}
         <div className="p-8">
           {/* 图标 */}
-          <div className="text-6xl text-center mb-6 animate-bounce">
-            {currentStepData.icon}
-          </div>
+          <div className="text-6xl text-center mb-6 animate-bounce">{currentStepData.icon}</div>
 
           {/* 标题 */}
           <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">
@@ -112,9 +114,7 @@ const Tutorial = () => {
           </h2>
 
           {/* 内容 */}
-          <p className="text-gray-600 text-center leading-relaxed">
-            {currentStepData.content}
-          </p>
+          <p className="text-gray-600 text-center leading-relaxed">{currentStepData.content}</p>
 
           {/* 步骤指示器 */}
           <div className="flex justify-center gap-2 mt-8">
@@ -122,11 +122,11 @@ const Tutorial = () => {
               <div
                 key={index}
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentStep 
-                    ? 'w-8 bg-green-500' 
-                    : index < currentStep 
-                    ? 'bg-green-300' 
-                    : 'bg-gray-300'
+                  index === currentStep
+                    ? 'w-8 bg-green-500'
+                    : index < currentStep
+                      ? 'bg-green-300'
+                      : 'bg-gray-300'
                 }`}
               ></div>
             ))}

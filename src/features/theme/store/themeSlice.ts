@@ -15,7 +15,7 @@ const getInitialTheme = (): boolean => {
 
 // 初始状态
 const initialState: ThemeState = {
-  isDarkMode: getInitialTheme()
+  isDarkMode: getInitialTheme(),
 };
 
 // 创建theme slice
@@ -32,8 +32,8 @@ const themeSlice = createSlice({
       state.isDarkMode = action.payload;
       // 保存到localStorage
       localStorage.setItem('theme', state.isDarkMode ? 'dark' : 'light');
-    }
-  }
+    },
+  },
 });
 
 export const { toggleTheme, setTheme } = themeSlice.actions;

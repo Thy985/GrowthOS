@@ -1,7 +1,15 @@
 import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  Link,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 import '../App.css';
 import useKeyboardShortcuts from '../shared/hooks/useKeyboardShortcuts.ts';
@@ -27,52 +35,69 @@ const KeyboardShortcutsHelp = lazy(() => import('../shared/components/KeyboardSh
 
 function Navbar() {
   const location = useLocation();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { isDarkMode } = useSelector((state: RootState) => state.theme);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
-  
+
   // 打开快捷键帮助的回调
   const handleOpenShortcuts = () => {
     const event = new CustomEvent('openShortcutsHelp');
     window.dispatchEvent(event);
   };
-  
+
   // 处理登出
   const handleLogout = () => {
     dispatch(logout());
   };
-  
+
   // 处理主题切换
   const handleToggleTheme = () => {
     dispatch(toggleTheme());
   };
-  
+
   return (
     <nav className="nav">
       <div className="nav-container">
-        <Link to="/" className="nav-logo">GrowthOS</Link>
+        <Link to="/" className="nav-logo">
+          GrowthOS
+        </Link>
         <div className="nav-links">
           <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
             {t('common.dashboard')}
           </Link>
-          <Link to="/records" className={`nav-link ${location.pathname === '/records' ? 'active' : ''}`}>
+          <Link
+            to="/records"
+            className={`nav-link ${location.pathname === '/records' ? 'active' : ''}`}
+          >
             {t('common.records')}
           </Link>
-          <Link to="/goals" className={`nav-link ${location.pathname === '/goals' ? 'active' : ''}`}>
+          <Link
+            to="/goals"
+            className={`nav-link ${location.pathname === '/goals' ? 'active' : ''}`}
+          >
             {t('common.goals')}
           </Link>
-          <Link to="/reminders" className={`nav-link ${location.pathname === '/reminders' ? 'active' : ''}`}>
+          <Link
+            to="/reminders"
+            className={`nav-link ${location.pathname === '/reminders' ? 'active' : ''}`}
+          >
             {t('common.reminders')}
           </Link>
-          <Link to="/growth-tree" className={`nav-link ${location.pathname === '/growth-tree' ? 'active' : ''}`}>
+          <Link
+            to="/growth-tree"
+            className={`nav-link ${location.pathname === '/growth-tree' ? 'active' : ''}`}
+          >
             {t('common.growthTree')}
           </Link>
-          <Link to="/analytics" className={`nav-link ${location.pathname === '/analytics' ? 'active' : ''}`}>
+          <Link
+            to="/analytics"
+            className={`nav-link ${location.pathname === '/analytics' ? 'active' : ''}`}
+          >
             {t('common.analytics')}
           </Link>
-          <button 
+          <button
             onClick={handleOpenShortcuts}
             className="nav-shortcuts-hint"
             aria-label="快捷键帮助"
@@ -80,24 +105,21 @@ function Navbar() {
           >
             ⌨️
           </button>
-          <button 
-            onClick={handleToggleTheme} 
+          <button
+            onClick={handleToggleTheme}
             className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
             aria-label="切换主题"
           ></button>
           {isAuthenticated && user && (
             <div className="nav-user">
               <span className="nav-username">{user.username}</span>
-              <button 
-                onClick={handleLogout} 
-                className="nav-logout"
-              >
+              <button onClick={handleLogout} className="nav-logout">
                 {t('common.logout')}
               </button>
             </div>
           )}
         </div>
-        <button 
+        <button
           className="nav-mobile-toggle"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="切换菜单"
@@ -111,28 +133,52 @@ function Navbar() {
       </div>
       {isMobileMenuOpen && (
         <div className="nav-mobile-menu">
-          <Link to="/" className={`nav-mobile-link ${location.pathname === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <Link
+            to="/"
+            className={`nav-mobile-link ${location.pathname === '/' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             {t('common.dashboard')}
           </Link>
-          <Link to="/records" className={`nav-mobile-link ${location.pathname === '/records' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <Link
+            to="/records"
+            className={`nav-mobile-link ${location.pathname === '/records' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             {t('common.records')}
           </Link>
-          <Link to="/goals" className={`nav-mobile-link ${location.pathname === '/goals' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <Link
+            to="/goals"
+            className={`nav-mobile-link ${location.pathname === '/goals' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             {t('common.goals')}
           </Link>
-          <Link to="/reminders" className={`nav-mobile-link ${location.pathname === '/reminders' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <Link
+            to="/reminders"
+            className={`nav-mobile-link ${location.pathname === '/reminders' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             {t('common.reminders')}
           </Link>
-          <Link to="/growth-tree" className={`nav-mobile-link ${location.pathname === '/growth-tree' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <Link
+            to="/growth-tree"
+            className={`nav-mobile-link ${location.pathname === '/growth-tree' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             {t('common.growthTree')}
           </Link>
-          <Link to="/analytics" className={`nav-mobile-link ${location.pathname === '/analytics' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <Link
+            to="/analytics"
+            className={`nav-mobile-link ${location.pathname === '/analytics' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             {t('common.analytics')}
           </Link>
           <div className="nav-mobile-theme-toggle">
             <span>主题</span>
-            <button 
-              onClick={handleToggleTheme} 
+            <button
+              onClick={handleToggleTheme}
               className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
               aria-label="切换主题"
             ></button>
@@ -140,11 +186,11 @@ function Navbar() {
           {isAuthenticated && user && (
             <div className="nav-mobile-user">
               <span className="nav-username">{user.username}</span>
-              <button 
+              <button
                 onClick={() => {
                   handleLogout();
                   setIsMobileMenuOpen(false);
-                }} 
+                }}
                 className="nav-logout"
               >
                 登出
@@ -163,15 +209,15 @@ interface ProtectedRouteProps {
 
 function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
-  
+
   if (isLoading) {
     return <div className="loading">加载中...</div>;
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/auth" />;
   }
-  
+
   return children;
 }
 
@@ -191,7 +237,7 @@ function App() {
 
 function AppContent() {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const navigate = useNavigate();
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -201,7 +247,7 @@ function AppContent() {
     // 检查认证状态
     dispatch(checkAuth());
   }, [dispatch]);
-  
+
   // 延迟加载非关键数据
   useEffect(() => {
     if (isAuthenticated) {
@@ -214,7 +260,7 @@ function AppContent() {
         // 加载提醒数据
         dispatch(loadReminders());
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [dispatch, isAuthenticated]);
@@ -224,69 +270,140 @@ function AppContent() {
     const handleOpenShortcuts = () => {
       setShowShortcutsHelp(true);
     };
-    
+
     window.addEventListener('openShortcutsHelp', handleOpenShortcuts);
     return () => window.removeEventListener('openShortcutsHelp', handleOpenShortcuts);
   }, []);
 
   // 使用useMemo来避免每次渲染都重新创建shortcuts数组
-  const shortcuts = useMemo(() => [
-    {
-      key: 'h',
-      callback: () => isAuthenticated && navigate('/'),
-    },
-    {
-      key: 'r',
-      callback: () => isAuthenticated && navigate('/records'),
-    },
-    {
-      key: 't',
-      callback: () => isAuthenticated && navigate('/growth-tree'),
-    },
-    {
-      key: 'a',
-      callback: () => isAuthenticated && navigate('/analytics'),
-    },
-    {
-      key: '?',
-      callback: () => setShowShortcutsHelp(!showShortcutsHelp),
-    },
-    {
-      key: 'k',
-      ctrl: true,
-      callback: () => isAuthenticated && setShowSearch(!showSearch),
-    },
-    {
-      key: 'Escape',
-      callback: () => {
-        setShowShortcutsHelp(false);
-        setShowSearch(false);
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'h',
+        callback: () => isAuthenticated && navigate('/'),
       },
-    },
-  ], [isAuthenticated, navigate, showShortcutsHelp, showSearch]);
+      {
+        key: 'r',
+        callback: () => isAuthenticated && navigate('/records'),
+      },
+      {
+        key: 't',
+        callback: () => isAuthenticated && navigate('/growth-tree'),
+      },
+      {
+        key: 'a',
+        callback: () => isAuthenticated && navigate('/analytics'),
+      },
+      {
+        key: '?',
+        callback: () => setShowShortcutsHelp(!showShortcutsHelp),
+      },
+      {
+        key: 'k',
+        ctrl: true,
+        callback: () => isAuthenticated && setShowSearch(!showSearch),
+      },
+      {
+        key: 'Escape',
+        callback: () => {
+          setShowShortcutsHelp(false);
+          setShowSearch(false);
+        },
+      },
+    ],
+    [isAuthenticated, navigate, showShortcutsHelp, showSearch],
+  );
 
   useKeyboardShortcuts(shortcuts);
-  
+
   return (
     <>
       {isAuthenticated && <Navbar />}
       <div className="main">
         <ErrorBoundary>
-          <Suspense fallback={<div className="loading-container"><div className="loading"></div><span>加载中...</span></div>}>
+          <Suspense
+            fallback={
+              <div className="loading-container">
+                <div className="loading"></div>
+                <span>加载中...</span>
+              </div>
+            }
+          >
             {isAuthenticated && <Tutorial />}
-            <KeyboardShortcutsHelp 
-              isOpen={showShortcutsHelp} 
-              onClose={() => setShowShortcutsHelp(false)} 
+            <KeyboardShortcutsHelp
+              isOpen={showShortcutsHelp}
+              onClose={() => setShowShortcutsHelp(false)}
             />
             <Routes>
-            <Route path="/" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/records" element={<ProtectedRoute><ErrorBoundary><RecordList /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/goals" element={<ProtectedRoute><ErrorBoundary><Goals /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/reminders" element={<ProtectedRoute><ErrorBoundary><Reminders /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/growth-tree" element={<ProtectedRoute><ErrorBoundary><GrowthTree /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><ErrorBoundary><Analytics /></ErrorBoundary></ProtectedRoute>} />
-            <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
-          </Routes>
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <Dashboard />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/records"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <RecordList />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/goals"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <Goals />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reminders"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <Reminders />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/growth-tree"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <GrowthTree />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <Analytics />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/auth"
+                element={
+                  <ErrorBoundary>
+                    <Auth />
+                  </ErrorBoundary>
+                }
+              />
+            </Routes>
           </Suspense>
         </ErrorBoundary>
       </div>

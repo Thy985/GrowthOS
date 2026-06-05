@@ -1,4 +1,4 @@
-import type { ComponentType, ErrorInfo} from 'react';
+import type { ComponentType, ErrorInfo } from 'react';
 import React, { ReactNode } from 'react';
 
 import logger from './logger';
@@ -8,7 +8,7 @@ const errorHandler = {
   // 处理API错误
   handleApiError: (error: any, fallbackMessage: string = '网络请求失败，请稍后重试'): string => {
     logger.logApiError(error.config?.url || 'unknown', error);
-    
+
     if (error.response) {
       // 服务器返回错误状态码
       const status = error.response.status;
@@ -34,38 +34,41 @@ const errorHandler = {
       return error.message || fallbackMessage;
     }
   },
-  
+
   // 处理表单错误
   handleFormError: (errors: any, fallbackMessage: string = '表单数据有误'): string => {
     if (typeof errors === 'string') {
       return errors;
     }
-    
+
     if (errors && typeof errors === 'object') {
       // 提取第一个错误信息
       const firstError = Object.values(errors)[0];
       return firstError || fallbackMessage;
     }
-    
+
     return fallbackMessage;
   },
-  
+
   // 处理通用错误
   handleError: (error: any, fallbackMessage: string = '操作失败，请稍后重试'): string => {
     if (error instanceof Error) {
       logger.error('Error', error);
       return error.message || fallbackMessage;
     }
-    
+
     if (typeof error === 'string') {
       return error;
     }
-    
+
     return fallbackMessage;
   },
-  
+
   // 处理异步操作错误
-  async handleAsyncError<T>(asyncFn: () => Promise<T>, fallbackValue: T | null = null): Promise<T | null> {
+  async handleAsyncError<T>(
+    asyncFn: () => Promise<T>,
+    fallbackValue: T | null = null,
+  ): Promise<T | null> {
     try {
       return await asyncFn();
     } catch (error) {
@@ -73,23 +76,29 @@ const errorHandler = {
       return fallbackValue;
     }
   },
-  
+
   // 生成错误边界组件
-  createErrorBoundary<P extends object>(Component: ComponentType<P>, fallbackComponent: ComponentType<{ error: Error }>): ComponentType<P> {
-    return class ErrorBoundary extends React.Component<P, { hasError: boolean; error: Error | null }> {
+  createErrorBoundary<P extends object>(
+    Component: ComponentType<P>,
+    fallbackComponent: ComponentType<{ error: Error }>,
+  ): ComponentType<P> {
+    return class ErrorBoundary extends React.Component<
+      P,
+      { hasError: boolean; error: Error | null }
+    > {
       constructor(props: P) {
         super(props);
         this.state = { hasError: false, error: null };
       }
-      
+
       static getDerivedStateFromError(error: Error) {
         return { hasError: true, error };
       }
-      
+
       componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         logger.error('Error Boundary', error, errorInfo);
       }
-      
+
       render() {
         if (this.state.hasError) {
           return React.createElement(fallbackComponent, { error: this.state.error as Error });
@@ -97,7 +106,7 @@ const errorHandler = {
         return React.createElement(Component, this.props);
       }
     };
-  }
+  },
 };
 
 export default errorHandler;

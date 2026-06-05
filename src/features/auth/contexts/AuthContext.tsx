@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         username,
         // 实际项目中应该存储token
         token: 'mock-token-' + Date.now(),
-        role: username === 'admin' ? 'admin' : 'user' // 简单的角色分配
+        role: username === 'admin' ? 'admin' : 'user', // 简单的角色分配
       };
       setUser(userData);
       secureStorage.setItem('growthos-user', userData);
@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         username,
         // 实际项目中应该存储token
         token: 'mock-token-' + Date.now(),
-        role: 'user' // 新注册用户默认为普通用户
+        role: 'user', // 新注册用户默认为普通用户
       };
       setUser(userData);
       secureStorage.setItem('growthos-user', userData);
@@ -123,12 +123,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
-    hasPermission
+    hasPermission,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

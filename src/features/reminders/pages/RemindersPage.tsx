@@ -3,19 +3,27 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import type { Reminder, ReminderState } from '../../../shared/types';
 import ErrorBoundary from '../../../shared/components/ErrorBoundary';
-import { loadReminders, addReminder, updateReminder, deleteReminder, completeReminder } from '../store/reminderSlice';
+import {
+  loadReminders,
+  addReminder,
+  updateReminder,
+  deleteReminder,
+  completeReminder,
+} from '../store/reminderSlice';
 
 const Reminders = () => {
-  const dispatch = useDispatch();
-  const { reminders, isLoading, error } = useSelector((state: { reminder: ReminderState }) => state.reminder);
-  
+  const dispatch = useDispatch<any>();
+  const { reminders, isLoading, error } = useSelector(
+    (state: { reminder: ReminderState }) => state.reminder,
+  );
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     date: '',
-    time: ''
+    time: '',
   });
 
   // 加载提醒数据
@@ -26,9 +34,9 @@ const Reminders = () => {
   // 处理表单输入变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -36,19 +44,23 @@ const Reminders = () => {
   const handleAddReminder = useCallback(() => {
     if (formData.title && formData.date && formData.time) {
       if (editingReminder) {
-        dispatch(updateReminder({
-          ...editingReminder,
-          ...formData,
-          updatedAt: new Date().toISOString()
-        }));
+        dispatch(
+          updateReminder({
+            ...editingReminder,
+            ...formData,
+            updatedAt: new Date().toISOString(),
+          }),
+        );
         setEditingReminder(null);
       } else {
-        dispatch(addReminder({
-          title: formData.title,
-          description: formData.description,
-          date: formData.date,
-          time: formData.time
-        }));
+        dispatch(
+          addReminder({
+            title: formData.title,
+            description: formData.description,
+            date: formData.date,
+            time: formData.time,
+          }),
+        );
       }
       setFormData({ title: '', description: '', date: '', time: '' });
       setShowAddModal(false);
@@ -62,7 +74,7 @@ const Reminders = () => {
       title: reminder.title,
       description: reminder.description,
       date: reminder.date,
-      time: reminder.time
+      time: reminder.time,
     });
     setShowAddModal(true);
   };
@@ -80,16 +92,16 @@ const Reminders = () => {
   };
 
   // 过滤出未完成的提醒
-  const pendingReminders = reminders.filter(reminder => !reminder.isCompleted);
+  const pendingReminders = reminders.filter((reminder) => !reminder.isCompleted);
   // 过滤出已完成的提醒
-  const completedReminders = reminders.filter(reminder => reminder.isCompleted);
+  const completedReminders = reminders.filter((reminder) => reminder.isCompleted);
 
   return (
     <ErrorBoundary>
       <div className="reminders-page">
         <div className="flex justify-between items-center mb-6">
           <h1 className="page-title">提醒</h1>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => {
               setEditingReminder(null);
@@ -101,22 +113,18 @@ const Reminders = () => {
           </button>
         </div>
 
-        {error && (
-          <div className="error-message mb-6">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message mb-6">{error}</div>}
 
         {/* 未完成的提醒 */}
         {pendingReminders.length > 0 && (
           <div className="mb-8">
             <h2 className="text-lg font-medium mb-4">待完成</h2>
             <div className="space-y-4">
-              {pendingReminders.map(reminder => (
+              {pendingReminders.map((reminder) => (
                 <div key={reminder.id} className="reminder-card">
                   <div className="flex items-start">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="mt-1 mr-3"
                       onChange={() => handleCompleteReminder(reminder.id)}
                     />
@@ -132,13 +140,13 @@ const Reminders = () => {
                       )}
                     </div>
                     <div className="flex space-x-2">
-                      <button 
+                      <button
                         className="btn btn-sm btn-outline"
                         onClick={() => handleEditReminder(reminder)}
                       >
                         编辑
                       </button>
-                      <button 
+                      <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDeleteReminder(reminder.id)}
                       >
@@ -157,15 +165,10 @@ const Reminders = () => {
           <div>
             <h2 className="text-lg font-medium mb-4">已完成</h2>
             <div className="space-y-4">
-              {completedReminders.map(reminder => (
+              {completedReminders.map((reminder) => (
                 <div key={reminder.id} className="reminder-card completed">
                   <div className="flex items-start">
-                    <input 
-                      type="checkbox" 
-                      className="mt-1 mr-3" 
-                      checked
-                      onChange={() => {}}
-                    />
+                    <input type="checkbox" className="mt-1 mr-3" checked onChange={() => {}} />
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
                         <h3 className="font-medium line-through">{reminder.title}</h3>
@@ -174,10 +177,12 @@ const Reminders = () => {
                         </div>
                       </div>
                       {reminder.description && (
-                        <p className="text-sm text-gray-600 mt-1 line-through">{reminder.description}</p>
+                        <p className="text-sm text-gray-600 mt-1 line-through">
+                          {reminder.description}
+                        </p>
                       )}
                     </div>
-                    <button 
+                    <button
                       className="btn btn-sm btn-danger"
                       onClick={() => handleDeleteReminder(reminder.id)}
                     >
@@ -205,9 +210,9 @@ const Reminders = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">标题</label>
-                  <input 
-                    type="text" 
-                    name="title" 
+                  <input
+                    type="text"
+                    name="title"
                     className="input w-full"
                     value={formData.title}
                     onChange={handleInputChange}
@@ -216,9 +221,9 @@ const Reminders = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">描述</label>
-                  <textarea 
-                    name="description" 
-                    className="input w-full" 
+                  <textarea
+                    name="description"
+                    className="input w-full"
                     rows={3}
                     value={formData.description}
                     onChange={handleInputChange}
@@ -228,9 +233,9 @@ const Reminders = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">日期</label>
-                    <input 
-                      type="date" 
-                      name="date" 
+                    <input
+                      type="date"
+                      name="date"
                       className="input w-full"
                       value={formData.date}
                       onChange={handleInputChange}
@@ -238,9 +243,9 @@ const Reminders = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">时间</label>
-                    <input 
-                      type="time" 
-                      name="time" 
+                    <input
+                      type="time"
+                      name="time"
                       className="input w-full"
                       value={formData.time}
                       onChange={handleInputChange}
@@ -249,7 +254,7 @@ const Reminders = () => {
                 </div>
               </div>
               <div className="modal-actions">
-                <button 
+                <button
                   className="btn btn-outline"
                   onClick={() => {
                     setShowAddModal(false);
@@ -258,10 +263,7 @@ const Reminders = () => {
                 >
                   取消
                 </button>
-                <button 
-                  className="btn btn-primary"
-                  onClick={handleAddReminder}
-                >
+                <button className="btn btn-primary" onClick={handleAddReminder}>
                   {editingReminder ? '更新' : '添加'}
                 </button>
               </div>

@@ -36,10 +36,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             <h1>出错了</h1>
             <p>抱歉，页面出现了错误。</p>
             <p className="error-message">{this.state.error?.message || '未知错误'}</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => window.location.reload()}
-            >
+            <button className="btn btn-primary" onClick={() => window.location.reload()}>
               刷新页面
             </button>
           </div>

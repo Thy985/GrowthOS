@@ -52,12 +52,8 @@ export const ThemeProvider = ({ children }) => {
   // 提供给子组件的值
   const value = {
     isDarkMode,
-    toggleTheme
+    toggleTheme,
   };
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

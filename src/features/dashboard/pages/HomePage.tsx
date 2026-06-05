@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Home = () => {
   return (
     <div className="container mx-auto p-4">
@@ -15,15 +13,29 @@ const Home = () => {
           <h2 className="text-xl font-semibold mb-4">日常记录</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">做了什么</label>
-              <input type="text" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="今天做了什么" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                做了什么
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="今天做了什么"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">学了什么</label>
-              <input type="text" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="今天学了什么" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                学了什么
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="今天学了什么"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">状态如何</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                状态如何
+              </label>
               <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                 <option value="">选择状态</option>
                 <option value="happy">很好</option>

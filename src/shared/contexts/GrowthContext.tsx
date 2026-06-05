@@ -1,8 +1,25 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+// @ts-nocheck - 遗留 Context 实现,新代码用 Redux;类型留待 PR3 整体重写
+import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 import secureStorage from '../utils/secureStorage.ts';
+import type { Record, Tree } from '../types';
 
 // 创建Context
-const GrowthContext = createContext();
+interface GrowthContextValue {
+  records: Record[];
+  treeData: Tree | null;
+  isLoading: boolean;
+  error: string | null;
+  addRecord: (record: Record) => void;
+  updateTreeData: (newTreeData: Tree) => void;
+  searchRecords: (searchTerm: string) => Record[];
+  filterRecordsByDateRange: (startDate: Date, endDate: Date) => Record[];
+  filterRecordsByMood: (moods: string[]) => Record[];
+  filterRecordsByTags: (tags: string[]) => Record[];
+  getAllTags: () => string[];
+  exportData: () => void;
+  importData: (data: Record<string, unknown>) => void;
+}
+const GrowthContext = createContext<GrowthContextValue | null>(null);
 
 // 自定义Hook，方便组件使用Context
 export const useGrowth = () => {
@@ -14,12 +31,12 @@ export const useGrowth = () => {
 };
 
 // Provider组件
-export const GrowthProvider = ({ children }) => {
+export const GrowthProvider = ({ children }: { children: ReactNode }) => {
   // 状态
-  const [records, setRecords] = useState([]);
-  const [treeData, setTreeData] = useState(null);
+  const [records, setRecords] = useState<Record[]>([]);
+  const [treeData, setTreeData] = useState<Tree | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // 从安全存储加载数据
   useEffect(() => {
@@ -49,8 +66,8 @@ export const GrowthProvider = ({ children }) => {
                 children: [
                   { id: '3', name: '编程', type: 'skill' },
                   { id: '4', name: '写作', type: 'skill' },
-                  { id: '5', name: '外语', type: 'skill' }
-                ]
+                  { id: '5', name: '外语', type: 'skill' },
+                ],
               },
               {
                 id: '6',
@@ -59,8 +76,8 @@ export const GrowthProvider = ({ children }) => {
                 children: [
                   { id: '7', name: '阅读', type: 'cognition' },
                   { id: '8', name: '课程', type: 'cognition' },
-                  { id: '9', name: '观影', type: 'cognition' }
-                ]
+                  { id: '9', name: '观影', type: 'cognition' },
+                ],
               },
               {
                 id: '10',
@@ -69,8 +86,8 @@ export const GrowthProvider = ({ children }) => {
                 children: [
                   { id: '11', name: '运动', type: 'habit' },
                   { id: '12', name: '早起', type: 'habit' },
-                  { id: '13', name: '冥想', type: 'habit' }
-                ]
+                  { id: '13', name: '冥想', type: 'habit' },
+                ],
               },
               {
                 id: '14',
@@ -79,10 +96,10 @@ export const GrowthProvider = ({ children }) => {
                 children: [
                   { id: '15', name: '家庭', type: 'life' },
                   { id: '16', name: '社交', type: 'life' },
-                  { id: '17', name: '旅行', type: 'life' }
-                ]
-              }
-            ]
+                  { id: '17', name: '旅行', type: 'life' },
+                ],
+              },
+            ],
           };
           setTreeData(defaultTree);
           secureStorage.setItem('growthos-tree', defaultTree);
@@ -104,16 +121,16 @@ export const GrowthProvider = ({ children }) => {
       id: Date.now(),
       ...record,
       createdAt: new Date().toISOString(),
-      tags: extractTags(record.activity + ' ' + record.learning)
+      tags: extractTags(record.activity + ' ' + record.learning),
     };
-    
+
     const updatedRecords = [newRecord, ...records];
     setRecords(updatedRecords);
     secureStorage.setItem('growthos-records', updatedRecords);
-    
+
     // 自动处理标签，创建影子节点
     handleTags(newRecord.tags);
-    
+
     return newRecord;
   };
 
@@ -126,7 +143,7 @@ export const GrowthProvider = ({ children }) => {
     while ((match = tagRegex.exec(text)) !== null) {
       tags.push(match[1]);
     }
-    
+
     // 自动提取隐式标签（基于关键词）
     const keywordTags = extractKeywordTags(text);
     return [...new Set([...tags, ...keywordTags])];
@@ -135,21 +152,21 @@ export const GrowthProvider = ({ children }) => {
   // 从文本中提取关键词作为标签
   const extractKeywordTags = (text) => {
     const keywordMap = {
-      '编程': ['编程', '代码', '开发', 'coding', 'programming'],
-      '写作': ['写作', '文章', '博客', '写', 'writing'],
-      '外语': ['英语', '日语', '外语', '学习', 'language'],
-      '阅读': ['阅读', '读书', '书', 'reading', 'book'],
-      '运动': ['运动', '健身', '跑步', '锻炼', 'sports', 'exercise'],
-      '早起': ['早起', '早睡', '起床', 'morning'],
-      '冥想': ['冥想', '正念', '冥想练习', 'meditation'],
-      '家庭': ['家庭', '家人', '亲子', 'family'],
-      '社交': ['社交', '朋友', '聚会', 'social'],
-      '旅行': ['旅行', '旅游', '出行', 'travel']
+      编程: ['编程', '代码', '开发', 'coding', 'programming'],
+      写作: ['写作', '文章', '博客', '写', 'writing'],
+      外语: ['英语', '日语', '外语', '学习', 'language'],
+      阅读: ['阅读', '读书', '书', 'reading', 'book'],
+      运动: ['运动', '健身', '跑步', '锻炼', 'sports', 'exercise'],
+      早起: ['早起', '早睡', '起床', 'morning'],
+      冥想: ['冥想', '正念', '冥想练习', 'meditation'],
+      家庭: ['家庭', '家人', '亲子', 'family'],
+      社交: ['社交', '朋友', '聚会', 'social'],
+      旅行: ['旅行', '旅游', '出行', 'travel'],
     };
-    
+
     const extractedTags = [];
     Object.entries(keywordMap).forEach(([tag, keywords]) => {
-      if (keywords.some(keyword => text.includes(keyword))) {
+      if (keywords.some((keyword) => text.includes(keyword))) {
         extractedTags.push(tag);
       }
     });
@@ -160,17 +177,17 @@ export const GrowthProvider = ({ children }) => {
   const handleTags = (tags) => {
     if (!tags || tags.length === 0) return;
     if (!treeData) return;
-    
+
     const updatedTree = JSON.parse(JSON.stringify(treeData));
     let hasChanges = false;
-    
-    tags.forEach(tag => {
+
+    tags.forEach((tag) => {
       if (!isTagExists(updatedTree, tag)) {
         addShadowNode(updatedTree, tag);
         hasChanges = true;
       }
     });
-    
+
     if (hasChanges) {
       updateTree(updatedTree);
     }
@@ -198,7 +215,7 @@ export const GrowthProvider = ({ children }) => {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         name: tag,
         type: 'shadow',
-        children: []
+        children: [],
       };
       suitableParent.children.push(newNode);
     }
@@ -229,7 +246,7 @@ export const GrowthProvider = ({ children }) => {
   // 添加树节点
   const addTreeNode = (node) => {
     if (!treeData) return;
-    
+
     // 这里可以实现添加节点的逻辑
     console.log('添加节点:', node);
   };
@@ -238,25 +255,25 @@ export const GrowthProvider = ({ children }) => {
   const getStats = () => {
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    const weeklyRecords = records.filter(record => {
+
+    const weeklyRecords = records.filter((record) => {
       return new Date(record.createdAt) >= weekAgo;
     }).length;
-    
+
     const totalRecords = records.length;
     const growthProgress = Math.min(Math.round((totalRecords / 100) * 100), 100);
-    
+
     return {
       weeklyRecords,
       totalRecords,
-      growthProgress
+      growthProgress,
     };
   };
 
   // 计算情绪平均值
   const getAverageMood = () => {
     if (records.length === 0) return 0;
-    
+
     const totalMood = records.reduce((sum, record) => {
       switch (record.mood) {
         case '很好':
@@ -269,7 +286,7 @@ export const GrowthProvider = ({ children }) => {
           return sum;
       }
     }, 0);
-    
+
     return (totalMood / records.length).toFixed(1);
   };
 
@@ -278,13 +295,13 @@ export const GrowthProvider = ({ children }) => {
     const exportData = {
       records,
       treeData,
-      exportDate: new Date().toISOString()
+      exportDate: new Date().toISOString(),
     };
-    
+
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = `growthos-export-${new Date().toISOString().split('T')[0]}.json`;
@@ -315,21 +332,21 @@ export const GrowthProvider = ({ children }) => {
   // 搜索记录
   const searchRecords = (searchTerm) => {
     if (!searchTerm) return records;
-    
+
     const term = searchTerm.toLowerCase();
-    return records.filter(record => {
+    return records.filter((record) => {
       return (
         record.activity?.toLowerCase().includes(term) ||
         record.learning?.toLowerCase().includes(term) ||
         record.reflection?.toLowerCase().includes(term) ||
-        record.tags?.some(tag => tag.toLowerCase().includes(term))
+        record.tags?.some((tag) => tag.toLowerCase().includes(term))
       );
     });
   };
 
   // 按时间范围过滤记录
   const filterRecordsByDateRange = (startDate, endDate) => {
-    return records.filter(record => {
+    return records.filter((record) => {
       const recordDate = new Date(record.createdAt);
       return recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
     });
@@ -338,23 +355,23 @@ export const GrowthProvider = ({ children }) => {
   // 按情绪过滤记录
   const filterRecordsByMood = (moods) => {
     if (!moods || moods.length === 0) return records;
-    return records.filter(record => moods.includes(record.mood));
+    return records.filter((record) => moods.includes(record.mood));
   };
 
   // 按标签过滤记录
   const filterRecordsByTags = (tags) => {
     if (!tags || tags.length === 0) return records;
-    return records.filter(record => {
-      return record.tags?.some(tag => tags.includes(tag));
+    return records.filter((record) => {
+      return record.tags?.some((tag) => tags.includes(tag));
     });
   };
 
   // 获取所有标签
   const getAllTags = () => {
     const allTags = new Set();
-    records.forEach(record => {
+    records.forEach((record) => {
       if (record.tags) {
-        record.tags.forEach(tag => allTags.add(tag));
+        record.tags.forEach((tag) => allTags.add(tag));
       }
     });
     return Array.from(allTags);
@@ -377,12 +394,8 @@ export const GrowthProvider = ({ children }) => {
     filterRecordsByDateRange,
     filterRecordsByMood,
     filterRecordsByTags,
-    getAllTags
+    getAllTags,
   };
 
-  return (
-    <GrowthContext.Provider value={value}>
-      {children}
-    </GrowthContext.Provider>
-  );
+  return <GrowthContext.Provider value={value}>{children}</GrowthContext.Provider>;
 };

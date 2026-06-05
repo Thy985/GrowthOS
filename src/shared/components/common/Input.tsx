@@ -1,23 +1,18 @@
-import React from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 
-const Input = ({
-  label,
-  error,
-  helperText,
-  className = '',
-  containerClassName = '',
-  ...props
-}) => {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'children'> {
+  label?: ReactNode;
+  error?: string;
+  helperText?: string;
+  className?: string;
+  containerClassName?: string;
+}
+
+const Input = ({ label, error, helperText, className = '', containerClassName = '', ...props }: InputProps) => {
   return (
     <div className={`space-y-1 ${containerClassName}`}>
-      {/* 标签 */}
-      {label && (
-        <label className="block text-sm font-medium text-gray-700">
-          {label}
-        </label>
-      )}
+      {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
 
-      {/* 输入框 */}
       <input
         className={`
           w-full px-4 py-2 rounded-lg
@@ -31,19 +26,9 @@ const Input = ({
         {...props}
       />
 
-      {/* 辅助文本 */}
-      {helperText && !error && (
-        <p className="text-sm text-gray-500">
-          {helperText}
-        </p>
-      )}
+      {helperText && !error && <p className="text-sm text-gray-500">{helperText}</p>}
 
-      {/* 错误信息 */}
-      {error && (
-        <p className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 };

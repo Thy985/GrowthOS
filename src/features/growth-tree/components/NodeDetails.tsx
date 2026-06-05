@@ -6,15 +6,15 @@ const NodeDetails = () => {
     mastery: 75,
     status: '进行中',
     startDate: '2024-01-01',
-    lastUpdate: '2024-01-15'
+    lastUpdate: '2024-01-15',
   });
 
   // 处理节点详情变化
   const handleNodeDetailChange = (e) => {
     const { name, value } = e.target;
-    setNodeDetails(prev => ({
+    setNodeDetails((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -24,11 +24,11 @@ const NodeDetails = () => {
       <div className="space-y-4">
         <div>
           <label className="form-label">节点名称</label>
-          <input 
-            type="text" 
-            className="form-input" 
+          <input
+            type="text"
+            className="form-input"
             name="name"
-            value={nodeDetails.name} 
+            value={nodeDetails.name}
             onChange={handleNodeDetailChange}
           />
         </div>
@@ -41,7 +41,7 @@ const NodeDetails = () => {
         </div>
         <div>
           <label className="form-label">状态</label>
-          <select 
+          <select
             className="form-input"
             name="status"
             value={nodeDetails.status}
@@ -54,27 +54,25 @@ const NodeDetails = () => {
         </div>
         <div>
           <label className="form-label">开始日期</label>
-          <input 
-            type="date" 
-            className="form-input" 
+          <input
+            type="date"
+            className="form-input"
             name="startDate"
-            value={nodeDetails.startDate} 
+            value={nodeDetails.startDate}
             onChange={handleNodeDetailChange}
           />
         </div>
         <div>
           <label className="form-label">最近更新</label>
-          <input 
-            type="date" 
-            className="form-input" 
+          <input
+            type="date"
+            className="form-input"
             name="lastUpdate"
-            value={nodeDetails.lastUpdate} 
+            value={nodeDetails.lastUpdate}
             onChange={handleNodeDetailChange}
           />
         </div>
-        <button className="btn btn-primary w-full">
-          保存更改
-        </button>
+        <button className="btn btn-primary w-full">保存更改</button>
       </div>
     </div>
   );

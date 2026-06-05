@@ -1,5 +1,10 @@
 // recordsSlice - 阶段 E: 把 growthSlice 中 records/tags 相关代码迁入
-import { createSlice, createAsyncThunk, createSelector, type PayloadAction } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  createAsyncThunk,
+  createSelector,
+  type PayloadAction,
+} from '@reduxjs/toolkit';
 
 import type { Record, Tag } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
@@ -25,7 +30,11 @@ export const addRecord = createAsyncThunk(
   'records/addRecord',
   async (record: Omit<Record, 'id' | 'createdAt'>) => {
     try {
-      logger.info('添加成长记录', { activity: record.activity, learning: record.learning, tags: record.tags });
+      logger.info('添加成长记录', {
+        activity: record.activity,
+        learning: record.learning,
+        tags: record.tags,
+      });
       const records = (secureStorage.getItem<Record[]>('growth-records') || []) as Record[];
       const newRecord: Record = {
         ...record,
@@ -46,7 +55,10 @@ export const addRecord = createAsyncThunk(
       logger.info('成长记录添加成功', { recordId: newRecord.id, tagsCount: updatedTags.length });
       return { record: newRecord, tags: updatedTags };
     } catch (error) {
-      logger.error('添加成长记录异常', error, { activity: record.activity, learning: record.learning });
+      logger.error('添加成长记录异常', error, {
+        activity: record.activity,
+        learning: record.learning,
+      });
       throw error;
     }
   },
@@ -119,7 +131,10 @@ export default recordsSlice.reducer;
 
 // 选择器(从原 growthSlice 平移)
 export const searchRecords = createSelector(
-  [(state: { records: RecordsState }) => state.records.records, (_: unknown, searchTerm: string) => searchTerm],
+  [
+    (state: { records: RecordsState }) => state.records.records,
+    (_: unknown, searchTerm: string) => searchTerm,
+  ],
   (records, searchTerm) => {
     const searchLower = searchTerm.toLowerCase();
     return records.filter((record) => {

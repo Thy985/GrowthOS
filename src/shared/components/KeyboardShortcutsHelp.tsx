@@ -30,17 +30,17 @@ const KeyboardShortcutsHelp = ({ isOpen, onClose }: KeyboardShortcutsHelpProps) 
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-800">键盘快捷键</h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
             ×
           </button>
         </div>
-        
+
         <div className="space-y-4">
           {shortcuts.map((shortcut, index) => (
-            <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+            <div
+              key={index}
+              className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0"
+            >
               <span className="text-gray-700">{shortcut.description}</span>
               <div className="flex gap-2">
                 {shortcut.keys.map((key, i) => (
@@ -52,10 +52,8 @@ const KeyboardShortcutsHelp = ({ isOpen, onClose }: KeyboardShortcutsHelpProps) 
             </div>
           ))}
         </div>
-        
-        <div className="mt-6 text-sm text-gray-500">
-          提示：在输入框中使用快捷键无效
-        </div>
+
+        <div className="mt-6 text-sm text-gray-500">提示：在输入框中使用快捷键无效</div>
       </div>
     </div>
   );

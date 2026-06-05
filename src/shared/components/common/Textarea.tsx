@@ -1,4 +1,13 @@
-import React from 'react';
+import type { TextareaHTMLAttributes, ReactNode } from 'react';
+
+interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'children'> {
+  label?: ReactNode;
+  error?: string;
+  helperText?: string;
+  className?: string;
+  containerClassName?: string;
+  rows?: number;
+}
 
 const Textarea = ({
   label,
@@ -8,17 +17,11 @@ const Textarea = ({
   containerClassName = '',
   rows = 4,
   ...props
-}) => {
+}: TextareaProps) => {
   return (
     <div className={`space-y-1 ${containerClassName}`}>
-      {/* 标签 */}
-      {label && (
-        <label className="block text-sm font-medium text-gray-700">
-          {label}
-        </label>
-      )}
+      {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
 
-      {/* 文本域 */}
       <textarea
         rows={rows}
         className={`
@@ -34,19 +37,9 @@ const Textarea = ({
         {...props}
       />
 
-      {/* 辅助文本 */}
-      {helperText && !error && (
-        <p className="text-sm text-gray-500">
-          {helperText}
-        </p>
-      )}
+      {helperText && !error && <p className="text-sm text-gray-500">{helperText}</p>}
 
-      {/* 错误信息 */}
-      {error && (
-        <p className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 };

@@ -28,7 +28,10 @@ const useKeyboardShortcuts = (shortcuts: Shortcut[]) => {
 
         if (
           event.key.toLowerCase() === key.toLowerCase() &&
-          hasCtrl && hasShift && hasAlt && hasMeta
+          hasCtrl &&
+          hasShift &&
+          hasAlt &&
+          hasMeta
         ) {
           event.preventDefault();
           callback();

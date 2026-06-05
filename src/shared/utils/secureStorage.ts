@@ -39,7 +39,7 @@ class SecureStorage {
 
       if (this.encryptionEnabled) {
         const decryptedValue = encryptionUtil.decrypt(storedValue);
-        return decryptedValue !== null ? decryptedValue as T : defaultValue;
+        return decryptedValue !== null ? (decryptedValue as T) : defaultValue;
       } else {
         // 如果不加密，直接解析
         try {
