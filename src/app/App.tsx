@@ -204,6 +204,35 @@ function App() {
   );
 }
 
+// 底部导航栏（仅移动端显示）
+function BottomNav() {
+  const location = useLocation();
+  const { t } = useTranslation();
+
+  const navItems = [
+    { path: '/', label: t('common.dashboard'), icon: '📊' },
+    { path: '/records', label: t('common.records'), icon: '📝' },
+    { path: '/goals', label: t('common.goals'), icon: '🎯' },
+    { path: '/growth-tree', label: t('common.growthTree'), icon: '🌳' },
+    { path: '/analytics', label: t('common.analytics'), icon: '📈' },
+  ];
+
+  return (
+    <nav className="bottom-nav">
+      {navItems.map((item) => (
+        <Link
+          key={item.path}
+          to={item.path}
+          className={`bottom-nav-item ${location.pathname === item.path ? 'active' : ''}`}
+        >
+          <span className="bottom-nav-icon">{item.icon}</span>
+          <span className="bottom-nav-label">{item.label}</span>
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 function AppContent() {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<any>();
@@ -314,6 +343,7 @@ function AppContent() {
           <AppRoutes />
         </ErrorBoundary>
       </div>
+      {isAuthenticated && <BottomNav />}
     </>
   );
 }
