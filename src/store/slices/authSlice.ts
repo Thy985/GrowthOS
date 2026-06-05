@@ -1,7 +1,9 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { secureStorage } from '../../common/utils/secureStorage';
-import { AuthState } from '../../common/types';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+import type { AuthState } from '../../common/types';
 import logger from '../../common/utils/logger';
+import { secureStorage } from '../../common/utils/secureStorage';
 
 // 用户类型
 interface User {

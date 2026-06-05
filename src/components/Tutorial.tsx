@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import secureStorage from '../common/utils/secureStorage.ts';
 
 interface TutorialStep {

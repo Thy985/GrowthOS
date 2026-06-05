@@ -58,6 +58,9 @@ dist-ssr
 .rts2_cache_es/
 .rts2_cache_umd/
 
+# Husky
+.husky/_
+
 # Optional REPL history
 .node_repl_history
 

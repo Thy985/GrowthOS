@@ -1,7 +1,9 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { secureStorage } from '../../common/utils/secureStorage';
-import { Goal, GoalState } from '../../common/types';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+import type { Goal, GoalState } from '../../common/types';
 import logger from '../../common/utils/logger';
+import { secureStorage } from '../../common/utils/secureStorage';
 
 // 初始状态
 const initialState: GoalState = {

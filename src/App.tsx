@@ -1,17 +1,18 @@
 import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Provider, useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
+
 import './App.css';
-import store from './store/index.ts';
-import { loadData } from './store/slices/growthSlice.ts';
-import { checkAuth, logout } from './store/slices/authSlice.ts';
-import { toggleTheme } from './store/slices/themeSlice.ts';
-import { loadGoals } from './store/slices/goalSlice.ts';
-import { loadReminders } from './store/slices/reminderSlice.ts';
 import useKeyboardShortcuts from './common/hooks/useKeyboardShortcuts.ts';
+import type { RootState } from './common/types/index.ts';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
-import { RootState } from './common/types/index.ts';
+import store from './store/index.ts';
+import { checkAuth, logout } from './store/slices/authSlice.ts';
+import { loadGoals } from './store/slices/goalSlice.ts';
+import { loadData } from './store/slices/growthSlice.ts';
+import { loadReminders } from './store/slices/reminderSlice.ts';
+import { toggleTheme } from './store/slices/themeSlice.ts';
 
 // 使用React.lazy实现代码分割
 const Dashboard = lazy(() => import('./pages/dashboard/index.tsx'));
