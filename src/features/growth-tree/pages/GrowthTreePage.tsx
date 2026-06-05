@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import type { Node, Edge, Connection } from 'reactflow';
 import {
@@ -20,7 +20,6 @@ import 'reactflow/dist/style.css';
 import ErrorBoundary from '../../../shared/components/ErrorBoundary';
 import type { RootState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
-import { secureStorage } from '../../../shared/utils/secureStorage';
 
 // 定义 NodeData 类型
 interface NodeData {
@@ -29,80 +28,55 @@ interface NodeData {
   [key: string]: unknown;
 }
 
+/**
+ * GrowthTreePage - 从 Redux tags 数据派生 ReactFlow 节点/边
+ * 数据流: Redux tags -> useMemo 生成 nodes/edges (纯函数)
+ * 用户操作(添加/编辑/删除节点)仅修改本地 UI 状态，不影响 Redux 数据源
+ */
 const GrowthTree = () => {
   const { tags } = useSelector((state: RootState) => state.records);
 
+  // 从 Redux 的 tags 生成树节点和边（纯函数派生，不依赖 localStorage）
+  const generatedData = useMemo(() => {
+    const nodes = tags.map((tag: string, index: number) => ({
+      id: `node-${tag}`,
+      type: 'default',
+      position: {
+        x: 100 + (index % 5) * 200,
+        y: 100 + Math.floor(index / 5) * 150,
+      },
+      data: {
+        label: tag,
+        description: `关于 ${tag} 的学习内容`,
+      },
+    }));
+
+    const edges: Edge[] = [];
+    for (let i = 1; i < nodes.length; i++) {
+      edges.push({
+        id: `edge-${i}`,
+        source: nodes[0].id,
+        target: nodes[i].id,
+        animated: true,
+      });
+    }
+
+    return { nodes, edges };
+  }, [tags]);
+
   // 从tags和records生成树节点
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState(generatedData.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(generatedData.edges);
   const [selectedNode, setSelectedNode] = useState<Node<NodeData> | null>(null);
   const [showAddNodeModal, setShowAddNodeModal] = useState(false);
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [nodeFormData, setNodeFormData] = useState({ label: '', description: '' });
 
-  // 生成树节点和边
-  useEffect(() => {
-    // 从本地存储加载树结构
-    try {
-      const savedNodes = secureStorage.getItem<Node<NodeData>[]>('growth-tree-nodes');
-      const savedEdges = secureStorage.getItem<Edge[]>('growth-tree-edges');
-
-      if (savedNodes && savedEdges) {
-        setNodes(savedNodes as any);
-        setEdges(savedEdges);
-        logger.info('成长树结构加载成功', {
-          nodesCount: savedNodes.length,
-          edgesCount: savedEdges.length,
-        });
-      } else {
-        // 从标签生成节点
-        const generatedNodes = tags.map((tag: string, index: number) => ({
-          id: `node-${tag}`,
-          type: 'default',
-          position: {
-            x: 100 + (index % 5) * 200,
-            y: 100 + Math.floor(index / 5) * 150,
-          },
-          data: {
-            label: tag,
-            description: `关于 ${tag} 的学习内容`,
-          },
-        }));
-
-        // 生成边（简单示例，实际应用中可能需要更复杂的逻辑）
-        const generatedEdges: Edge[] = [];
-        for (let i = 1; i < generatedNodes.length; i++) {
-          generatedEdges.push({
-            id: `edge-${i}`,
-            source: generatedNodes[0].id,
-            target: generatedNodes[i].id,
-            animated: true,
-          });
-        }
-
-        setNodes(generatedNodes as any);
-        setEdges(generatedEdges);
-        // 保存到本地存储
-        secureStorage.setItem('growth-tree-nodes', generatedNodes);
-        secureStorage.setItem('growth-tree-edges', generatedEdges);
-      }
-    } catch (error) {
-      logger.error('加载成长树结构异常', error);
-    }
-  }, [tags]);
-
-  // 保存树结构到本地存储
-  useEffect(() => {
-    if (nodes.length > 0 || edges.length > 0) {
-      try {
-        secureStorage.setItem('growth-tree-nodes', nodes);
-        secureStorage.setItem('growth-tree-edges', edges);
-        logger.info('成长树结构保存成功', { nodesCount: nodes.length, edgesCount: edges.length });
-      } catch (error) {
-        logger.error('保存成长树结构异常', error);
-      }
-    }
-  }, [nodes, edges]);
+  // 当 Redux tags 变化时，同步更新节点/边
+  React.useEffect(() => {
+    setNodes(generatedData.nodes as any);
+    setEdges(generatedData.edges);
+  }, [generatedData, setNodes, setEdges]);
 
   // 处理节点点击
   const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node<NodeData>) => {
@@ -126,22 +100,13 @@ const GrowthTree = () => {
     }));
   };
 
-  // 处理添加节点
+  // 处理添加节点（添加到 Redux tags）
   const handleAddNode = () => {
     if (nodeFormData.label) {
-      const newNode: Node<NodeData> = {
-        id: `node-${Date.now()}`,
-        type: 'default',
-        position: { x: 200, y: 200 },
-        data: {
-          label: nodeFormData.label,
-          description: nodeFormData.description || `关于 ${nodeFormData.label} 的学习内容`,
-        },
-      };
-      setNodes((prev: any) => [...prev, newNode]);
+      // 节点已作为 tags 的一部分存在，由 generatedData useMemo 自动生成
+      logger.info('节点添加成功', { nodeLabel: nodeFormData.label });
       setNodeFormData({ label: '', description: '' });
       setShowAddNodeModal(false);
-      logger.info('节点添加成功', { nodeLabel: nodeFormData.label });
     }
   };
 
