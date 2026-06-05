@@ -34,7 +34,7 @@ describe('i18n', () => {
     setNavigatorLanguage('fr-FR');
     const mod = await import('../../shared/i18n/index.ts');
     // fallback to en-US (user locale), but translation resources should include zh-CN
-    expect(mod.default.options.fallbackLng).toBe('zh-CN');
+    expect(mod.default.options.fallbackLng).toEqual(['zh-CN']);
   });
 
   it('exposes resources for both zh-CN and en-US', async () => {
