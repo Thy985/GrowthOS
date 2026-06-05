@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 const AIGardener = () => {
   return (
     <div className="mt-6">

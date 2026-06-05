@@ -1,6 +1,13 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 
-export type BadgeVariant = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+export type BadgeVariant =
+  | 'default'
+  | 'primary'
+  | 'secondary'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'outline';
 export type BadgeSize = 'small' | 'medium' | 'large';
 
 interface BadgeProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
@@ -17,6 +24,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   success: 'bg-green-100 text-green-800',
   warning: 'bg-yellow-100 text-yellow-800',
   danger: 'bg-red-100 text-red-800',
+  outline: 'border border-gray-300 text-gray-700',
 };
 
 const sizeClasses: Record<BadgeSize, string> = {

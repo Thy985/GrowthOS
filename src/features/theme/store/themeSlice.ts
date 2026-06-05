@@ -8,7 +8,7 @@ const getInitialTheme = (): boolean => {
   try {
     const savedTheme = localStorage.getItem('theme');
     return savedTheme ? savedTheme === 'dark' : false;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

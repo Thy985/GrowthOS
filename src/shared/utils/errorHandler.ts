@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ComponentType, ErrorInfo } from 'react';
-import React, { ReactNode } from 'react';
+import { Component, createElement } from 'react';
 
 import logger from './logger';
 
@@ -44,7 +45,7 @@ const errorHandler = {
     if (errors && typeof errors === 'object') {
       // 提取第一个错误信息
       const firstError = Object.values(errors)[0];
-      return firstError || fallbackMessage;
+      return typeof firstError === 'string' ? firstError : fallbackMessage;
     }
 
     return fallbackMessage;
@@ -79,10 +80,10 @@ const errorHandler = {
 
   // 生成错误边界组件
   createErrorBoundary<P extends object>(
-    Component: ComponentType<P>,
+    WrappedComponent: ComponentType<P>,
     fallbackComponent: ComponentType<{ error: Error }>,
   ): ComponentType<P> {
-    return class ErrorBoundary extends React.Component<
+    return class ErrorBoundary extends Component<
       P,
       { hasError: boolean; error: Error | null }
     > {
@@ -101,9 +102,9 @@ const errorHandler = {
 
       render() {
         if (this.state.hasError) {
-          return React.createElement(fallbackComponent, { error: this.state.error as Error });
+          return createElement(fallbackComponent, { error: this.state.error as Error });
         }
-        return React.createElement(Component, this.props);
+        return createElement(WrappedComponent, this.props);
       }
     };
   },

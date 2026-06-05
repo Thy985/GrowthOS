@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck - reactflow v11→v12 类型升级,留 PR3 处理
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
@@ -16,10 +17,10 @@ import {
 } from 'reactflow';
 
 import 'reactflow/dist/style.css';
+import ErrorBoundary from '../../../shared/components/ErrorBoundary';
 import type { RootState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
-import ErrorBoundary from '../../../shared/components/ErrorBoundary';
 
 const GrowthTree = () => {
   const { records, tags } = useSelector((state: RootState) => state.records);

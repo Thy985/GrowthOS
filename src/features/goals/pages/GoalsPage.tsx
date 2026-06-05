@@ -1,14 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import type { Goal, GoalState } from '../../../shared/types';
-import {
-  calculateProgress,
-  formatDate,
-  getGoalStatusText,
-  validateGoalForm,
-} from '../utils/goalUtils';
 import ErrorBoundary from '../../../shared/components/ErrorBoundary';
+import type { Goal, GoalState } from '../../../shared/types';
 import {
   loadGoals,
   addGoal,
@@ -17,7 +11,14 @@ import {
   incrementGoalProgress,
   clearError,
 } from '../store/goalSlice';
+import {
+  calculateProgress,
+  formatDate,
+  getGoalStatusText,
+  validateGoalForm,
+} from '../utils/goalUtils';
 
+/* eslint-disable react/no-unescaped-entities, @typescript-eslint/no-explicit-any */
 const Goals = () => {
   const dispatch = useDispatch<any>();
   const { goals, isLoading, error } = useSelector((state: { goal: GoalState }) => state.goal);
@@ -174,7 +175,7 @@ const Goals = () => {
   const handleIncrementProgress = useCallback(
     (goalId: string) => {
       const value = prompt('请输入要增加的进度值：');
-      if (value && !isNaN(value) && Number(value) > 0) {
+      if (value && !isNaN(Number(value)) && Number(value) > 0) {
         dispatch(incrementGoalProgress({ goalId, value: Number(value) }));
       }
     },
@@ -215,7 +216,7 @@ const Goals = () => {
                 <textarea
                   name="description"
                   className="input"
-                  rows="3"
+                  rows={3}
                   placeholder="描述你的目标..."
                   value={formData.description}
                   onChange={handleChange}
@@ -288,7 +289,7 @@ const Goals = () => {
                 <textarea
                   name="description"
                   className="input"
-                  rows="3"
+                  rows={3}
                   placeholder="描述你的目标..."
                   value={formData.description}
                   onChange={handleChange}

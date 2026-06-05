@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck - reactflow v11→v12 类型升级,留 PR3 处理
 import { useState, useEffect } from 'react';
 import { ReactFlow, addEdge, Background, Controls, MiniMap } from 'reactflow';

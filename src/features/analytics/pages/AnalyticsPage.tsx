@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck - recharts v2→v3 类型升级 + analytics 重构较大,留 PR3 处理
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -27,8 +28,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-import type { RootState } from '../../../shared/types';
 import ErrorBoundary from '../../../shared/components/ErrorBoundary';
+import type { RootState } from '../../../shared/types';
 import { exportData, importData } from '../../../store/slices/growthSlice';
 
 // 自定义工具提示组件

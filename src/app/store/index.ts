@@ -1,12 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import recordsReducer from '../../features/records/store/recordsSlice';
-import treeReducer from '../../features/growth-tree/store/treeSlice';
 import authReducer from '../../features/auth/store/authSlice';
 import goalReducer from '../../features/goals/store/goalSlice';
-import growthReducer from '../../store/slices/growthSlice';
+import treeReducer from '../../features/growth-tree/store/treeSlice';
+import recordsReducer from '../../features/records/store/recordsSlice';
 import reminderReducer from '../../features/reminders/store/reminderSlice';
 import themeReducer from '../../features/theme/store/themeSlice';
+import growthReducer from '../../store/slices/growthSlice';
 
 export const store = configureStore({
   reducer: {

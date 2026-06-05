@@ -1,8 +1,9 @@
+/* eslint-disable react/no-unescaped-entities, @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import type { Reminder, ReminderState } from '../../../shared/types';
 import ErrorBoundary from '../../../shared/components/ErrorBoundary';
+import type { Reminder, ReminderState } from '../../../shared/types';
 import {
   loadReminders,
   addReminder,

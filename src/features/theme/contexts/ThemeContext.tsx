@@ -1,7 +1,12 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
+
+interface ThemeContextValue {
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+}
 
 // 创建Context
-const ThemeContext = createContext();
+const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 // 自定义Hook，方便组件使用Context
 export const useTheme = () => {
@@ -13,11 +18,9 @@ export const useTheme = () => {
 };
 
 // Provider组件
-export const ThemeProvider = ({ children }) => {
-  // 状态
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // 从localStorage加载主题设置
   useEffect(() => {
     const savedTheme = localStorage.getItem('growthos-theme');
     if (savedTheme) {
@@ -27,7 +30,6 @@ export const ThemeProvider = ({ children }) => {
         document.documentElement.classList.add('dark');
       }
     } else {
-      // 检测系统主题
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setIsDarkMode(prefersDark);
       if (prefersDark) {
@@ -36,7 +38,6 @@ export const ThemeProvider = ({ children }) => {
     }
   }, []);
 
-  // 切换主题
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
@@ -49,8 +50,7 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
-  // 提供给子组件的值
-  const value = {
+  const value: ThemeContextValue = {
     isDarkMode,
     toggleTheme,
   };

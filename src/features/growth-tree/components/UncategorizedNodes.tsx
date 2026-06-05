@@ -1,5 +1,4 @@
-import React from 'react';
-
+/* eslint-disable react/no-unescaped-entities */
 const UncategorizedNodes = () => {
   // 模拟未分类节点数据
   const uncategorizedNodes = [

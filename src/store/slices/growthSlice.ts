@@ -39,23 +39,19 @@ export const loadData = createAsyncThunk('growth/loadData', async () => {
 export const importData = createAsyncThunk(
   'growth/importData',
   async (data: { records?: Record[]; tags?: Tag[]; trees?: Tree[]; goals?: unknown[] }) => {
-    try {
-      if (data.records && Array.isArray(data.records)) {
-        secureStorage.setItem('growth-records', data.records);
-      }
-      if (data.tags && Array.isArray(data.tags)) {
-        secureStorage.setItem('growth-tags', data.tags);
-      }
-      if (data.trees && Array.isArray(data.trees)) {
-        secureStorage.setItem('growth-trees', data.trees);
-      }
-      if (data.goals && Array.isArray(data.goals)) {
-        secureStorage.setItem('growth-goals', data.goals);
-      }
-      return data;
-    } catch (error) {
-      throw error;
+    if (data.records && Array.isArray(data.records)) {
+      secureStorage.setItem('growth-records', data.records);
     }
+    if (data.tags && Array.isArray(data.tags)) {
+      secureStorage.setItem('growth-tags', data.tags);
+    }
+    if (data.trees && Array.isArray(data.trees)) {
+      secureStorage.setItem('growth-trees', data.trees);
+    }
+    if (data.goals && Array.isArray(data.goals)) {
+      secureStorage.setItem('growth-goals', data.goals);
+    }
+    return data;
   },
 );
 
@@ -77,11 +73,13 @@ export const exportData = createAsyncThunk(
         tree: { trees: Tree[] };
         goal: GoalState;
       };
-      let { records, tags } = state.records;
+      const initialRecs = state.records.records;
+      const { tags } = state.records;
       const { trees } = state.tree;
       const { goals } = state.goal;
 
       // 过滤时间范围
+      let records = initialRecs;
       if (options.startDate && options.endDate) {
         records = records.filter((record) => {
           const recordDate = new Date(record.createdAt);

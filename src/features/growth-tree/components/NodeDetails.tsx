@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
+
+interface NodeDetailsState {
+  name: string;
+  mastery: number;
+  status: string;
+  startDate: string;
+  lastUpdate: string;
+}
 
 const NodeDetails = () => {
-  const [nodeDetails, setNodeDetails] = useState({
+  const [nodeDetails, setNodeDetails] = useState<NodeDetailsState>({
     name: 'React 技能',
     mastery: 75,
     status: '进行中',
@@ -10,7 +18,7 @@ const NodeDetails = () => {
   });
 
   // 处理节点详情变化
-  const handleNodeDetailChange = (e) => {
+  const handleNodeDetailChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNodeDetails((prev) => ({
       ...prev,

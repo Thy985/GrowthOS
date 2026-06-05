@@ -19,7 +19,6 @@ const RecordList = () => {
 
   const allTags = tags;
   const allMoods = ['很好', '一般', '不太好'] as const;
-  type Mood = (typeof allMoods)[number];
 
   // 处理搜索和过滤
   const filteredRecords = useMemo(() => {
