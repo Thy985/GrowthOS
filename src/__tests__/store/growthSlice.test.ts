@@ -158,12 +158,21 @@ describe('growthSlice', () => {
     const recordsReducer = (state = { records: [], tags: [] }) => state;
     const treeReducer = (state = { trees: [] }) => state;
     const goalReducer = (state = { goals: [] }) => state;
+    // New slices for experience management
+    const experiencesReducer = (state = { experiences: [], links: [] }) => state;
+    const capabilitiesReducer = (state = { capabilities: [], history: [] }) => state;
+    const principlesReducer = (state = { principles: [] }) => state;
+    const projectsReducer = (state = { projects: [] }) => state;
     const store = configureStore({
       reducer: {
         growth: growthReducer,
         records: recordsReducer as never,
         tree: treeReducer as never,
         goal: goalReducer as never,
+        experiences: experiencesReducer as never,
+        capabilities: capabilitiesReducer as never,
+        principles: principlesReducer as never,
+        projects: projectsReducer as never,
       },
     });
     await store.dispatch(
@@ -191,12 +200,21 @@ describe('growthSlice', () => {
     const recordsReducer = (state = { records: [], tags: [] }) => state;
     const treeReducer = (state = { trees: [] }) => state;
     const goalReducer = (state = { goals: [] }) => state;
+    // New slices for experience management
+    const experiencesReducer = (state = { experiences: [], links: [] }) => state;
+    const capabilitiesReducer = (state = { capabilities: [], history: [] }) => state;
+    const principlesReducer = (state = { principles: [] }) => state;
+    const projectsReducer = (state = { projects: [] }) => state;
     const store = configureStore({
       reducer: {
         growth: growthReducer,
         records: recordsReducer as never,
         tree: treeReducer as never,
         goal: goalReducer as never,
+        experiences: experiencesReducer as never,
+        capabilities: capabilitiesReducer as never,
+        principles: principlesReducer as never,
+        projects: projectsReducer as never,
       },
     });
     await store.dispatch(
@@ -225,12 +243,20 @@ describe('growthSlice', () => {
     const recordsReducer = (state = { records: [], tags: [] }) => state;
     const treeReducer = (state = { trees: [] }) => state;
     const goalReducer = (state = { goals: [] }) => state;
+    const experiencesReducer = (state = { experiences: [], links: [] }) => state;
+    const capabilitiesReducer = (state = { capabilities: [], history: [] }) => state;
+    const principlesReducer = (state = { principles: [] }) => state;
+    const projectsReducer = (state = { projects: [] }) => state;
     const store = configureStore({
       reducer: {
         growth: growthReducer,
         records: recordsReducer as never,
         tree: treeReducer as never,
         goal: goalReducer as never,
+        experiences: experiencesReducer as never,
+        capabilities: capabilitiesReducer as never,
+        principles: principlesReducer as never,
+        projects: projectsReducer as never,
       },
     });
     await store.dispatch(
@@ -250,12 +276,20 @@ describe('growthSlice', () => {
     const recordsReducer = (state = { records: [], tags: [] }) => state;
     const treeReducer = (state = { trees: [] }) => state;
     const goalReducer = (state = { goals: [] }) => state;
+    const experiencesReducer = (state = { experiences: [], links: [] }) => state;
+    const capabilitiesReducer = (state = { capabilities: [], history: [] }) => state;
+    const principlesReducer = (state = { principles: [] }) => state;
+    const projectsReducer = (state = { projects: [] }) => state;
     const store = configureStore({
       reducer: {
         growth: growthReducer,
         records: recordsReducer as never,
         tree: treeReducer as never,
         goal: goalReducer as never,
+        experiences: experiencesReducer as never,
+        capabilities: capabilitiesReducer as never,
+        principles: principlesReducer as never,
+        projects: projectsReducer as never,
       },
     });
     await store.dispatch(

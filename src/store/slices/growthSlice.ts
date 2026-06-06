@@ -1,7 +1,18 @@
 // growthSlice - 阶段 E: 退化为"数据编排 thunk 容器",状态迁出到 recordsSlice/treeSlice
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
-import type { GoalState, Record, Tag, Tree } from '../../shared/types';
+import type {
+  GoalState,
+  Record,
+  Tag,
+  Tree,
+  Experience,
+  Capability,
+  Principle,
+  Project,
+  ExperienceCapabilityLink,
+  CapabilityHistory,
+} from '../../shared/types';
 import logger from '../../shared/utils/logger';
 import { secureStorage } from '../../shared/utils/secureStorage';
 
@@ -23,12 +34,39 @@ export const loadData = createAsyncThunk('growth/loadData', async () => {
     const tags = (secureStorage.getItem<Tag[]>('growth-tags') || []) as Tag[];
     const trees = (secureStorage.getItem<Tree[]>('growth-trees') || []) as Tree[];
 
+    // 经验管理系统数据
+    const experiences = (secureStorage.getItem<Experience[]>('growthos-experiences') ||
+      []) as Experience[];
+    const capabilities = (secureStorage.getItem<Capability[]>('growthos-capabilities') ||
+      []) as Capability[];
+    const principles = (secureStorage.getItem<Principle[]>('growthos-principles') ||
+      []) as Principle[];
+    const projects = (secureStorage.getItem<Project[]>('growthos-projects') || []) as Project[];
+    const links = (secureStorage.getItem<ExperienceCapabilityLink[]>('growthos-exp-cap-links') ||
+      []) as ExperienceCapabilityLink[];
+    const history = (secureStorage.getItem<CapabilityHistory[]>('growthos-cap-history') ||
+      []) as CapabilityHistory[];
+
     logger.info('成长数据加载完成', {
       recordsCount: records.length,
       tagsCount: tags.length,
       treesCount: trees.length,
+      experiencesCount: experiences.length,
+      capabilitiesCount: capabilities.length,
+      principlesCount: principles.length,
+      projectsCount: projects.length,
     });
-    return { records, tags, trees };
+    return {
+      records,
+      tags,
+      trees,
+      experiences,
+      capabilities,
+      principles,
+      projects,
+      links,
+      history,
+    };
   } catch (error) {
     logger.error('加载成长数据异常', error);
     throw error;
@@ -55,19 +93,50 @@ const isValidTree = (item: unknown): item is Tree => {
   return typeof t.id === 'string' && typeof t.name === 'string';
 };
 
+// 验证 Experience 基本结构
+const isValidExperience = (item: unknown): item is Experience => {
+  if (typeof item !== 'object' || item === null) return false;
+  const e = item as Experience;
+  return typeof e.id === 'string' && typeof e.event === 'string';
+};
+
+// 验证 Capability 基本结构
+const isValidCapability = (item: unknown): item is Capability => {
+  if (typeof item !== 'object' || item === null) return false;
+  const c = item as Capability;
+  return typeof c.id === 'string' && typeof c.name === 'string';
+};
+
+// 验证 Principle 基本结构
+const isValidPrinciple = (item: unknown): item is Principle => {
+  if (typeof item !== 'object' || item === null) return false;
+  const p = item as Principle;
+  return typeof p.id === 'string' && typeof p.content === 'string';
+};
+
+// 验证 Project 基本结构
+const isValidProject = (item: unknown): item is Project => {
+  if (typeof item !== 'object' || item === null) return false;
+  const p = item as Project;
+  return typeof p.id === 'string' && typeof p.name === 'string';
+};
+
 export const importData = createAsyncThunk(
   'growth/importData',
-  async (data: { records?: Record[]; tags?: Tag[]; trees?: Tree[]; goals?: unknown[] }) => {
+  async (data: {
+    records?: Record[];
+    tags?: Tag[];
+    trees?: Tree[];
+    goals?: unknown[];
+    experiences?: Experience[];
+    capabilities?: Capability[];
+    principles?: Principle[];
+    projects?: Project[];
+    links?: ExperienceCapabilityLink[];
+    history?: CapabilityHistory[];
+  }) => {
     if (data.records && Array.isArray(data.records)) {
-      // 校验导入数据，防止恶意注入
       const validatedRecords = data.records.filter(isValidRecord);
-      if (validatedRecords.length !== data.records.length) {
-        logger.warn('导入数据校验', {
-          total: data.records.length,
-          valid: validatedRecords.length,
-          rejected: data.records.length - validatedRecords.length,
-        });
-      }
       secureStorage.setItem('growth-records', validatedRecords);
     }
     if (data.tags && Array.isArray(data.tags)) {
@@ -80,6 +149,28 @@ export const importData = createAsyncThunk(
     }
     if (data.goals && Array.isArray(data.goals)) {
       secureStorage.setItem('growth-goals', data.goals);
+    }
+    if (data.experiences && Array.isArray(data.experiences)) {
+      const validatedExp = data.experiences.filter(isValidExperience);
+      secureStorage.setItem('growthos-experiences', validatedExp);
+    }
+    if (data.capabilities && Array.isArray(data.capabilities)) {
+      const validatedCap = data.capabilities.filter(isValidCapability);
+      secureStorage.setItem('growthos-capabilities', validatedCap);
+    }
+    if (data.principles && Array.isArray(data.principles)) {
+      const validatedPrin = data.principles.filter(isValidPrinciple);
+      secureStorage.setItem('growthos-principles', validatedPrin);
+    }
+    if (data.projects && Array.isArray(data.projects)) {
+      const validatedProj = data.projects.filter(isValidProject);
+      secureStorage.setItem('growthos-projects', validatedProj);
+    }
+    if (data.links && Array.isArray(data.links)) {
+      secureStorage.setItem('growthos-exp-cap-links', data.links);
+    }
+    if (data.history && Array.isArray(data.history)) {
+      secureStorage.setItem('growthos-cap-history', data.history);
     }
     return data;
   },
@@ -102,11 +193,19 @@ export const exportData = createAsyncThunk(
         records: { records: Record[]; tags: Tag[] };
         tree: { trees: Tree[] };
         goal: GoalState;
+        experiences: { experiences: Experience[]; links: ExperienceCapabilityLink[] };
+        capabilities: { capabilities: Capability[]; history: CapabilityHistory[] };
+        principles: { principles: Principle[] };
+        projects: { projects: Project[] };
       };
       const initialRecs = state.records.records;
       const { tags } = state.records;
       const { trees } = state.tree;
       const { goals } = state.goal;
+      const { experiences, links } = state.experiences;
+      const { capabilities, history } = state.capabilities;
+      const { principles } = state.principles;
+      const { projects } = state.projects;
 
       // 过滤时间范围
       let records = initialRecs;
@@ -219,12 +318,20 @@ export const exportData = createAsyncThunk(
 
         case 'json':
         default: {
-          // 生成JSON格式
           const data = {
+            version: '2.0',
+            exportedAt: new Date().toISOString(),
+            app: 'GrowthOS',
             records: options.dataTypes.includes('records') ? records : [],
             tags: options.dataTypes.includes('tags') ? tags : [],
             trees: options.dataTypes.includes('trees') ? trees : [],
             goals: options.dataTypes.includes('goals') ? goals : [],
+            experiences: options.dataTypes.includes('experiences') ? experiences : [],
+            capabilities: options.dataTypes.includes('capabilities') ? capabilities : [],
+            principles: options.dataTypes.includes('principles') ? principles : [],
+            projects: options.dataTypes.includes('projects') ? projects : [],
+            links: options.dataTypes.includes('links') ? links : [],
+            history: options.dataTypes.includes('history') ? history : [],
           };
           const jsonStr = JSON.stringify(data, null, 2);
           blob = new Blob([jsonStr], { type: 'application/json' });

@@ -210,10 +210,10 @@ function BottomNav() {
   const { t } = useTranslation();
 
   const navItems = [
-    { path: '/', label: t('common.dashboard'), icon: '📊' },
-    { path: '/records', label: t('common.records'), icon: '📝' },
+    { path: '/', label: t('common.dashboard'), icon: '🏠' },
+    { path: '/experiences', label: '经历', icon: '📝' },
+    { path: '/capabilities', label: '能力', icon: '🌳' },
     { path: '/goals', label: t('common.goals'), icon: '🎯' },
-    { path: '/growth-tree', label: t('common.growthTree'), icon: '🌳' },
     { path: '/analytics', label: t('common.analytics'), icon: '📈' },
   ];
 

@@ -15,6 +15,11 @@ const GrowthTree = lazy(() => import('../features/growth-tree/pages/GrowthTreePa
 const Analytics = lazy(() => import('../features/analytics/pages/AnalyticsPage.tsx'));
 const Auth = lazy(() => import('../features/auth/pages/LoginPage.tsx'));
 
+// 经验管理系统页面
+const ExperiencesPage = lazy(() => import('../features/experiences/pages/ExperiencesPage.tsx'));
+const NewExperiencePage = lazy(() => import('../features/experiences/pages/NewExperiencePage.tsx'));
+const CapabilitiesPage = lazy(() => import('../features/capabilities/pages/CapabilitiesPage.tsx'));
+
 interface ProtectedRouteProps {
   children: ReactNode;
 }
@@ -50,29 +55,23 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
+        <Route path="/" element={<ProtectedRoute>{wrap(Dashboard)}</ProtectedRoute>} />
+        <Route path="/records" element={<ProtectedRoute>{wrap(RecordList)}</ProtectedRoute>} />
+        <Route path="/goals" element={<ProtectedRoute>{wrap(Goals)}</ProtectedRoute>} />
+        <Route path="/reminders" element={<ProtectedRoute>{wrap(Reminders)}</ProtectedRoute>} />
+        <Route path="/growth-tree" element={<ProtectedRoute>{wrap(GrowthTree)}</ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute>{wrap(Analytics)}</ProtectedRoute>} />
         <Route
-          path="/"
-          element={<ProtectedRoute>{wrap(Dashboard)}</ProtectedRoute>}
+          path="/experiences"
+          element={<ProtectedRoute>{wrap(ExperiencesPage)}</ProtectedRoute>}
         />
         <Route
-          path="/records"
-          element={<ProtectedRoute>{wrap(RecordList)}</ProtectedRoute>}
+          path="/experiences/new"
+          element={<ProtectedRoute>{wrap(NewExperiencePage)}</ProtectedRoute>}
         />
         <Route
-          path="/goals"
-          element={<ProtectedRoute>{wrap(Goals)}</ProtectedRoute>}
-        />
-        <Route
-          path="/reminders"
-          element={<ProtectedRoute>{wrap(Reminders)}</ProtectedRoute>}
-        />
-        <Route
-          path="/growth-tree"
-          element={<ProtectedRoute>{wrap(GrowthTree)}</ProtectedRoute>}
-        />
-        <Route
-          path="/analytics"
-          element={<ProtectedRoute>{wrap(Analytics)}</ProtectedRoute>}
+          path="/capabilities"
+          element={<ProtectedRoute>{wrap(CapabilitiesPage)}</ProtectedRoute>}
         />
         <Route path="/auth" element={wrap(Auth)} />
       </Routes>

@@ -1,6 +1,6 @@
 {
   "common": {
-    "dashboard": "仪表盘",
+    "dashboard": "首页",
     "records": "记录",
     "goals": "目标",
     "reminders": "提醒",
@@ -35,6 +35,43 @@
     "keyboardShortcuts": "快捷键",
     "help": "帮助",
     "about": "关于"
+  },
+  "experiences": {
+    "title": "经历",
+    "newExperience": "新经历",
+    "event": "发生了什么？",
+    "reflection": "你学到了什么？",
+    "principle": "用一个原则总结",
+    "confidence": "确信度",
+    "capabilities": "涉及的能力",
+    "noReflection": "暂无反思",
+    "noPrinciple": "尚未提炼原则",
+    "step1Title": "发生了什么？",
+    "step1Desc": "客观描述今天发生的事件",
+    "step2Title": "你学到了什么？",
+    "step2Desc": "写下你的主观反思和感悟",
+    "step3Title": "用一个原则总结",
+    "step3Desc": "如果可以用一句话总结这次经历？",
+    "completed": "经历已记录！",
+    "experienceAdded": "经历添加成功",
+    "eventRequired": "请填写发生了什么"
+  },
+  "capabilities": {
+    "title": "能力",
+    "newCapability": "新能力",
+    "currentLevel": "当前水平",
+    "targetLevel": "目标水平",
+    "growthRate": "增长率",
+    "category": "类别",
+    "mind": "思维",
+    "skill": "技能",
+    "cognition": "认知",
+    "body": "体能",
+    "social": "社交",
+    "noCapabilities": "暂无能力，点击\"添加能力\"创建第一个能力",
+    "capabilityAdded": "能力添加成功",
+    "capabilityDeleted": "能力删除成功",
+    "capabilityUpdated": "能力更新成功"
   },
   "dashboard": {
     "title": "仪表盘",
