@@ -73,6 +73,37 @@
     "capabilityDeleted": "能力删除成功",
     "capabilityUpdated": "能力更新成功"
   },
+  "principles": {
+    "title": "原则库",
+    "newPrinciple": "新原则",
+    "content": "原则内容",
+    "confidence": "确信度",
+    "usageCount": "使用次数",
+    "noPrinciples": "暂无原则，当你记录经历并提炼原则后会显示在这里",
+    "principleAdded": "原则添加成功",
+    "principleUpdated": "原则更新成功",
+    "principleDeleted": "原则删除成功"
+  },
+  "projects": {
+    "title": "项目",
+    "newProject": "新项目",
+    "description": "项目描述",
+    "startDate": "开始日期",
+    "endDate": "结束日期",
+    "status": "状态",
+    "active": "进行中",
+    "completed": "已完成",
+    "paused": "已暂停",
+    "abandoned": "已放弃",
+    "retrospective": "复盘",
+    "whatWentWell": "做得好的",
+    "whatWentWrong": "做得不好的",
+    "nextTime": "下次怎么做",
+    "noProjects": "暂无项目，点击\"添加项目\"创建第一个项目",
+    "projectAdded": "项目添加成功",
+    "projectUpdated": "项目更新成功",
+    "projectDeleted": "项目删除成功"
+  },
   "dashboard": {
     "title": "仪表盘",
     "welcome": "欢迎回来，{{username}}！",

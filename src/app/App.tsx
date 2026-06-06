@@ -213,7 +213,7 @@ function BottomNav() {
     { path: '/', label: t('common.dashboard'), icon: '🏠' },
     { path: '/experiences', label: '经历', icon: '📝' },
     { path: '/capabilities', label: '能力', icon: '🌳' },
-    { path: '/goals', label: t('common.goals'), icon: '🎯' },
+    { path: '/projects', label: '项目', icon: '📁' },
     { path: '/analytics', label: t('common.analytics'), icon: '📈' },
   ];
 

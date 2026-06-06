@@ -19,6 +19,8 @@ const Auth = lazy(() => import('../features/auth/pages/LoginPage.tsx'));
 const ExperiencesPage = lazy(() => import('../features/experiences/pages/ExperiencesPage.tsx'));
 const NewExperiencePage = lazy(() => import('../features/experiences/pages/NewExperiencePage.tsx'));
 const CapabilitiesPage = lazy(() => import('../features/capabilities/pages/CapabilitiesPage.tsx'));
+const PrinciplesPage = lazy(() => import('../features/principles/pages/PrinciplesPage.tsx'));
+const ProjectsPage = lazy(() => import('../features/projects/pages/ProjectsPage.tsx'));
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -73,6 +75,11 @@ export function AppRoutes() {
           path="/capabilities"
           element={<ProtectedRoute>{wrap(CapabilitiesPage)}</ProtectedRoute>}
         />
+        <Route
+          path="/principles"
+          element={<ProtectedRoute>{wrap(PrinciplesPage)}</ProtectedRoute>}
+        />
+        <Route path="/projects" element={<ProtectedRoute>{wrap(ProjectsPage)}</ProtectedRoute>} />
         <Route path="/auth" element={wrap(Auth)} />
       </Routes>
     </Suspense>
