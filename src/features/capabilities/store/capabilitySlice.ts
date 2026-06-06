@@ -15,6 +15,7 @@ import type {
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
 import { loadData, importData } from '../../../store/slices/growthSlice';
+import { shouldRecordSnapshot, createSnapshot } from '../../growth-curve/engine/historySnapshot';
 
 // Local storage keys
 const CAPABILITIES_KEY = 'growthos-capabilities';
@@ -56,8 +57,19 @@ export const addCapability = createAsyncThunk(
       const updatedCapabilities = [newCapability, ...capabilities];
       secureStorage.setItem(CAPABILITIES_KEY, updatedCapabilities);
 
+      // Record initial snapshot
+      const history = (secureStorage.getItem<CapabilityHistory[]>(CAPABILITY_HISTORY_KEY) ||
+        []) as CapabilityHistory[];
+      const initialSnapshot = createSnapshot(newCapability.id, newCapability.currentLevel, now);
+      const updatedHistory = [initialSnapshot, ...history];
+      secureStorage.setItem(CAPABILITY_HISTORY_KEY, updatedHistory);
+
       logger.info('能力添加成功', { capabilityId: newCapability.id });
-      return { capability: newCapability, capabilities: updatedCapabilities };
+      return {
+        capability: newCapability,
+        capabilities: updatedCapabilities,
+        history: updatedHistory,
+      };
     } catch (error) {
       logger.error('添加能力异常', error, { name: data.name });
       throw error;
@@ -104,8 +116,9 @@ export const updateCapability = createAsyncThunk(
         throw new Error(`Capability ${id} not found`);
       }
 
+      const oldCapability = capabilities[index];
       const updatedCapability: Capability = {
-        ...capabilities[index],
+        ...oldCapability,
         ...rest,
         id,
         lastUpdated: new Date().toISOString(),
@@ -113,8 +126,33 @@ export const updateCapability = createAsyncThunk(
       capabilities[index] = updatedCapability;
       secureStorage.setItem(CAPABILITIES_KEY, [...capabilities]);
 
+      // Record snapshot if level changed
+      const history = (secureStorage.getItem<CapabilityHistory[]>(CAPABILITY_HISTORY_KEY) ||
+        []) as CapabilityHistory[];
+      const lastSnapshot = [...history]
+        .filter((h) => h.capabilityId === id)
+        .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime())[0];
+
+      let updatedHistory = history;
+      if (
+        shouldRecordSnapshot(
+          oldCapability.currentLevel,
+          updatedCapability.currentLevel,
+          lastSnapshot,
+        )
+      ) {
+        const newSnapshot = createSnapshot(id, updatedCapability.currentLevel);
+        updatedHistory = [...history, newSnapshot];
+        secureStorage.setItem(CAPABILITY_HISTORY_KEY, updatedHistory);
+      }
+
       logger.info('能力更新成功', { capabilityId: id });
-      return { capability: updatedCapability, capabilities: [...capabilities] };
+      return {
+        capability: updatedCapability,
+        oldCapability,
+        capabilities: [...capabilities],
+        history: updatedHistory,
+      };
     } catch (error) {
       logger.error('更新能力异常', error, { capabilityId: id });
       throw error;
@@ -192,6 +230,9 @@ const capabilitySlice = createSlice({
       .addCase(addCapability.fulfilled, (state, action) => {
         state.isLoading = false;
         state.capabilities = action.payload.capabilities;
+        if (action.payload.history) {
+          state.history = action.payload.history;
+        }
       })
       .addCase(addCapability.rejected, (state, action) => {
         state.isLoading = false;
@@ -219,6 +260,9 @@ const capabilitySlice = createSlice({
       .addCase(updateCapability.fulfilled, (state, action) => {
         state.isLoading = false;
         state.capabilities = action.payload.capabilities;
+        if (action.payload.history) {
+          state.history = action.payload.history;
+        }
       })
       .addCase(updateCapability.rejected, (state, action) => {
         state.isLoading = false;

@@ -14,6 +14,7 @@ import type { RootState, Capability } from '../../../shared/types';
 import { calculateCapabilityLevel } from '../../capabilities/store/capabilitySlice';
 import CoachDiagnosisCard from '../../coach/components/CoachDiagnosisCard';
 import CoachRecommendations from '../../coach/components/CoachRecommendations';
+import GrowthOverviewSection from '../../growth-curve/components/GrowthOverviewSection';
 import { InsightCards } from '../components/InsightCards';
 import { QuickRecordForm } from '../components/QuickRecordForm';
 
@@ -199,6 +200,9 @@ const DashboardPage: React.FC = () => {
 
       {/* ── Coach Recommendations ── */}
       <CoachRecommendations />
+
+      {/* ── Growth Trajectory ── */}
+      <GrowthOverviewSection defaultRange="30d" />
     </div>
   );
 };

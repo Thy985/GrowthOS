@@ -126,6 +126,22 @@
       "default": "记录第一条经历，开始你的成长之旅"
     }
   },
+  "growthCurve": {
+    "title": "成长轨迹",
+    "topGrowth": "增长排行",
+    "emptyState": "还没有成长记录，开始记录经历吧",
+    "range": {
+      "30d": "30天",
+      "90d": "90天",
+      "1y": "1年",
+      "all": "全部"
+    },
+    "trend": {
+      "up": "增长",
+      "down": "下降",
+      "stable": "持平"
+    }
+  },
   "experiences": {
     "title": "经历",
     "managementTitle": "经历管理",

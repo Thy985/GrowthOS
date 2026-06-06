@@ -126,6 +126,22 @@
       "default": "Record your first experience and start your growth journey"
     }
   },
+  "growthCurve": {
+    "title": "Growth Trajectory",
+    "topGrowth": "Growth Ranking",
+    "emptyState": "No growth records yet. Start recording experiences!",
+    "range": {
+      "30d": "30 days",
+      "90d": "90 days",
+      "1y": "1 year",
+      "all": "All"
+    },
+    "trend": {
+      "up": "Growing",
+      "down": "Declining",
+      "stable": "Stable"
+    }
+  },
   "experiences": {
     "title": "Experiences",
     "managementTitle": "Experience Management",
