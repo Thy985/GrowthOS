@@ -10,14 +10,6 @@ interface StepSelectCapabilitiesProps {
   onChange: (ids: string[]) => void;
 }
 
-const categoryLabels: Record<string, string> = {
-  mind: '思维',
-  skill: '技能',
-  cognition: '认知',
-  body: '体能',
-  social: '社交',
-};
-
 const StepSelectCapabilities: React.FC<StepSelectCapabilitiesProps> = ({ selected, onChange }) => {
   const { t } = useTranslation();
   const capabilities = useSelector((state: RootState) => state.capabilities.capabilities);
@@ -59,7 +51,7 @@ const StepSelectCapabilities: React.FC<StepSelectCapabilitiesProps> = ({ selecte
       {Object.entries(grouped).map(([category, caps]) => (
         <div key={category} className="mb-4">
           <h4 className="text-xs font-medium text-gray-400 uppercase mb-2">
-            {categoryLabels[category] || category}
+            {t(`capabilities.${category}`, category)}
           </h4>
           <div className="space-y-1">
             {caps.map((cap) => (

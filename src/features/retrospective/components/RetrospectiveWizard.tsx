@@ -1,12 +1,12 @@
 // RetrospectiveWizard - 复盘向导主容器
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useCallback, useReducer, useMemo } from 'react';
+import React, { useState, useCallback, useReducer, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 
 import type { RootState, Project } from '../../../shared/types';
 import { updateCapability } from '../../capabilities/store/capabilitySlice';
-import { addExperience } from '../../experiences/store/experienceSlice';
+import { addExperience, deleteExperience } from '../../experiences/store/experienceSlice';
 import { updateProject } from '../../projects/store/projectSlice';
 import { analyzeCapabilityImpact } from '../engine/impactAnalysis';
 import { INITIAL_WIZARD_DATA, wizardReducer, type WizardStep } from '../types/retrospectiveTypes';
@@ -23,6 +23,8 @@ interface RetrospectiveWizardProps {
   onClose: () => void;
 }
 
+const STEP_ORDER: WizardStep[] = ['capabilities', 'retrospective', 'experiences', 'preview'];
+
 const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, project, onClose }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<any>();
@@ -34,6 +36,17 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 向导打开时重置全部状态
+  useEffect(() => {
+    if (isOpen) {
+      dataDispatch({ type: 'RESET' });
+      setCurrentStep('capabilities');
+      setCompletedSteps([]);
+      setIsSubmitting(false);
+      setError(null);
+    }
+  }, [isOpen]);
+
   const capabilityNames = useMemo(() => {
     const map = new Map<string, string>();
     for (const cap of capabilities) {
@@ -42,7 +55,27 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
     return map;
   }, [capabilities]);
 
-  const canGoNext = useCallback((): boolean => {
+  const stepLabels: Record<WizardStep, string> = useMemo(
+    () => ({
+      capabilities: t('retrospective.step1', '选择能力'),
+      retrospective: t('retrospective.step2', '自由回顾'),
+      experiences: t('retrospective.step3', '提炼经验'),
+      preview: t('retrospective.step4', '确认变化'),
+    }),
+    [t],
+  );
+
+  const stepDescs: Record<WizardStep, string> = useMemo(
+    () => ({
+      capabilities: t('retrospective.step1Desc', '选择本项目中使用到的能力'),
+      retrospective: t('retrospective.step2Desc', '回顾做得好的、需要改进的、下次注意的'),
+      experiences: t('retrospective.step3Desc', '把复盘发现转化为可复用的经验'),
+      preview: t('retrospective.step4Desc', '预览本次复盘对能力的影响'),
+    }),
+    [t],
+  );
+
+  const canGoNext = (): boolean => {
     switch (currentStep) {
       case 'capabilities':
         return wizardData.capabilitiesUsed.length > 0;
@@ -59,48 +92,36 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
       default:
         return true;
     }
-  }, [currentStep, wizardData]);
+  };
 
   const handleNext = useCallback(() => {
     if (!canGoNext()) return;
 
     setCompletedSteps((prev) => (prev.includes(currentStep) ? prev : [...prev, currentStep]));
 
-    switch (currentStep) {
-      case 'capabilities':
-        setCurrentStep('retrospective');
-        break;
-      case 'retrospective':
-        setCurrentStep('experiences');
-        break;
-      case 'experiences': {
-        // 计算能力影响
-        const impacts = analyzeCapabilityImpact(
-          wizardData.capabilitiesUsed,
-          capabilities,
-          wizardData.whatWentWell,
-          wizardData.whatWentWrong,
-        );
-        dataDispatch({ type: 'SET_IMPACTS', payload: impacts });
-        setCurrentStep('preview');
-        break;
-      }
-      case 'preview':
-        break;
+    const nextIndex = STEP_ORDER.indexOf(currentStep) + 1;
+    if (nextIndex >= STEP_ORDER.length) return;
+
+    const nextStep = STEP_ORDER[nextIndex];
+
+    // 进入 preview 前计算能力影响
+    if (nextStep === 'preview') {
+      const impacts = analyzeCapabilityImpact(
+        wizardData.capabilitiesUsed,
+        capabilities,
+        wizardData.whatWentWell,
+        wizardData.whatWentWrong,
+      );
+      dataDispatch({ type: 'SET_IMPACTS', payload: impacts });
     }
-  }, [canGoNext, currentStep, wizardData, capabilities]);
+
+    setCurrentStep(nextStep);
+  }, [currentStep, wizardData, capabilities]);
 
   const handleBack = useCallback(() => {
-    switch (currentStep) {
-      case 'retrospective':
-        setCurrentStep('capabilities');
-        break;
-      case 'experiences':
-        setCurrentStep('retrospective');
-        break;
-      case 'preview':
-        setCurrentStep('experiences');
-        break;
+    const prevIndex = STEP_ORDER.indexOf(currentStep) - 1;
+    if (prevIndex >= 0) {
+      setCurrentStep(STEP_ORDER[prevIndex]);
     }
   }, [currentStep]);
 
@@ -118,26 +139,32 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
     setIsSubmitting(true);
     setError(null);
 
+    const createdExpIds: string[] = [];
+
     try {
-      // 1. 创建经验
-      const expIds: string[] = [];
-      for (const exp of wizardData.experiences) {
-        const result = await dispatch(
-          addExperience({
-            userId: project.userId,
-            event: exp.event,
-            reflection: exp.reflection || undefined,
-            principle: exp.principle || undefined,
-            projectId: project.id,
-            confidence: 0.5,
-            occurredAt: new Date().toISOString(),
-            capabilityLinks: exp.capabilityLinks.map((link) => ({
-              capabilityId: link.capabilityId,
-              contribution: link.contribution,
-            })),
-          }),
-        ).unwrap();
-        expIds.push(result.experience.id);
+      // 1. 并行创建所有经验
+      const expResults = await Promise.all(
+        wizardData.experiences.map((exp) =>
+          dispatch(
+            addExperience({
+              userId: project.userId,
+              event: exp.event,
+              reflection: exp.reflection || undefined,
+              principle: exp.principle || undefined,
+              projectId: project.id,
+              confidence: 0.5,
+              occurredAt: new Date().toISOString(),
+              capabilityLinks: exp.capabilityLinks.map((link) => ({
+                capabilityId: link.capabilityId,
+                contribution: link.contribution,
+              })),
+            }),
+          ).unwrap(),
+        ),
+      );
+
+      for (const result of expResults) {
+        createdExpIds.push(result.experience.id);
       }
 
       // 2. 更新 Project
@@ -150,11 +177,11 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
             nextTime: wizardData.nextTime,
           },
           capabilitiesUsed: wizardData.capabilitiesUsed,
-          experienceGained: expIds,
+          experienceGained: createdExpIds,
         }),
       ).unwrap();
 
-      // 3. 更新能力等级
+      // 3. 更新能力等级（串行是为了确保每个更新完成后才继续）
       for (const impact of wizardData.impacts) {
         if (impact.change > 0) {
           try {
@@ -165,35 +192,29 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
               }),
             ).unwrap();
           } catch (capErr) {
-            // 能力更新失败不阻断复盘提交
             console.error('Failed to update capability:', impact.capabilityId, capErr);
           }
         }
       }
-
-      onClose();
     } catch (err) {
+      // 回滚已创建的经验
+      for (const expId of createdExpIds) {
+        try {
+          await dispatch(deleteExperience(expId));
+        } catch {
+          // 回滚失败不再处理
+        }
+      }
       setError(err instanceof Error ? err.message : '提交失败');
     } finally {
       setIsSubmitting(false);
+      if (!error) {
+        onClose();
+      }
     }
-  }, [project, wizardData, dispatch, onClose]);
+  }, [project, wizardData, dispatch, onClose, error]);
 
   if (!isOpen || !project) return null;
-
-  const stepLabels: Record<WizardStep, string> = {
-    capabilities: t('retrospective.step1', '选择能力'),
-    retrospective: t('retrospective.step2', '自由回顾'),
-    experiences: t('retrospective.step3', '提炼经验'),
-    preview: t('retrospective.step4', '确认变化'),
-  };
-
-  const stepDescs: Record<WizardStep, string> = {
-    capabilities: t('retrospective.step1Desc', '选择本项目中使用到的能力'),
-    retrospective: t('retrospective.step2Desc', '回顾做得好的、需要改进的、下次注意的'),
-    experiences: t('retrospective.step3Desc', '把复盘发现转化为可复用的经验'),
-    preview: t('retrospective.step4Desc', '预览本次复盘对能力的影响'),
-  };
 
   return (
     <div

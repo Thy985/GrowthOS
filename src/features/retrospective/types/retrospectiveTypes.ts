@@ -2,12 +2,6 @@
 
 export type WizardStep = 'capabilities' | 'retrospective' | 'experiences' | 'preview';
 
-export interface WizardStepConfig {
-  key: WizardStep;
-  label: string;
-  stepNumber: number;
-}
-
 export interface CapabilityImpact {
   capabilityId: string;
   capabilityName: string;
@@ -46,13 +40,6 @@ export const INITIAL_WIZARD_DATA: RetrospectiveWizardData = {
   experiences: [],
   impacts: [],
 };
-
-export const WIZARD_STEPS: WizardStepConfig[] = [
-  { key: 'capabilities', label: '选择能力', stepNumber: 1 },
-  { key: 'retrospective', label: '自由回顾', stepNumber: 2 },
-  { key: 'experiences', label: '提炼经验', stepNumber: 3 },
-  { key: 'preview', label: '确认变化', stepNumber: 4 },
-];
 
 export type WizardAction =
   | { type: 'SET_CAPABILITIES'; payload: string[] }

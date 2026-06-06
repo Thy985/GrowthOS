@@ -110,33 +110,33 @@ describe('analyzeCapabilityImpact', () => {
       ['good1', 'good2'],
       ['wrong1'],
     );
-    expect(result[0].reason).toContain('正面回顾');
-    expect(result[0].reason).toContain('改进项');
-    expect(result[0].reason).toContain('+2');
+    expect(result[0].reason).toContain('positive:2');
+    expect(result[0].reason).toContain('negative:1');
+    expect(result[0].reason).toContain('change:2');
   });
 });
 
 describe('buildReason', () => {
   it('should include well count when positive', () => {
     const reason = buildReason(5, 3, 0);
-    expect(reason).toContain('3 条正面回顾');
-    expect(reason).not.toContain('改进项');
+    expect(reason).toContain('positive:3');
+    expect(reason).not.toContain('negative');
   });
 
   it('should include wrong count when positive', () => {
     const reason = buildReason(2, 0, 2);
-    expect(reason).toContain('2 条改进项');
-    expect(reason).not.toContain('正面回顾');
+    expect(reason).toContain('negative:2');
+    expect(reason).not.toContain('positive');
   });
 
   it('should include both when both exist', () => {
     const reason = buildReason(3, 2, 1);
-    expect(reason).toContain('正面回顾');
-    expect(reason).toContain('改进项');
+    expect(reason).toContain('positive:2');
+    expect(reason).toContain('negative:1');
   });
 
   it('should include change value', () => {
     const reason = buildReason(1, 0, 0);
-    expect(reason).toContain('+1');
+    expect(reason).toContain('change:1');
   });
 });

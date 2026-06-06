@@ -337,7 +337,10 @@
     "noImpact": "本次复盘未产生能力等级变化",
     "levelChange": "+{{change}}",
     "backToEdit": "返回修改",
-    "confirmSubmit": "确认提交"
+    "confirmSubmit": "确认提交",
+    "reasonWell": "{{count}} 条正面回顾",
+    "reasonWrong": "{{count}} 条改进项",
+    "reasonChange": "等级 +{{change}}"
   },
   "records": {
     "title": "记录",

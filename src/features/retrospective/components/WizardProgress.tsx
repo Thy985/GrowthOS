@@ -1,8 +1,8 @@
 // WizardProgress - 复盘向导进度条
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import type { WizardStep } from '../types/retrospectiveTypes';
-import { WIZARD_STEPS } from '../types/retrospectiveTypes';
 
 interface WizardProgressProps {
   currentStep: WizardStep;
@@ -10,24 +10,32 @@ interface WizardProgressProps {
   onStepClick: (step: WizardStep) => void;
 }
 
-const stepOrder: WizardStep[] = ['capabilities', 'retrospective', 'experiences', 'preview'];
+const STEP_ORDER: WizardStep[] = ['capabilities', 'retrospective', 'experiences', 'preview'];
+
+const stepLabelKeys: Record<WizardStep, string> = {
+  capabilities: 'retrospective.step1',
+  retrospective: 'retrospective.step2',
+  experiences: 'retrospective.step3',
+  preview: 'retrospective.step4',
+};
 
 const WizardProgress: React.FC<WizardProgressProps> = ({
   currentStep,
   completedSteps,
   onStepClick,
 }) => {
-  const currentIndex = stepOrder.indexOf(currentStep);
+  const { t } = useTranslation();
+  const currentIndex = STEP_ORDER.indexOf(currentStep);
 
   return (
     <div className="flex items-center justify-center gap-0 mb-6">
-      {WIZARD_STEPS.map((step, index) => {
-        const isCompleted = completedSteps.includes(step.key);
-        const isCurrent = step.key === currentStep;
-        const isClickable = isCompleted || index < currentIndex;
+      {STEP_ORDER.map((step, index) => {
+        const isCompleted = completedSteps.includes(step);
+        const isCurrent = step === currentStep;
+        const isClickable = isCompleted;
 
         return (
-          <React.Fragment key={step.key}>
+          <React.Fragment key={step}>
             {index > 0 && (
               <div
                 className={`h-0.5 w-10 sm:w-16 ${
@@ -38,7 +46,7 @@ const WizardProgress: React.FC<WizardProgressProps> = ({
             <button
               type="button"
               disabled={!isClickable}
-              onClick={() => isClickable && onStepClick(step.key)}
+              onClick={() => isClickable && onStepClick(step)}
               className={`flex flex-col items-center gap-1 ${
                 isClickable ? 'cursor-pointer' : 'cursor-default'
               }`}
@@ -52,7 +60,7 @@ const WizardProgress: React.FC<WizardProgressProps> = ({
                       : 'bg-gray-200 text-gray-400'
                 }`}
               >
-                {isCompleted ? '✓' : step.stepNumber}
+                {isCompleted ? '✓' : index + 1}
               </div>
               <span
                 className={`text-xs whitespace-nowrap ${
@@ -63,7 +71,7 @@ const WizardProgress: React.FC<WizardProgressProps> = ({
                       : 'text-gray-400'
                 }`}
               >
-                {step.label}
+                {t(stepLabelKeys[step], '')}
               </span>
             </button>
           </React.Fragment>

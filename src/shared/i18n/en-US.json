@@ -337,7 +337,10 @@
     "noImpact": "No capability level changes from this retrospective",
     "levelChange": "+{{change}}",
     "backToEdit": "Back to Edit",
-    "confirmSubmit": "Confirm Submit"
+    "confirmSubmit": "Confirm Submit",
+    "reasonWell": "{{count}} positive review(s)",
+    "reasonWrong": "{{count}} area(s) to improve",
+    "reasonChange": "Level +{{change}}"
   },
   "records": {
     "title": "Records",

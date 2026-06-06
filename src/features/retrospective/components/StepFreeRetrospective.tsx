@@ -1,5 +1,5 @@
 // StepFreeRetrospective - 步骤 2：自由回顾
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface StepFreeRetrospectiveProps {
@@ -20,12 +20,30 @@ const StepFreeRetrospective: React.FC<StepFreeRetrospectiveProps> = ({
   const [wrongText, setWrongText] = useState(whatWentWrong.join('\n'));
   const [nextText, setNextText] = useState(nextTime.join('\n'));
 
-  const handleBlur = () => {
-    onChange({
-      whatWentWell: wellText.split('\n').filter(Boolean),
-      whatWentWrong: wrongText.split('\n').filter(Boolean),
-      nextTime: nextText.split('\n').filter(Boolean),
-    });
+  const syncToParent = useCallback(
+    (well: string, wrong: string, next: string) => {
+      onChange({
+        whatWentWell: well.split('\n').filter(Boolean),
+        whatWentWrong: wrong.split('\n').filter(Boolean),
+        nextTime: next.split('\n').filter(Boolean),
+      });
+    },
+    [onChange],
+  );
+
+  const handleWellChange = (value: string) => {
+    setWellText(value);
+    syncToParent(value, wrongText, nextText);
+  };
+
+  const handleWrongChange = (value: string) => {
+    setWrongText(value);
+    syncToParent(wellText, value, nextText);
+  };
+
+  const handleNextChange = (value: string) => {
+    setNextText(value);
+    syncToParent(wellText, wrongText, value);
   };
 
   return (
@@ -36,8 +54,7 @@ const StepFreeRetrospective: React.FC<StepFreeRetrospectiveProps> = ({
         </label>
         <textarea
           value={wellText}
-          onChange={(e) => setWellText(e.target.value)}
-          onBlur={handleBlur}
+          onChange={(e) => handleWellChange(e.target.value)}
           rows={3}
           placeholder={t('projects.whatWentWellPlaceholder')}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-sm"
@@ -52,8 +69,7 @@ const StepFreeRetrospective: React.FC<StepFreeRetrospectiveProps> = ({
         </label>
         <textarea
           value={wrongText}
-          onChange={(e) => setWrongText(e.target.value)}
-          onBlur={handleBlur}
+          onChange={(e) => handleWrongChange(e.target.value)}
           rows={3}
           placeholder={t('projects.whatWentWrongPlaceholder')}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-sm"
@@ -68,8 +84,7 @@ const StepFreeRetrospective: React.FC<StepFreeRetrospectiveProps> = ({
         </label>
         <textarea
           value={nextText}
-          onChange={(e) => setNextText(e.target.value)}
-          onBlur={handleBlur}
+          onChange={(e) => handleNextChange(e.target.value)}
           rows={3}
           placeholder={t('projects.nextTimePlaceholder')}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none text-sm"
