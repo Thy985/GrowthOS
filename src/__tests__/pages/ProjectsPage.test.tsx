@@ -261,7 +261,7 @@ describe('ProjectsPage', () => {
     expect(screen.getByText('新建项目')).toBeInTheDocument();
   });
 
-  it('shows retrospective fields when retrospect button is clicked', async () => {
+  it('opens retrospective wizard when retrospect button is clicked', async () => {
     const user = userEvent.setup();
     const store = makeStore();
     const project = makeProject({ id: 'p-retro', name: 'Retro Test', status: 'active' });
@@ -272,11 +272,9 @@ describe('ProjectsPage', () => {
     const retroBtn = screen.getByRole('button', { name: '复盘' });
     await user.click(retroBtn);
 
-    // Retrospective modal should open
+    // Retrospective wizard should open with step 1 (select capabilities)
     expect(screen.getByText('项目复盘')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/按时完成第一阶段/)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/需求变更频繁/)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/提前锁定需求范围/)).toBeInTheDocument();
+    expect(screen.getByText('选择能力')).toBeInTheDocument();
   });
 
   it('triggers deleteProject when delete button is clicked', async () => {

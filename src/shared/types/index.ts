@@ -181,6 +181,8 @@ export interface Project {
   status: 'active' | 'completed' | 'paused' | 'abandoned';
   startDate?: string;
   endDate?: string;
+  capabilitiesUsed?: string[]; // 涉及的能力 ID 列表
+  experienceGained?: string[]; // 提炼的经验 ID 列表
   retrospective?: {
     whatWentWell: string[];
     whatWentWrong: string[];
