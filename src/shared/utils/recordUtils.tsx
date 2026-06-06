@@ -15,7 +15,7 @@ export const formatDate = (dateStr: string): string => {
 };
 
 // 获取情绪颜色
-export const getMoodColor = (mood: '很好' | '一般' | '不太好'): string => {
+export const getMoodColor = (mood: string): string => {
   switch (mood) {
     case '很好':
       return 'bg-green-100 text-green-800';

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
 import type { RootState } from '../../../shared/types/index.ts';
@@ -10,6 +11,7 @@ import {
 } from '../../../shared/utils/recordUtils.tsx';
 
 const RecordList = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -18,28 +20,28 @@ const RecordList = () => {
   const { records, tags } = useSelector((state: RootState) => state.records);
 
   const allTags = tags;
-  const allMoods = ['很好', '一般', '不太好'] as const;
+  const allMoods = [
+    t('records.moodHappy', '很好'),
+    t('records.moodNeutral', '一般'),
+    t('records.moodBad', '不太好'),
+  ] as const;
 
-  // 处理搜索和过滤
   const filteredRecords = useMemo(() => {
     return filterRecords(records, searchTerm, selectedMoods, selectedTags, dateRange);
   }, [records, searchTerm, selectedMoods, selectedTags, dateRange]);
 
-  // 处理情绪选择
   const toggleMood = useCallback((mood: string) => {
     setSelectedMoods((prev) =>
       prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood],
     );
   }, []);
 
-  // 处理标签选择
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
     );
   }, []);
 
-  // 清除所有过滤
   const clearFilters = useCallback(() => {
     setSearchTerm('');
     setSelectedMoods([]);
@@ -50,7 +52,7 @@ const RecordList = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">记录列表</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t('records.title', '记录列表')}</h1>
         {(searchTerm ||
           selectedMoods.length > 0 ||
           selectedTags.length > 0 ||
@@ -60,28 +62,27 @@ const RecordList = () => {
             onClick={clearFilters}
             className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors w-full sm:w-auto"
           >
-            清除过滤
+            {t('records.clearFilters', '清除过滤')}
           </button>
         )}
       </div>
 
-      {/* 搜索和过滤区域 */}
       <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        {/* 搜索框 */}
         <div className="mb-4">
           <input
             type="text"
-            placeholder="搜索记录..."
+            placeholder={t('records.searchPlaceholder', '搜索记录...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
         </div>
 
-        {/* 时间范围过滤 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('records.startDate', '开始日期')}
+            </label>
             <input
               type="date"
               value={dateRange.start}
@@ -90,7 +91,9 @@ const RecordList = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">结束日期</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('records.endDate', '结束日期')}
+            </label>
             <input
               type="date"
               value={dateRange.end}
@@ -100,9 +103,10 @@ const RecordList = () => {
           </div>
         </div>
 
-        {/* 情绪过滤 */}
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">情绪状态</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">
+            {t('records.moodFilter', '情绪状态')}
+          </h3>
           <div className="flex flex-wrap gap-2">
             {allMoods.map((mood) => (
               <button
@@ -120,10 +124,11 @@ const RecordList = () => {
           </div>
         </div>
 
-        {/* 标签过滤 */}
         {allTags.length > 0 && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">标签</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              {t('records.tagFilter', '标签')}
+            </h3>
             <div className="flex flex-wrap gap-2">
               {allTags.map((tag) => (
                 <button
@@ -143,14 +148,14 @@ const RecordList = () => {
         )}
       </div>
 
-      {/* 记录计数 */}
-      <div className="text-sm text-gray-600">显示 {filteredRecords.length} 条记录</div>
+      <div className="text-sm text-gray-600">
+        {t('records.showingCount', { count: filteredRecords.length })}
+      </div>
 
-      {/* 记录列表 */}
       <div className="space-y-4">
         {filteredRecords.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-            没有找到符合条件的记录
+            {t('records.noResults', '没有找到符合条件的记录')}
           </div>
         ) : (
           filteredRecords.map((record) => (
@@ -171,7 +176,9 @@ const RecordList = () => {
 
               {record.activity && (
                 <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-1">做了什么</h4>
+                  <h4 className="text-sm font-medium text-gray-700 mb-1">
+                    {t('records.whatDid', '做了什么')}
+                  </h4>
                   <p className="text-gray-600">
                     {searchTerm
                       ? highlightSearchTerm(record.activity, searchTerm)
@@ -182,7 +189,9 @@ const RecordList = () => {
 
               {record.learning && (
                 <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-1">学了什么</h4>
+                  <h4 className="text-sm font-medium text-gray-700 mb-1">
+                    {t('records.whatLearned', '学了什么')}
+                  </h4>
                   <p className="text-gray-600">
                     {searchTerm
                       ? highlightSearchTerm(record.learning, searchTerm)
@@ -193,7 +202,9 @@ const RecordList = () => {
 
               {record.reflection && (
                 <div className="mb-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-1">反思</h4>
+                  <h4 className="text-sm font-medium text-gray-700 mb-1">
+                    {t('records.reflection', '反思')}
+                  </h4>
                   <p className="text-gray-600">
                     {searchTerm
                       ? highlightSearchTerm(record.reflection, searchTerm)
