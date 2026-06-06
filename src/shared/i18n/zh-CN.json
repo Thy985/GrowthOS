@@ -91,6 +91,41 @@
     "learningHours": "学习时长",
     "averageMood": "平均情绪"
   },
+  "coach": {
+    "title": "成长诊断",
+    "emptyMessage": "记录第一条经历后，成长教练会为你生成诊断。",
+    "recommendationsTitle": "推荐下一步",
+    "emptyRecommendations": "暂无推荐建议",
+    "priorityHigh": "高优先级",
+    "priorityMedium": "中优先级",
+    "priorityLow": "低优先级",
+    "insight": {
+      "stale": "你的 {{name}} 已 {{days}} 天未更新",
+      "staleShort": "你的 {{name}} 已超过一个月未更新",
+      "staleMild": "你的 {{name}} 两周没有新经历了",
+      "growth": "你的 {{name}} 本月增长 {{change}} 分，势头很好！",
+      "growthMild": "你的 {{name}} 本月增长 {{change}} 分，继续保持",
+      "patternConcentrated": "本月你 {{percent}}% 经历都贡献给了 {{name}}",
+      "patternManyProjects": "你有 {{count}} 个项目在进行中，注意合理分配精力",
+      "patternUnusedPrinciples": "你有 {{count}} 条原则从未在实践中使用"
+    },
+    "recommend": {
+      "record": "记录「{{name}}」相关经历",
+      "recordAction": "该能力已 {{days}} 天未更新",
+      "retrospect": "复盘「{{name}}」项目",
+      "retrospectAction": "已活跃 {{days}} 天",
+      "continueGrowth": "继续保持「{{name}}」的增长势头",
+      "startProject": "开始记录「{{name}}」的相关经历",
+      "applyPrinciple": "尝试运用「{{content}}」",
+      "default": "记录新经历，开始你的成长之旅"
+    },
+    "summary": {
+      "stale": "你的 {{name}} 已 {{days}} 天未更新，是时候补充新经历了",
+      "growth": "你的 {{name}} 本月增长 {{change}} 分，继续保持这个势头",
+      "pattern": "本月你的经历主要围绕 {{name}} 展开",
+      "default": "记录第一条经历，开始你的成长之旅"
+    }
+  },
   "experiences": {
     "title": "经历",
     "managementTitle": "经历管理",

@@ -222,6 +222,12 @@ export interface ProjectsState {
   error: string | null;
 }
 
+// Coach state placeholder (actual type lives in features/coach)
+export interface CoachState {
+  diagnosis: unknown;
+  lastGeneratedAt: string | null;
+}
+
 // 根状态类型
 export interface RootState {
   auth: AuthState;
@@ -235,4 +241,5 @@ export interface RootState {
   capabilities: CapabilitiesState;
   principles: PrinciplesState;
   projects: ProjectsState;
+  coach: CoachState;
 }

@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import authReducer from '../../features/auth/store/authSlice';
 import capabilityReducer from '../../features/capabilities/store/capabilitySlice';
+import coachReducer from '../../features/coach/store/coachSlice';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage.tsx';
 import experienceReducer from '../../features/experiences/store/experienceSlice';
 import goalReducer from '../../features/goals/store/goalSlice';
@@ -35,6 +36,7 @@ function makeStore() {
       capabilities: capabilityReducer,
       principles: principleReducer,
       projects: projectReducer,
+      coach: coachReducer,
     },
   });
 }
@@ -77,6 +79,6 @@ describe('DashboardPage (Growth Portrait)', () => {
 
   it('renders the recommendations section', () => {
     renderPage();
-    expect(screen.getByText('推荐下一步')).toBeInTheDocument();
+    expect(screen.getByText(/推荐下一步/)).toBeInTheDocument();
   });
 });

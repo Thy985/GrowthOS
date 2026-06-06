@@ -91,6 +91,41 @@
     "learningHours": "Learning Hours",
     "averageMood": "Average Mood"
   },
+  "coach": {
+    "title": "Growth Diagnosis",
+    "emptyMessage": "After recording your first experience, the growth coach will generate a diagnosis for you.",
+    "recommendationsTitle": "Recommended Next Steps",
+    "emptyRecommendations": "No recommendations yet",
+    "priorityHigh": "High Priority",
+    "priorityMedium": "Medium Priority",
+    "priorityLow": "Low Priority",
+    "insight": {
+      "stale": "Your {{name}} hasn't been updated for {{days}} days",
+      "staleShort": "Your {{name}} hasn't been updated for over a month",
+      "staleMild": "No new experiences for your {{name}} in two weeks",
+      "growth": "Your {{name}} grew by {{change}} points this month, great momentum!",
+      "growthMild": "Your {{name}} grew by {{change}} points this month, keep it up",
+      "patternConcentrated": "{{percent}}% of your experiences this month went to {{name}}",
+      "patternManyProjects": "You have {{count}} projects in progress, make sure to allocate your efforts wisely",
+      "patternUnusedPrinciples": "You have {{count}} principles that have never been applied in practice"
+    },
+    "recommend": {
+      "record": "Record experience related to \"{{name}}\"",
+      "recordAction": "This capability hasn't been updated for {{days}} days",
+      "retrospect": "Retrospect on \"{{name}}\" project",
+      "retrospectAction": "Active for {{days}} days",
+      "continueGrowth": "Keep up the growth momentum for \"{{name}}\"",
+      "startProject": "Start recording experiences related to \"{{name}}\"",
+      "applyPrinciple": "Try applying \"{{content}}\"",
+      "default": "Record a new experience and start your growth journey"
+    },
+    "summary": {
+      "stale": "Your {{name}} hasn't been updated for {{days}} days, time to add new experiences",
+      "growth": "Your {{name}} grew by {{change}} points this month, keep the momentum going",
+      "pattern": "Your experiences this month mainly revolved around {{name}}",
+      "default": "Record your first experience and start your growth journey"
+    }
+  },
   "experiences": {
     "title": "Experiences",
     "managementTitle": "Experience Management",

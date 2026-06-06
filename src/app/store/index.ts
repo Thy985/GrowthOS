@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 
 import authReducer from '../../features/auth/store/authSlice';
 import capabilityReducer from '../../features/capabilities/store/capabilitySlice';
+import coachReducer from '../../features/coach/store/coachSlice';
 import experienceReducer from '../../features/experiences/store/experienceSlice';
 import goalReducer from '../../features/goals/store/goalSlice';
 import treeReducer from '../../features/growth-tree/store/treeSlice';
@@ -28,6 +29,8 @@ export const store = configureStore({
     capabilities: capabilityReducer,
     principles: principleReducer,
     projects: projectReducer,
+    // 成长教练
+    coach: coachReducer,
   },
 });
 
