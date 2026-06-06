@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import React, { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import type { Node, Edge } from 'reactflow';
 import { ReactFlow, Background, Controls, MiniMap, BackgroundVariant } from 'reactflow';
@@ -22,14 +23,16 @@ import {
 } from '../store/capabilitySlice';
 
 // Category config
-const CATEGORY_CONFIG: Record<CapabilityCategory, { emoji: string; label: string; color: string }> =
-  {
-    mind: { emoji: '\uD83E\uDDE0', label: '\u601D\u7EF4', color: '#8B5CF6' },
-    skill: { emoji: '\uD83D\uDD27', label: '\u6280\u80FD', color: '#3B82F6' },
-    cognition: { emoji: '\uD83D\uDCA1', label: '\u8BA4\u77E5', color: '#F59E0B' },
-    body: { emoji: '\uD83D\uDCAA', label: '\u4F53\u80FD', color: '#10B981' },
-    social: { emoji: '\uD83E\uDD1D', label: '\u793E\u4EA4', color: '#EC4899' },
-  };
+const CATEGORY_CONFIG: Record<
+  CapabilityCategory,
+  { emoji: string; labelKey: string; color: string }
+> = {
+  mind: { emoji: '\uD83E\uDDE0', labelKey: 'capabilities.mind', color: '#8B5CF6' },
+  skill: { emoji: '\uD83D\uDD27', labelKey: 'capabilities.skill', color: '#3B82F6' },
+  cognition: { emoji: '\uD83D\uDCA1', labelKey: 'capabilities.cognition', color: '#F59E0B' },
+  body: { emoji: '\uD83D\uDCAA', labelKey: 'capabilities.body', color: '#10B981' },
+  social: { emoji: '\uD83E\uDD1D', labelKey: 'capabilities.social', color: '#EC4899' },
+};
 
 // Circular progress component
 const CircularProgress: React.FC<{
@@ -75,6 +78,7 @@ const NewCapabilityModal: React.FC<{
   onSubmit: (data: Omit<Capability, 'id' | 'createdAt' | 'lastUpdated'>) => void;
   allCapabilities: Capability[];
 }> = ({ isOpen, onClose, onSubmit, allCapabilities }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     category: 'mind' as CapabilityCategory,
@@ -140,7 +144,7 @@ const NewCapabilityModal: React.FC<{
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">New Capability</h2>
+          <h2 className="text-lg font-semibold">{t('capabilities.newCapabilityModal')}</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-xl leading-none"
@@ -151,20 +155,20 @@ const NewCapabilityModal: React.FC<{
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
+            <label className="block text-sm font-medium mb-1">{t('capabilities.name')}</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="e.g., Critical Thinking"
+              placeholder={t('capabilities.namePlaceholder')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
+            <label className="block text-sm font-medium mb-1">{t('capabilities.category')}</label>
             <select
               name="category"
               value={formData.category}
@@ -173,21 +177,23 @@ const NewCapabilityModal: React.FC<{
             >
               {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
                 <option key={key} value={key}>
-                  {config.emoji} {config.label}
+                  {config.emoji} {t(config.labelKey)}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Parent (optional)</label>
+            <label className="block text-sm font-medium mb-1">
+              {t('capabilities.parentOptional')}
+            </label>
             <select
               name="parentId"
               value={formData.parentId}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             >
-              <option value="">None (root)</option>
+              <option value="">{t('capabilities.noneRoot')}</option>
               {allCapabilities.map((cap) => (
                 <option key={cap.id} value={cap.id}>
                   {cap.name}
@@ -198,7 +204,7 @@ const NewCapabilityModal: React.FC<{
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Current</label>
+              <label className="block text-sm font-medium mb-1">{t('capabilities.current')}</label>
               <input
                 type="number"
                 name="currentLevel"
@@ -210,7 +216,7 @@ const NewCapabilityModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Target</label>
+              <label className="block text-sm font-medium mb-1">{t('capabilities.target')}</label>
               <input
                 type="number"
                 name="targetLevel"
@@ -222,7 +228,7 @@ const NewCapabilityModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Growth</label>
+              <label className="block text-sm font-medium mb-1">{t('capabilities.growth')}</label>
               <input
                 type="number"
                 name="growthRate"
@@ -235,12 +241,14 @@ const NewCapabilityModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
+            <label className="block text-sm font-medium mb-1">
+              {t('capabilities.description')}
+            </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Brief description..."
+              placeholder={t('capabilities.descriptionPlaceholder')}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
             />
@@ -251,14 +259,14 @@ const NewCapabilityModal: React.FC<{
               type="submit"
               className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
             >
-              Add Capability
+              {t('capabilities.addCapability')}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium"
             >
-              Cancel
+              {t('capabilities.cancel')}
             </button>
           </div>
         </form>
@@ -273,11 +281,13 @@ const CardView: React.FC<{
   onDelete: (id: string) => void;
   onUpdate: (data: Partial<Capability> & { id: string }) => void;
 }> = ({ capabilities, onDelete, onUpdate }) => {
+  const { t } = useTranslation();
+
   if (capabilities.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
-        <p className="text-lg">No capabilities yet</p>
-        <p className="text-sm mt-1">Click &ldquo;+ New Capability&rdquo; to get started</p>
+        <p className="text-lg">{t('capabilities.noCapabilitiesYet')}</p>
+        <p className="text-sm mt-1">{t('capabilities.getStarted')}</p>
       </div>
     );
   }
@@ -305,14 +315,14 @@ const CardView: React.FC<{
                       color: config.color,
                     }}
                   >
-                    {config.label}
+                    {t(config.labelKey)}
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => onDelete(cap.id)}
                 className="text-gray-300 hover:text-red-500 transition-colors text-sm"
-                title="Delete"
+                title={t('capabilities.deleteCapability')}
               >
                 &times;
               </button>
@@ -321,7 +331,7 @@ const CardView: React.FC<{
             <div className="flex items-center gap-4">
               <div
                 className="relative flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                title="Click to increment level"
+                title={t('capabilities.clickIncrement')}
                 onClick={() =>
                   onUpdate({
                     id: cap.id,
@@ -342,7 +352,7 @@ const CardView: React.FC<{
 
               <div className="flex-1 space-y-1.5">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Target</span>
+                  <span className="text-gray-500">{t('capabilities.targetLabel')}</span>
                   <span className="font-medium">{cap.targetLevel}</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2">
@@ -355,7 +365,7 @@ const CardView: React.FC<{
                   />
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Progress</span>
+                  <span className="text-gray-500">{t('capabilities.progressLabel')}</span>
                   <span className="font-medium">
                     {Math.min(Math.round((cap.currentLevel / cap.targetLevel) * 100), 100)}%
                   </span>
@@ -364,7 +374,7 @@ const CardView: React.FC<{
             </div>
 
             <div className="mt-3 flex items-center gap-1 text-sm">
-              <span className="text-gray-500">This month:</span>
+              <span className="text-gray-500">{t('capabilities.thisMonthLabel')}:</span>
               <span className={`font-semibold ${isGrowing ? 'text-green-600' : 'text-red-500'}`}>
                 {isGrowing ? '+' : ''}
                 {cap.growthRate}
@@ -382,6 +392,7 @@ const TreeView: React.FC<{ capabilities: Capability[]; treeData: Capability[] }>
   capabilities,
   treeData,
 }) => {
+  const { t } = useTranslation();
   const source = treeData.length > 0 ? treeData : capabilities;
 
   const nodes: Node[] = useMemo(() => {
@@ -454,7 +465,7 @@ const TreeView: React.FC<{ capabilities: Capability[]; treeData: Capability[] }>
   if (source.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
-        <p className="text-lg">No capabilities to display</p>
+        <p className="text-lg">{t('capabilities.noCapabilitiesDisplay')}</p>
       </div>
     );
   }
@@ -472,6 +483,7 @@ const TreeView: React.FC<{ capabilities: Capability[]; treeData: Capability[] }>
 
 // Radar view using Recharts
 const RadarView: React.FC<{ capabilities: Capability[] }> = ({ capabilities }) => {
+  const { t } = useTranslation();
   const radarData = useMemo(() => {
     // Top 6 by current level
     const top6 = [...capabilities].sort((a, b) => b.currentLevel - a.currentLevel).slice(0, 6);
@@ -487,22 +499,28 @@ const RadarView: React.FC<{ capabilities: Capability[] }> = ({ capabilities }) =
   if (radarData.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
-        <p className="text-lg">No capabilities to display</p>
+        <p className="text-lg">{t('capabilities.noCapabilitiesDisplay')}</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold mb-4">Top Capabilities Overview</h3>
+      <h3 className="text-lg font-semibold mb-4">{t('capabilities.topCapabilities')}</h3>
       <ResponsiveContainer width="100%" height={400}>
         <RadarChart data={radarData}>
           <PolarGrid stroke="#e5e7eb" />
           <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
           <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
-          <Radar name="Current" dataKey="level" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
           <Radar
-            name="Target"
+            name={t('capabilities.currentLevel')}
+            dataKey="level"
+            stroke="#6366f1"
+            fill="#6366f1"
+            fillOpacity={0.3}
+          />
+          <Radar
+            name={t('capabilities.targetLevel')}
             dataKey="target"
             stroke="#94a3b8"
             fill="#94a3b8"
@@ -520,6 +538,7 @@ type ViewMode = 'cards' | 'tree' | 'radar';
 
 // Main Page Component
 const CapabilitiesPage: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<any>();
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [showModal, setShowModal] = useState(false);
@@ -572,10 +591,10 @@ const CapabilitiesPage: React.FC = () => {
     [dispatch],
   );
 
-  const viewModes: { key: ViewMode; label: string; icon: string }[] = [
-    { key: 'cards', label: 'Cards', icon: '\u229E' },
-    { key: 'tree', label: 'Tree', icon: '\uD83C\uDF33' },
-    { key: 'radar', label: 'Radar', icon: '\uD83D\uDCCA' },
+  const viewModes: { key: ViewMode; labelKey: string; icon: string }[] = [
+    { key: 'cards', labelKey: 'capabilities.cardView', icon: '\u229E' },
+    { key: 'tree', labelKey: 'capabilities.treeView', icon: '\uD83C\uDF33' },
+    { key: 'radar', labelKey: 'capabilities.radarView', icon: '\uD83D\uDCCA' },
   ];
 
   return (
@@ -583,17 +602,15 @@ const CapabilitiesPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Capabilities</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage and track your personal growth capabilities
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('capabilities.titlePage')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('capabilities.subtitle')}</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
           className="inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
         >
           <span className="text-lg leading-none">+</span>
-          New Capability
+          {t('capabilities.addCapabilityButton')}
         </button>
       </div>
 
@@ -610,7 +627,7 @@ const CapabilitiesPage: React.FC = () => {
             }`}
           >
             <span className="mr-1">{vm.icon}</span>
-            {vm.label}
+            {t(vm.labelKey)}
           </button>
         ))}
       </div>
@@ -629,7 +646,7 @@ const CapabilitiesPage: React.FC = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
-                All ({count})
+                {t('common.all')} ({count})
               </button>
             );
           }
@@ -645,7 +662,7 @@ const CapabilitiesPage: React.FC = () => {
               }`}
               style={activeCategory === category ? { backgroundColor: config.color } : undefined}
             >
-              {config.emoji} {config.label} ({count})
+              {config.emoji} {t(config.labelKey)} ({count})
             </button>
           );
         })}

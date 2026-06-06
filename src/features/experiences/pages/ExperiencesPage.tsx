@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
@@ -34,10 +35,10 @@ function getConfidenceColor(confidence: number): string {
   return 'bg-red-400';
 }
 
-function getConfidenceLabel(confidence: number): string {
-  if (confidence >= 0.8) return '高';
-  if (confidence >= 0.5) return '中';
-  return '低';
+function getConfidenceLabel(confidence: number, t: (key: string) => string): string {
+  if (confidence >= 0.8) return t('experiences.high');
+  if (confidence >= 0.5) return t('experiences.medium');
+  return t('experiences.low');
 }
 
 interface ExperienceCardProps {
@@ -51,6 +52,7 @@ const ExperienceCard = React.memo(function ExperienceCard({
   capabilityLinks,
   capabilities,
 }: ExperienceCardProps) {
+  const { t } = useTranslation();
   const linkedCapabilityIds = new Set(capabilityLinks.map((l) => l.capabilityId));
   const linkedCapabilities = capabilities.filter((cap) => linkedCapabilityIds.has(cap.id));
 
@@ -62,11 +64,12 @@ const ExperienceCard = React.memo(function ExperienceCard({
           {formatDate(experience.occurredAt || experience.createdAt)}
         </span>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-500">确信度</span>
+          <span className="text-xs font-medium text-gray-500">{t('experiences.confidence')}</span>
           <span
             className={`inline-block px-2 py-0.5 text-xs rounded-full text-white ${getConfidenceColor(experience.confidence)}`}
           >
-            {getConfidenceLabel(experience.confidence)} ({Math.round(experience.confidence * 100)}%)
+            {getConfidenceLabel(experience.confidence, t)} (
+            {Math.round(experience.confidence * 100)}%)
           </span>
         </div>
       </div>
@@ -83,14 +86,14 @@ const ExperienceCard = React.memo(function ExperienceCard({
 
       {/* Event */}
       <div className="mb-3">
-        <h3 className="text-sm font-medium text-gray-700 mb-1">事件</h3>
+        <h3 className="text-sm font-medium text-gray-700 mb-1">{t('experiences.event')}</h3>
         <p className="text-gray-800">{experience.event}</p>
       </div>
 
       {/* Reflection (truncated) */}
       {experience.reflection && (
         <div className="mb-3">
-          <h3 className="text-sm font-medium text-gray-700 mb-1">反思</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-1">{t('experiences.reflection')}</h3>
           <p className="text-gray-600 text-sm">
             {truncate(experience.reflection, TRUNCATE_LENGTH)}
           </p>
@@ -100,7 +103,7 @@ const ExperienceCard = React.memo(function ExperienceCard({
       {/* Principle (truncated) */}
       {experience.principle && (
         <div className="mb-3">
-          <h3 className="text-sm font-medium text-gray-700 mb-1">原则</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-1">{t('experiences.principle')}</h3>
           <p className="text-gray-600 text-sm">{truncate(experience.principle, TRUNCATE_LENGTH)}</p>
         </div>
       )}
@@ -123,6 +126,7 @@ const ExperienceCard = React.memo(function ExperienceCard({
 });
 
 const ExperiencesPage = React.memo(function ExperiencesPage() {
+  const { t } = useTranslation();
   const { experiences, links, isLoading, error } = useSelector(
     (state: RootState) => state.experiences as ExperiencesState,
   );
@@ -189,7 +193,7 @@ const ExperiencesPage = React.memo(function ExperiencesPage() {
   if (isLoading && experiences.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-gray-500">加载中...</div>
+        <div className="text-gray-500">{t('experiences.loading')}</div>
       </div>
     );
   }
@@ -198,10 +202,10 @@ const ExperiencesPage = React.memo(function ExperiencesPage() {
     <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">经历管理</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t('experiences.managementTitle')}</h1>
         <Link to="/experiences/new">
           <span className="inline-block px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all duration-200 cursor-pointer">
-            + 新经历
+            {t('experiences.newExperienceButton')}
           </span>
         </Link>
       </div>
@@ -218,7 +222,9 @@ const ExperiencesPage = React.memo(function ExperiencesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Date range */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">开始日期</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('experiences.startDate')}
+            </label>
             <input
               type="date"
               value={dateRange.start}
@@ -227,7 +233,9 @@ const ExperiencesPage = React.memo(function ExperiencesPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">结束日期</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('experiences.endDate')}
+            </label>
             <input
               type="date"
               value={dateRange.end}
@@ -238,13 +246,15 @@ const ExperiencesPage = React.memo(function ExperiencesPage() {
 
           {/* Capability filter */}
           <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">按能力筛选</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('experiences.filterByCapability')}
+            </label>
             <select
               value={selectedCapabilityId}
               onChange={(e) => setSelectedCapabilityId(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
             >
-              <option value="">全部能力</option>
+              <option value="">{t('experiences.allCapabilities')}</option>
               {capabilities.map((cap) => (
                 <option key={cap.id} value={cap.id}>
                   {cap.name}
@@ -261,21 +271,23 @@ const ExperiencesPage = React.memo(function ExperiencesPage() {
               onClick={clearFilters}
               className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-700"
             >
-              清除筛选
+              {t('experiences.clearFilters')}
             </button>
           </div>
         )}
       </div>
 
       {/* Results count */}
-      <div className="text-sm text-gray-500">共 {filteredExperiences.length} 条经历</div>
+      <div className="text-sm text-gray-500">
+        {t('common.total')} {filteredExperiences.length} {t('experiences.totalExperiences')}
+      </div>
 
       {/* Experience list */}
       {filteredExperiences.length === 0 ? (
         <div className="bg-white rounded-xl shadow-md border border-gray-100 p-8 text-center text-gray-500">
           {experiences.length === 0
-            ? '还没有任何经历，点击上方按钮添加第一条吧！'
-            : '没有找到符合条件的经历'}
+            ? t('experiences.noExperiencesYet')
+            : t('experiences.noMatchingExperiences')}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

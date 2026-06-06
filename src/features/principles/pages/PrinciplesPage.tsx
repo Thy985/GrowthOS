@@ -11,7 +11,7 @@ import {
   getPrinciplesByCategory,
 } from '../store/principleSlice';
 
-const CATEGORY_OPTIONS = ['全部', '学习', '工作', '沟通', '生活', '其他'] as const;
+const CATEGORY_OPTIONS = ['all', 'learning', 'work', 'communication', 'life', 'other'] as const;
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -121,9 +121,9 @@ const ModalForm = React.memo(function ModalForm({ isOpen, onClose, onSubmit }: M
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500"
             >
               <option value="">{t('common.noData', '无')}</option>
-              {CATEGORY_OPTIONS.filter((c) => c !== '全部').map((cat) => (
+              {CATEGORY_OPTIONS.filter((c) => c !== 'all').map((cat) => (
                 <option key={cat} value={cat}>
-                  {cat}
+                  {t(`principles.categories.${cat}`, cat)}
                 </option>
               ))}
             </select>
@@ -193,7 +193,7 @@ const PrincipleCard = React.memo(function PrincipleCard({
         {/* Category */}
         {principle.category && (
           <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">
-            {principle.category}
+            {t(`principles.categories.${principle.category}`, principle.category)}
           </span>
         )}
       </div>
@@ -309,9 +309,9 @@ const EditModal = React.memo(function EditModal({
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500"
             >
               <option value="">{t('common.noData', '无')}</option>
-              {CATEGORY_OPTIONS.filter((c) => c !== '全部').map((cat) => (
+              {CATEGORY_OPTIONS.filter((c) => c !== 'all').map((cat) => (
                 <option key={cat} value={cat}>
-                  {cat}
+                  {t(`principles.categories.${cat}`, cat)}
                 </option>
               ))}
             </select>
@@ -361,7 +361,7 @@ function PrinciplesPageInner() {
     (state: RootState) => state.principles as PrinciplesState,
   );
 
-  const [activeCategory, setActiveCategory] = useState('全部');
+  const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingPrinciple, setEditingPrinciple] = useState<Principle | null>(null);
@@ -370,7 +370,7 @@ function PrinciplesPageInner() {
   // Filtered + sorted principles
   const displayedPrinciples = useMemo(() => {
     let filtered =
-      activeCategory === '全部'
+      activeCategory === 'all'
         ? [...principles]
         : getPrinciplesByCategory(
             { principles: { principles } as PrinciplesState },
@@ -436,7 +436,7 @@ function PrinciplesPageInner() {
           onClick={() => setIsCreateModalOpen(true)}
           className="inline-block rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-all duration-200 hover:bg-green-600 cursor-pointer"
         >
-          {t('principles.newPrinciple', '+ 新原则')}
+          {t('principles.newPrincipleButton', '+ 新原则')}
         </button>
       </div>
 
@@ -470,7 +470,7 @@ function PrinciplesPageInner() {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {cat}
+            {t(`principles.categories.${cat}`, cat)}
           </button>
         ))}
       </div>

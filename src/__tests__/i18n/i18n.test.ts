@@ -5,6 +5,7 @@ describe('i18n', () => {
 
   beforeEach(() => {
     vi.resetModules();
+    vi.doUnmock('react-i18next');
     originalLanguage = Object.getOwnPropertyDescriptor(navigator, 'language');
   });
 

@@ -55,28 +55,28 @@ function Navbar() {
             {t('common.dashboard')}
           </Link>
           <Link
-            to="/records"
-            className={`nav-link ${location.pathname === '/records' ? 'active' : ''}`}
+            to="/experiences"
+            className={`nav-link ${location.pathname.startsWith('/experiences') ? 'active' : ''}`}
           >
-            {t('common.records')}
+            {t('experiences.title', '经历')}
           </Link>
           <Link
-            to="/goals"
-            className={`nav-link ${location.pathname === '/goals' ? 'active' : ''}`}
+            to="/capabilities"
+            className={`nav-link ${location.pathname === '/capabilities' ? 'active' : ''}`}
           >
-            {t('common.goals')}
+            {t('capabilities.title', '能力')}
           </Link>
           <Link
-            to="/reminders"
-            className={`nav-link ${location.pathname === '/reminders' ? 'active' : ''}`}
+            to="/projects"
+            className={`nav-link ${location.pathname === '/projects' ? 'active' : ''}`}
           >
-            {t('common.reminders')}
+            {t('projects.title', '项目')}
           </Link>
           <Link
-            to="/growth-tree"
-            className={`nav-link ${location.pathname === '/growth-tree' ? 'active' : ''}`}
+            to="/principles"
+            className={`nav-link ${location.pathname === '/principles' ? 'active' : ''}`}
           >
-            {t('common.growthTree')}
+            {t('principles.title', '原则库')}
           </Link>
           <Link
             to="/analytics"
@@ -128,32 +128,32 @@ function Navbar() {
             {t('common.dashboard')}
           </Link>
           <Link
-            to="/records"
-            className={`nav-mobile-link ${location.pathname === '/records' ? 'active' : ''}`}
+            to="/experiences"
+            className={`nav-mobile-link ${location.pathname.startsWith('/experiences') ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            {t('common.records')}
+            {t('experiences.title', '经历')}
           </Link>
           <Link
-            to="/goals"
-            className={`nav-mobile-link ${location.pathname === '/goals' ? 'active' : ''}`}
+            to="/capabilities"
+            className={`nav-mobile-link ${location.pathname === '/capabilities' ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            {t('common.goals')}
+            {t('capabilities.title', '能力')}
           </Link>
           <Link
-            to="/reminders"
-            className={`nav-mobile-link ${location.pathname === '/reminders' ? 'active' : ''}`}
+            to="/projects"
+            className={`nav-mobile-link ${location.pathname === '/projects' ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            {t('common.reminders')}
+            {t('projects.title', '项目')}
           </Link>
           <Link
-            to="/growth-tree"
-            className={`nav-mobile-link ${location.pathname === '/growth-tree' ? 'active' : ''}`}
+            to="/principles"
+            className={`nav-mobile-link ${location.pathname === '/principles' ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            {t('common.growthTree')}
+            {t('principles.title', '原则库')}
           </Link>
           <Link
             to="/analytics"

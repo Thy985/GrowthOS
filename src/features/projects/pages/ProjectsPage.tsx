@@ -1,616 +1,511 @@
-import React, { useState, useCallback, useMemo } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
+import React, { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 
-import type { AppDispatch } from '../../../app/store';
 import type { Project, RootState } from '../../../shared/types';
-import {
-  addProject,
-  deleteProject,
-  updateProject,
-  getActiveProjects,
-  getCompletedProjects,
-} from '../store/projectSlice';
+import { addProject, updateProject, deleteProject } from '../store/projectSlice';
 
-/* eslint-disable react/no-unescaped-entities */
+type ProjectStatus = Project['status'];
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── New Project Modal ──────────────────────────────────────────
 
-const STATUS_LABELS: Record<Project['status'], string> = {
-  active: '进行中',
-  completed: '已完成',
-  paused: '已暂停',
-  abandoned: '已废弃',
-};
-
-const STATUS_COLORS: Record<Project['status'], string> = {
-  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  paused: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-  abandoned: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
-};
-
-const SECTION_CONFIGS: {
-  key: string;
-  title: string;
-  emptyMsg: string;
-}[] = [
-  {
-    key: 'active',
-    title: '进行中',
-    emptyMsg: '暂无进行中的项目，点击下方按钮创建新项目',
-  },
-  {
-    key: 'completed',
-    title: '已完成',
-    emptyMsg: '暂无已完成的项目',
-  },
-  {
-    key: 'paused',
-    title: '已暂停',
-    emptyMsg: '暂无已暂停的项目',
-  },
-];
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface ProjectFormData {
-  name: string;
-  description: string;
-  status: Project['status'];
-  startDate: string;
-  endDate: string;
-  whatWentWell: string;
-  whatWentWrong: string;
-  nextTime: string;
-}
-
-const initialFormData: ProjectFormData = {
-  name: '',
-  description: '',
-  status: 'active',
-  startDate: '',
-  endDate: '',
-  whatWentWell: '',
-  whatWentWrong: '',
-  nextTime: '',
-};
-
-// ─── Modal Component ─────────────────────────────────────────────────────────
-
-interface ProjectModalProps {
+const NewProjectModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: ProjectFormData) => void;
-}
+  onSubmit: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => void;
+}> = ({ isOpen, onClose, onSubmit }) => {
+  const { t } = useTranslation();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState('');
 
-const ProjectModal: React.FC<ProjectModalProps> = React.memo(function ProjectModal({
-  isOpen,
-  onClose,
-  onSubmit,
-}) {
-  const [form, setForm] = useState<ProjectFormData>(initialFormData);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      setForm((prev) => ({ ...prev, [name]: value }));
-      if (errors[name]) {
-        setErrors((prev) => {
-          const next = { ...prev };
-          delete next[name];
-          return next;
-        });
-      }
-    },
-    [errors],
-  );
-
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!form.name.trim()) {
-        setErrors({ name: '项目名称为必填项' });
-        return;
-      }
-      onSubmit(form);
-      setForm(initialFormData);
-      setErrors({});
-    },
-    [form, onSubmit],
-  );
-
-  const handleClose = useCallback(() => {
-    setForm(initialFormData);
-    setErrors({});
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onSubmit({
+      userId: 'default',
+      name: name.trim(),
+      description: description.trim() || undefined,
+      status: 'active',
+      startDate: new Date(startDate).toISOString(),
+      endDate: endDate ? new Date(endDate).toISOString() : undefined,
+    });
+    setName('');
+    setDescription('');
+    setStartDate(new Date().toISOString().split('T')[0]);
+    setEndDate('');
     onClose();
-  }, [onClose]);
+  };
 
   if (!isOpen) return null;
 
-  const showRetrospective = form.status === 'completed';
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
       <div
-        className="relative w-full max-w-lg my-8 bg-white dark:bg-gray-900 rounded-xl shadow-xl"
+        className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold">新建项目</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">{t('projects.newProjectModal')}</h2>
           <button
-            type="button"
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none"
-            onClick={handleClose}
-            aria-label="关闭"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
           >
             &times;
           </button>
         </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-          {/* name */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">
-              项目名称 <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm font-medium mb-1">{t('projects.projectName')}</label>
             <input
               type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="输入项目名称"
-              className={`w-full rounded-lg border px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'
-              }`}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder={t('projects.projectNameRequired')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
-
-          {/* description */}
           <div>
-            <label className="block text-sm font-medium mb-1">描述</label>
+            <label className="block text-sm font-medium mb-1">
+              {t('projects.projectDescription')}
+            </label>
             <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              rows={2}
-              placeholder="项目描述（可选）"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
             />
           </div>
-
-          {/* status */}
-          <div>
-            <label className="block text-sm font-medium mb-1">状态</label>
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="active">进行中</option>
-              <option value="completed">已完成</option>
-              <option value="paused">已暂停</option>
-              <option value="abandoned">已废弃</option>
-            </select>
-          </div>
-
-          {/* dates */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">开始日期</label>
+              <label className="block text-sm font-medium mb-1">{t('projects.startDate')}</label>
               <input
                 type="date"
-                name="startDate"
-                value={form.startDate}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">结束日期</label>
+              <label className="block text-sm font-medium mb-1">{t('projects.endDate')}</label>
               <input
                 type="date"
-                name="endDate"
-                value={form.endDate}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </div>
           </div>
-
-          {/* Retrospective section */}
-          {showRetrospective && (
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
-              <h3 className="text-sm font-semibold">项目复盘</h3>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">做得好的（每行一条）</label>
-                <textarea
-                  name="whatWentWell"
-                  value={form.whatWentWell}
-                  onChange={handleChange}
-                  rows={3}
-                  placeholder="例如：&#10;按时完成第一阶段&#10;团队协作顺畅"
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">需要改进的（每行一条）</label>
-                <textarea
-                  name="whatWentWrong"
-                  value={form.whatWentWrong}
-                  onChange={handleChange}
-                  rows={3}
-                  placeholder="例如：&#10;需求变更频繁&#10;测试覆盖不足"
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">下次注意（每行一条）</label>
-                <textarea
-                  name="nextTime"
-                  value={form.nextTime}
-                  onChange={handleChange}
-                  rows={3}
-                  placeholder="例如：&#10;提前锁定需求范围&#10;增加代码评审环节"
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
           <div className="flex gap-3 pt-2">
             <button
-              type="button"
-              onClick={handleClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              type="submit"
+              className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
             >
-              取消
+              {t('common.create')}
             </button>
             <button
-              type="submit"
-              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium"
             >
-              创建
+              {t('common.cancel')}
             </button>
           </div>
         </form>
       </div>
-
-      {/* backdrop click */}
-      <div className="fixed inset-0 -z-10" onClick={handleClose} />
     </div>
   );
-});
+};
 
-// ─── Project Card Component ──────────────────────────────────────────────────
+// ─── Retrospective Modal ────────────────────────────────────────
 
-interface ProjectCardProps {
-  project: Project;
-  onDelete: (id: string) => void;
-  onCreateRetrospective: (id: string) => void;
-}
+const RetrospectiveModal: React.FC<{
+  isOpen: boolean;
+  project: Project | null;
+  onClose: () => void;
+  onSubmit: (retrospective: {
+    whatWentWell: string[];
+    whatWentWrong: string[];
+    nextTime: string[];
+  }) => void;
+}> = ({ isOpen, project, onClose, onSubmit }) => {
+  const { t } = useTranslation();
+  const [whatWentWell, setWhatWentWell] = useState('');
+  const [whatWentWrong, setWhatWentWrong] = useState('');
+  const [nextTime, setNextTime] = useState('');
 
-const ProjectCard: React.FC<ProjectCardProps> = React.memo(function ProjectCard({
-  project,
-  onDelete,
-  onCreateRetrospective,
-}) {
-  const hasRetrospective = !!project.retrospective;
-  const isCompleted = project.status === 'completed';
-
-  const formatDate = (d?: string) => {
-    if (!d) return '—';
-    return new Date(d).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      whatWentWell: whatWentWell.split('\n').filter(Boolean),
+      whatWentWrong: whatWentWrong.split('\n').filter(Boolean),
+      nextTime: nextTime.split('\n').filter(Boolean),
     });
+    setWhatWentWell('');
+    setWhatWentWrong('');
+    setNextTime('');
+    onClose();
   };
 
-  const truncate = (text?: string, max = 120) => {
-    if (!text) return null;
-    return text.length > max ? text.slice(0, max) + '...' : text;
-  };
+  if (!isOpen || !project) return null;
 
   return (
-    <div className="group relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow">
-      {/* Delete button – visible on hover */}
-      <button
-        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-md p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
-        onClick={() => onDelete(project.id)}
-        aria-label="删除项目"
-        title="删除"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">{t('projects.retrospectiveTitle')}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+          >
+            &times;
+          </button>
+        </div>
+        <p className="text-sm text-gray-500 mb-4">{project.name}</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {t('projects.whatWentWellLabel')}
+            </label>
+            <textarea
+              value={whatWentWell}
+              onChange={(e) => setWhatWentWell(e.target.value)}
+              rows={3}
+              placeholder={t('projects.whatWentWellPlaceholder')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {t('projects.whatWentWrongLabel')}
+            </label>
+            <textarea
+              value={whatWentWrong}
+              onChange={(e) => setWhatWentWrong(e.target.value)}
+              rows={3}
+              placeholder={t('projects.whatWentWrongPlaceholder')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">{t('projects.nextTimeLabel')}</label>
+            <textarea
+              value={nextTime}
+              onChange={(e) => setNextTime(e.target.value)}
+              rows={3}
+              placeholder={t('projects.nextTimePlaceholder')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+            >
+              {t('common.save')}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            >
+              {t('common.cancel')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ─── Project Card ───────────────────────────────────────────────
+
+const ProjectCard: React.FC<{
+  project: Project;
+  onRetrospect: (p: Project) => void;
+  onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: ProjectStatus) => void;
+}> = ({ project, onRetrospect, onDelete, onStatusChange }) => {
+  const { t } = useTranslation();
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const statusColors: Record<ProjectStatus, string> = {
+    active: 'bg-emerald-100 text-emerald-700',
+    completed: 'bg-blue-100 text-blue-700',
+    paused: 'bg-amber-100 text-amber-700',
+    abandoned: 'bg-gray-100 text-gray-500',
+  };
+
+  const daysFromStart = project.startDate
+    ? Math.floor((Date.now() - new Date(project.startDate).getTime()) / 86400000)
+    : 0;
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h3 className="font-semibold text-gray-900 text-lg">{project.name}</h3>
+          {project.description && (
+            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{project.description}</p>
+          )}
+        </div>
+        <span
+          className={`px-2 py-0.5 text-xs rounded-full font-medium ${statusColors[project.status]}`}
         >
-          <path
-            d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-
-      {/* Name */}
-      <h3 className="text-base font-semibold pr-8">{project.name}</h3>
-
-      {/* Description */}
-      {project.description && (
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          {truncate(project.description)}
-        </p>
-      )}
-
-      {/* Status badge */}
-      <span
-        className={`inline-block mt-3 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[project.status]}`}
-      >
-        {STATUS_LABELS[project.status]}
-      </span>
-
-      {/* Date range */}
-      <div className="mt-3 text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-3.5 w-3.5 flex-shrink-0"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
-        <span>
-          {formatDate(project.startDate)} → {formatDate(project.endDate)}
+          {t(`projects.${project.status}`)}
         </span>
       </div>
 
-      {/* Retrospective section for completed projects */}
-      {isCompleted && (
-        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3">
-          {hasRetrospective ? (
-            <span
-              className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-medium"
-              title="已复盘"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <rect x="9" y="3" width="6" height="4" rx="1" />
-                <path d="M9 14l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              已复盘
-            </span>
-          ) : (
-            <button
-              className="rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-3 py-1.5 text-xs font-medium hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
-              onClick={() => onCreateRetrospective(project.id)}
-            >
-              复盘
-            </button>
+      {/* Progress bar */}
+      <div className="mb-3">
+        <div className="flex justify-between text-xs text-gray-400 mb-1">
+          <span>
+            {project.startDate
+              ? new Date(project.startDate).toLocaleDateString('zh-CN', {
+                  month: 'short',
+                  day: 'numeric',
+                })
+              : '—'}
+          </span>
+          <span>
+            {daysFromStart} {t('common.days', '天')}
+          </span>
+        </div>
+        <div className="w-full bg-gray-100 rounded-full h-1.5">
+          <div
+            className="h-1.5 rounded-full bg-indigo-500"
+            style={{
+              width: project.retrospective ? '100%' : `${Math.min(daysFromStart / 3, 100)}%`,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Retrospective */}
+      {project.retrospective && (
+        <div className="bg-indigo-50 rounded-lg p-3 mb-3">
+          <p className="text-xs font-medium text-indigo-700 mb-1">
+            ✨ {t('projects.retrospected')}
+          </p>
+          {project.retrospective.whatWentWell && project.retrospective.whatWentWell.length > 0 && (
+            <p className="text-xs text-gray-600 whitespace-pre-line">
+              {project.retrospective.whatWentWell.slice(0, 2).join('\n')}
+            </p>
           )}
         </div>
       )}
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 mt-4">
+        {project.status === 'active' && !project.retrospective && (
+          <button
+            onClick={() => onRetrospect(project)}
+            className="flex-1 text-sm bg-indigo-600 text-white py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            {t('projects.doRetrospective')}
+          </button>
+        )}
+        {project.status === 'active' && (
+          <button
+            onClick={() => onStatusChange(project.id, 'completed')}
+            className="text-sm bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition-colors"
+          >
+            {t('common.close')}
+          </button>
+        )}
+        {project.status === 'active' && (
+          <button
+            onClick={() => onStatusChange(project.id, 'paused')}
+            className="text-sm bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-200 transition-colors"
+          >
+            {t('projects.paused')}
+          </button>
+        )}
+        {!showConfirmDelete ? (
+          <button
+            onClick={() => setShowConfirmDelete(true)}
+            className="text-sm text-gray-400 hover:text-red-500 transition-colors px-2 py-1.5"
+          >
+            {t('projects.delete')}
+          </button>
+        ) : (
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-red-500">{t('projects.confirmDelete')}</span>
+            <button
+              onClick={() => onDelete(project.id)}
+              className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+            >
+              {t('projects.delete')}
+            </button>
+            <button
+              onClick={() => setShowConfirmDelete(false)}
+              className="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
+            >
+              {t('common.cancel')}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
-});
+};
 
-// ─── Projects Page ───────────────────────────────────────────────────────────
+// ─── Main Page ──────────────────────────────────────────────────
 
 const ProjectsPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { projects, isLoading } = useSelector((state: RootState) => state.projects);
-  const activeProjects = useSelector(getActiveProjects);
-  const completedProjects = useSelector(getCompletedProjects);
-  const userId = useSelector((state: RootState) => state.auth.user?.id ?? '');
+  const { t } = useTranslation();
+  const dispatch = useDispatch<any>();
+  const projects = useSelector((state: RootState) => state.projects.projects);
+  const [showNewProject, setShowNewProject] = useState(false);
+  const [retroProject, setRetroProject] = useState<Project | null>(null);
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const active = useMemo(() => projects.filter((p) => p.status === 'active'), [projects]);
+  const completed = useMemo(() => projects.filter((p) => p.status === 'completed'), [projects]);
+  const paused = useMemo(() => projects.filter((p) => p.status === 'paused'), [projects]);
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
-
-  const handleCreate = useCallback(
-    (data: ProjectFormData) => {
-      const lines = (s: string) =>
-        s
-          .split('\n')
-          .map((l) => l.trim())
-          .filter(Boolean);
-
-      const payload = {
-        userId,
-        name: data.name.trim(),
-        description: data.description.trim() || undefined,
-        status: data.status,
-        startDate: data.startDate || undefined,
-        endDate: data.endDate || undefined,
-        retrospective:
-          data.status === 'completed'
-            ? {
-                whatWentWell: lines(data.whatWentWell),
-                whatWentWrong: lines(data.whatWentWrong),
-                nextTime: lines(data.nextTime),
-              }
-            : undefined,
-      };
-
-      dispatch(addProject(payload));
-      setModalOpen(false);
+  const handleAdd = useCallback(
+    (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+      dispatch(addProject(data));
     },
     [dispatch],
+  );
+
+  const handleRetrospective = useCallback(
+    (retro: { whatWentWell: string[]; whatWentWrong: string[]; nextTime: string[] }) => {
+      if (retroProject) {
+        dispatch(updateProject({ id: retroProject.id, retrospective: retro }));
+      }
+    },
+    [retroProject, dispatch],
   );
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (window.confirm('确定要删除这个项目吗？')) {
-        dispatch(deleteProject(id));
-      }
+      dispatch(deleteProject(id));
     },
     [dispatch],
   );
 
-  const handleCreateRetrospective = useCallback(
-    (id: string) => {
-      if (window.confirm('是否要为此项目创建复盘？')) {
-        dispatch(
-          updateProject({
-            id,
-            retrospective: {
-              whatWentWell: [],
-              whatWentWrong: [],
-              nextTime: [],
-            },
-          }),
-        );
-      }
+  const handleStatusChange = useCallback(
+    (id: string, status: ProjectStatus) => {
+      dispatch(updateProject({ id, status }));
     },
     [dispatch],
   );
 
-  // ── Derived: paused projects (no selector available) ─────────────────────
+  if (projects.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">{t('projects.managementTitle')}</h1>
+          <button
+            onClick={() => setShowNewProject(true)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium"
+          >
+            {t('projects.newProjectButton')}
+          </button>
+        </div>
+        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+          <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+            />
+          </svg>
+          <p className="text-lg font-medium">{t('projects.noProjectsYet')}</p>
+          <p className="text-sm mt-1">{t('projects.createFirstProject')}</p>
+        </div>
+        <NewProjectModal
+          isOpen={showNewProject}
+          onClose={() => setShowNewProject(false)}
+          onSubmit={handleAdd}
+        />
+      </div>
+    );
+  }
 
-  const pausedProjects = useMemo(() => projects.filter((p) => p.status === 'paused'), [projects]);
-
-  // ── Empty check ──────────────────────────────────────────────────────────
-
-  const totalVisible = activeProjects.length + completedProjects.length + pausedProjects.length;
-
-  // ── Render ───────────────────────────────────────────────────────────────
+  const sections: { key: string; items: Project[]; labelKey: string; emptyKey: string }[] = [
+    {
+      key: 'active',
+      items: active,
+      labelKey: 'projects.activeSection',
+      emptyKey: 'projects.noActiveProjects',
+    },
+    {
+      key: 'completed',
+      items: completed,
+      labelKey: 'projects.completedSection',
+      emptyKey: 'projects.noCompletedProjects',
+    },
+    {
+      key: 'paused',
+      items: paused,
+      labelKey: 'projects.pausedSection',
+      emptyKey: 'projects.noPausedProjects',
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold sm:text-2xl">项目管理</h1>
-          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            管理 GrowthOS 项目的生命周期与复盘
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('projects.managementTitle')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('projects.managementSubtitle')}</p>
         </div>
         <button
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 active:bg-blue-800 transition-colors"
-          onClick={() => setModalOpen(true)}
+          onClick={() => setShowNewProject(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium"
         >
-          + New Project
+          {t('projects.newProjectButton')}
         </button>
       </div>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-12 text-sm text-gray-500">
-          加载中...
-        </div>
-      )}
+      {sections.map(({ items, labelKey, emptyKey }) => (
+        <section key={labelKey} className="mb-8">
+          <h2 className="text-lg font-semibold mb-3 text-gray-800">
+            {t(labelKey)} ({items.length})
+          </h2>
+          {items.length === 0 ? (
+            <p className="text-gray-400 text-sm italic">{t(emptyKey)}</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {items.map((p) => (
+                <ProjectCard
+                  key={p.id}
+                  project={p}
+                  onRetrospect={setRetroProject}
+                  onDelete={handleDelete}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
 
-      {/* Empty state */}
-      {!isLoading && totalVisible === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 py-16 text-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <p className="text-base font-medium text-gray-600 dark:text-gray-300">还没有任何项目</p>
-          <p className="mt-1 text-sm text-gray-400">
-            点击右上方的「+ New Project」按钮创建你的第一个项目吧
-          </p>
-          <button
-            className="mt-4 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-            onClick={() => setModalOpen(true)}
-          >
-            + New Project
-          </button>
-        </div>
-      )}
-
-      {/* Status sections */}
-      {!isLoading && totalVisible > 0 && (
-        <div className="space-y-8">
-          {SECTION_CONFIGS.map(({ key, title, emptyMsg }) => {
-            const sectionProjects =
-              key === 'active'
-                ? activeProjects
-                : key === 'completed'
-                  ? completedProjects
-                  : pausedProjects;
-
-            return (
-              <section key={key}>
-                <h2 className="mb-3 text-base font-semibold flex items-center gap-2">
-                  <span
-                    className={`inline-block h-2.5 w-2.5 rounded-full ${
-                      key === 'active'
-                        ? 'bg-green-500'
-                        : key === 'completed'
-                          ? 'bg-blue-500'
-                          : 'bg-yellow-500'
-                    }`}
-                  />
-                  {title}
-                  <span className="ml-1 text-xs font-normal text-gray-400">
-                    ({sectionProjects.length})
-                  </span>
-                </h2>
-
-                {sectionProjects.length === 0 ? (
-                  <p className="text-sm text-gray-400 italic py-2">{emptyMsg}</p>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {sectionProjects.map((project) => (
-                      <ProjectCard
-                        key={project.id}
-                        project={project}
-                        onDelete={handleDelete}
-                        onCreateRetrospective={handleCreateRetrospective}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Modal */}
-      <ProjectModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleCreate}
+      <NewProjectModal
+        isOpen={showNewProject}
+        onClose={() => setShowNewProject(false)}
+        onSubmit={handleAdd}
+      />
+      <RetrospectiveModal
+        isOpen={!!retroProject}
+        project={retroProject}
+        onClose={() => setRetroProject(null)}
+        onSubmit={handleRetrospective}
       />
     </div>
   );

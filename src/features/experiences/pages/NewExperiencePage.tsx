@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,13 +20,8 @@ interface FormData {
   selectedCapabilityIds: string[];
 }
 
-const STEPS = [
-  { title: '发生了什么？', description: '描述你经历的事件' },
-  { title: '你学到了什么？', description: '分享你的反思和收获' },
-  { title: '用一个原则总结', description: '提炼一个可复用的原则' },
-];
-
 const NewExperiencePage = React.memo(function NewExperiencePage() {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
@@ -47,6 +43,12 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
     confidence: 0.5,
     selectedCapabilityIds: [],
   });
+
+  const STEPS = [
+    { title: t('experiences.step1Title'), description: t('experiences.step1Desc') },
+    { title: t('experiences.step2Title'), description: t('experiences.step2Desc') },
+    { title: t('experiences.step3Title'), description: t('experiences.step3Desc') },
+  ];
 
   // Redirect after successful submission
   useEffect(() => {
@@ -77,18 +79,18 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
 
   const validateStep = useCallback((): boolean => {
     if (currentStep === 0 && !formData.event.trim()) {
-      setFormError('请输入事件描述');
+      setFormError(t('experiences.eventRequiredError'));
       return false;
     }
     return true;
-  }, [currentStep, formData.event]);
+  }, [currentStep, formData.event, t]);
 
   const handleNext = useCallback(() => {
     if (!validateStep()) return;
     if (currentStep < STEPS.length - 1) {
       setCurrentStep((prev) => prev + 1);
     }
-  }, [currentStep, validateStep]);
+  }, [currentStep, validateStep, STEPS.length]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 0) {
@@ -98,7 +100,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
 
   const handleSubmit = useCallback(() => {
     if (!formData.event.trim()) {
-      setFormError('请输入事件描述');
+      setFormError(t('experiences.eventRequiredError'));
       return;
     }
 
@@ -120,7 +122,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
     );
 
     setIsSubmitted(true);
-  }, [dispatch, formData]);
+  }, [dispatch, formData, t]);
 
   // Completion animation
   if (isSubmitted) {
@@ -143,8 +145,10 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
             </svg>
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">经历已记录！</h2>
-        <p className="text-gray-500 text-center">你的成长又迈进了一步，正在跳转...</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          {t('experiences.experienceRecorded')}
+        </h2>
+        <p className="text-gray-500 text-center">{t('experiences.growthForward')}</p>
       </div>
     );
   }
@@ -153,8 +157,10 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">记录新经历</h1>
-        <p className="text-gray-500">通过结构化反思，把经历转化为成长</p>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">
+          {t('experiences.recordNewExperience')}
+        </h1>
+        <p className="text-gray-500">{t('experiences.structuredReflection')}</p>
       </div>
 
       {/* Step indicator */}
@@ -218,12 +224,14 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
         {/* Step 1: Event */}
         {currentStep === 0 && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-1">发生了什么？</h2>
-            <p className="text-sm text-gray-500 mb-4">客观描述你经历的事件</p>
+            <h2 className="text-xl font-semibold text-gray-800 mb-1">
+              {t('experiences.step1Title')}
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">{t('experiences.step1Desc')}</p>
             <textarea
               value={formData.event}
               onChange={(e) => handleChange('event', e.target.value)}
-              placeholder="例如：今天在项目评审中，我的方案被采纳了..."
+              placeholder={t('experiences.eventPlaceholder')}
               rows={6}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-gray-800 placeholder-gray-400"
@@ -234,12 +242,14 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
         {/* Step 2: Reflection */}
         {currentStep === 1 && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-1">你学到了什么？</h2>
-            <p className="text-sm text-gray-500 mb-4">分享你的主观反思和收获（可选）</p>
+            <h2 className="text-xl font-semibold text-gray-800 mb-1">
+              {t('experiences.step2Title')}
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">{t('experiences.step2Desc')}</p>
             <textarea
               value={formData.reflection}
               onChange={(e) => handleChange('reflection', e.target.value)}
-              placeholder="例如：我意识到充分的前期沟通能让方案更容易被接受..."
+              placeholder={t('experiences.reflectionPlaceholder')}
               rows={6}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-gray-800 placeholder-gray-400"
             />
@@ -251,13 +261,15 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
           <div className="space-y-6">
             {/* Principle */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-1">用一个原则总结</h2>
-              <p className="text-sm text-gray-500 mb-4">提炼一个可以复用的原则（可选）</p>
+              <h2 className="text-xl font-semibold text-gray-800 mb-1">
+                {t('experiences.step3Title')}
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">{t('experiences.step3Desc')}</p>
               <input
                 type="text"
                 value={formData.principle}
                 onChange={(e) => handleChange('principle', e.target.value)}
-                placeholder="例如：先对齐预期，再推进执行"
+                placeholder={t('experiences.principlePlaceholder')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 placeholder-gray-400"
               />
             </div>
@@ -266,7 +278,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
             {formData.principle.trim() && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  对这个原则的确信度：{Math.round(formData.confidence * 100)}%
+                  {t('experiences.confidence')}：{Math.round(formData.confidence * 100)}%
                 </label>
                 <input
                   type="range"
@@ -277,8 +289,8 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-500"
                 />
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>不确定</span>
-                  <span>非常确信</span>
+                  <span>{t('experiences.uncertain')}</span>
+                  <span>{t('experiences.veryCertain')}</span>
                 </div>
               </div>
             )}
@@ -286,11 +298,13 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
             {/* Capability multi-select */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                关联能力（可选）
+                {t('experiences.linkCapabilities')}
               </label>
-              <p className="text-xs text-gray-400 mb-3">选择这个经历对哪些能力有贡献</p>
+              <p className="text-xs text-gray-400 mb-3">
+                {t('experiences.capabilityContribution')}
+              </p>
               {capabilities.length === 0 ? (
-                <p className="text-sm text-gray-400 italic">暂无能力，可稍后在能力管理中添加</p>
+                <p className="text-sm text-gray-400 italic">{t('experiences.noCapabilitiesYet')}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {capabilities.map((cap: Capability) => {
@@ -329,7 +343,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
                 : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
             }`}
           >
-            上一步
+            {t('common.previous')}
           </button>
 
           {currentStep < STEPS.length - 1 ? (
@@ -338,7 +352,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
               onClick={handleNext}
               className="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
             >
-              下一步
+              {t('common.next')}
             </button>
           ) : (
             <button
@@ -347,7 +361,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
               disabled={isLoading}
               className="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? '提交中...' : '提交'}
+              {isLoading ? t('common.submitting') : t('common.submit')}
             </button>
           )}
         </div>
