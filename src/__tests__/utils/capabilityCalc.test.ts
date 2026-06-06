@@ -76,7 +76,7 @@ describe('calculateCapabilityLevel', () => {
       reflection: 'Great learning experience',
       principle: 'Always prepare thoroughly',
       confidence: 0.9,
-      createdAt: today,
+      occurredAt: today,
     });
     const links = [makeLink({ experienceId: 'exp-1', capabilityId: 'cap-1', contribution: 0.8 })];
 
@@ -95,28 +95,28 @@ describe('calculateCapabilityLevel', () => {
         reflection: 'r1',
         principle: 'p1',
         confidence: 1.0,
-        createdAt: today,
+        occurredAt: today,
       }),
       makeExperience({
         id: 'exp-2',
         reflection: 'r2',
         principle: 'p2',
         confidence: 1.0,
-        createdAt: today,
+        occurredAt: today,
       }),
       makeExperience({
         id: 'exp-3',
         reflection: 'r3',
         principle: 'p3',
         confidence: 1.0,
-        createdAt: today,
+        occurredAt: today,
       }),
       makeExperience({
         id: 'exp-4',
         reflection: 'r4',
         principle: 'p4',
         confidence: 1.0,
-        createdAt: today,
+        occurredAt: today,
       }),
     ];
     const links: ExperienceCapabilityLink[] = [
@@ -142,7 +142,7 @@ describe('calculateCapabilityLevel', () => {
       reflection: 'Old lesson',
       principle: 'Old principle',
       confidence: 0.9,
-      createdAt: oneYearAgo,
+      occurredAt: oneYearAgo,
     });
     const links = [makeLink({ experienceId: 'exp-old', capabilityId: 'cap-1', contribution: 0.8 })];
 
@@ -173,7 +173,7 @@ describe('calculateCapabilityLevel', () => {
     const exp = makeExperience({
       id: 'exp-6m',
       confidence: 0.5,
-      createdAt: sixMonthsAgo,
+      occurredAt: sixMonthsAgo,
     });
     const links = [makeLink({ experienceId: 'exp-6m', capabilityId: 'cap-1', contribution: 0.5 })];
 
@@ -189,7 +189,7 @@ describe('calculateCapabilityLevel', () => {
     const exp = makeExperience({
       id: 'exp-yesterday',
       confidence: 0.5,
-      createdAt: yesterday,
+      occurredAt: yesterday,
     });
     const links = [
       makeLink({ experienceId: 'exp-yesterday', capabilityId: 'cap-1', contribution: 0.5 }),
@@ -210,12 +210,12 @@ describe('calculateCapabilityLevel', () => {
       id: 'exp-reflection',
       reflection: 'I learned a lot',
       confidence: 0.5,
-      createdAt: today,
+      occurredAt: today,
     });
     const expWithoutReflection = makeExperience({
       id: 'exp-no-reflection',
       confidence: 0.5,
-      createdAt: today,
+      occurredAt: today,
     });
     const linksWith = [
       makeLink({ experienceId: 'exp-reflection', capabilityId: 'cap-1', contribution: 0.5 }),
@@ -239,12 +239,12 @@ describe('calculateCapabilityLevel', () => {
       id: 'exp-principle',
       principle: 'Always be prepared',
       confidence: 0.5,
-      createdAt: today,
+      occurredAt: today,
     });
     const expWithoutPrinciple = makeExperience({
       id: 'exp-no-principle',
       confidence: 0.5,
-      createdAt: today,
+      occurredAt: today,
     });
     const linksWith = [
       makeLink({ experienceId: 'exp-principle', capabilityId: 'cap-1', contribution: 0.5 }),
@@ -267,12 +267,12 @@ describe('calculateCapabilityLevel', () => {
     const highConfExp = makeExperience({
       id: 'exp-high',
       confidence: 1.0,
-      createdAt: today,
+      occurredAt: today,
     });
     const lowConfExp = makeExperience({
       id: 'exp-low',
       confidence: 0.2,
-      createdAt: today,
+      occurredAt: today,
     });
     const linksHigh = [
       makeLink({ experienceId: 'exp-high', capabilityId: 'cap-1', contribution: 0.5 }),
@@ -295,7 +295,7 @@ describe('calculateCapabilityLevel', () => {
     const exp = makeExperience({
       id: 'exp-1',
       confidence: 0.5,
-      createdAt: today,
+      occurredAt: today,
     });
     const highContribution = [
       makeLink({ experienceId: 'exp-1', capabilityId: 'cap-1', contribution: 1.0 }),
@@ -345,20 +345,20 @@ describe('calculateCapabilityLevel', () => {
         reflection: 'Great insight',
         principle: 'Always test',
         confidence: 0.9,
-        createdAt: today,
+        occurredAt: today,
       }),
       // Old, no reflection/principle, low confidence
       makeExperience({
         id: 'exp-2',
         confidence: 0.3,
-        createdAt: sixMonthsAgo,
+        occurredAt: sixMonthsAgo,
       }),
       // Recent, reflection only, medium confidence
       makeExperience({
         id: 'exp-3',
         reflection: 'Some thoughts',
         confidence: 0.6,
-        createdAt: today,
+        occurredAt: today,
       }),
     ];
 
@@ -382,7 +382,7 @@ describe('calculateCapabilityLevel', () => {
     const existingExp = makeExperience({
       id: 'exp-existing',
       confidence: 0.5,
-      createdAt: today,
+      occurredAt: today,
     });
     const links: ExperienceCapabilityLink[] = [
       makeLink({
@@ -434,7 +434,7 @@ describe('calculateCapabilityLevel', () => {
         reflection: 'reflection',
         principle: 'principle',
         confidence: 1.0,
-        createdAt: today,
+        occurredAt: today,
       }),
     );
     const links: ExperienceCapabilityLink[] = experiences.map((exp, i) =>
@@ -453,21 +453,20 @@ describe('calculateCapabilityLevel', () => {
     const exp = makeExperience({
       id: 'exp-zero',
       confidence: 0,
-      createdAt: today,
+      occurredAt: today,
     });
     const links = [
       makeLink({ experienceId: 'exp-zero', capabilityId: 'cap-1', contribution: 1.0 }),
     ];
 
     const result = calculateCapabilityLevel('cap-1', [exp], links);
-    // Note: exp.confidence || 0.5, so 0 is falsy and becomes 0.5
-    // Score: 1.0 * 10 * 1.0 * 1.0 * 0.5 * 1.0 = 5.0
-    expect(result).toBe(5);
+    // confidence = 0 is now respected (uses ?? not ||), so score = 0
+    expect(result).toBe(0);
   });
 
   it('filters links correctly by capabilityId', () => {
     const today = '2026-06-06T00:00:00Z';
-    const exp = makeExperience({ id: 'exp-1', confidence: 0.5, createdAt: today });
+    const exp = makeExperience({ id: 'exp-1', confidence: 0.5, occurredAt: today });
     const links: ExperienceCapabilityLink[] = [
       makeLink({ id: 'link-1', experienceId: 'exp-1', capabilityId: 'cap-1', contribution: 0.5 }),
       makeLink({ id: 'link-2', experienceId: 'exp-1', capabilityId: 'cap-2', contribution: 1.0 }),
@@ -492,7 +491,7 @@ describe('calculateCapabilityLevel', () => {
       id: 'exp-1',
       reflection: 'important',
       confidence: 0.8,
-      createdAt: today,
+      occurredAt: today,
     });
     const links: ExperienceCapabilityLink[] = [
       makeLink({ id: 'link-1', experienceId: 'exp-1', capabilityId: 'cap-1', contribution: 0.3 }),

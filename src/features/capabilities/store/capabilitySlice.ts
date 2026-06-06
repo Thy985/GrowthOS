@@ -129,28 +129,33 @@ export function calculateCapabilityLevel(
   links: ExperienceCapabilityLink[],
 ): number {
   const expLinks = links.filter((link) => link.capabilityId === capabilityId);
+  if (expLinks.length === 0) return 0;
+
+  // Build a map for O(1) experience lookup
+  const expMap = new Map<string, Experience>();
+  for (const exp of experiences) {
+    expMap.set(exp.id, exp);
+  }
+
   let totalScore = 0;
+  const now = new Date();
 
   for (const link of expLinks) {
-    const exp = experiences.find((e) => e.id === link.experienceId);
+    const exp = expMap.get(link.experienceId);
     if (!exp) continue;
 
-    const now = new Date();
-    const expDate = new Date(exp.createdAt);
+    // Use occurredAt (when the event happened) for time decay, not createdAt
+    const expDate = new Date(exp.occurredAt);
     const daysAgo = Math.max(0, (now.getTime() - expDate.getTime()) / (1000 * 60 * 60 * 24));
     const timeDecay = Math.exp(-daysAgo / 180);
 
     const reflectionMultiplier = exp.reflection ? 1.5 : 1.0;
     const principleMultiplier = exp.principle ? 2.0 : 1.0;
-    const confidenceMultiplier = exp.confidence || 0.5;
+    // Use ?? instead of || to allow confidence = 0
+    const confidence = exp.confidence ?? 0.5;
 
     totalScore +=
-      link.contribution *
-      10 *
-      reflectionMultiplier *
-      principleMultiplier *
-      confidenceMultiplier *
-      timeDecay;
+      link.contribution * 10 * reflectionMultiplier * principleMultiplier * confidence * timeDecay;
   }
 
   return Math.min(100, Math.round(totalScore));
