@@ -69,24 +69,18 @@ const RecommendationPanel: React.FC = React.memo(function RecommendationPanel() 
             {items.map((rec) => {
               const resolved = resolveRoute(rec);
               return (
-                <div
-                  key={rec.id}
-                  className={`rounded-lg border p-3 ${PRIORITY_COLORS[priority]} ${
-                    resolved ? 'hover:opacity-80 transition-opacity cursor-pointer' : ''
+                <button
+                  key={rec.id ?? `${Math.random()}`}
+                  type="button"
+                  className={`w-full text-left rounded-lg border p-3 ${PRIORITY_COLORS[priority]} ${
+                    resolved ? 'hover:opacity-80 transition-opacity cursor-pointer' : 'cursor-default'
                   }`}
                   onClick={() => {
                     if (resolved) {
                       navigate(resolved.route);
                     }
                   }}
-                  role={resolved ? 'button' : undefined}
-                  tabIndex={resolved ? 0 : undefined}
-                  onKeyDown={(e) => {
-                    if (resolved && (e.key === 'Enter' || e.key === ' ')) {
-                      e.preventDefault();
-                      navigate(resolved.route);
-                    }
-                  }}
+                  disabled={!resolved}
                 >
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold">
@@ -99,7 +93,7 @@ const RecommendationPanel: React.FC = React.memo(function RecommendationPanel() 
                     )}
                   </div>
                   <p className="text-xs mt-1 opacity-75">{rec.action}</p>
-                </div>
+                </button>
               );
             })}
           </div>

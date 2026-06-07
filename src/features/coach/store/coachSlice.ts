@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 import type { RootState, AppDispatch } from '../../../app/store';
 import type { CoachState, CoachDiagnosis } from '../types/coachTypes';
+import { analyze } from '../engine/coachEngine';
 
 const initialState: CoachState = {
   diagnosis: null,
@@ -66,21 +67,45 @@ export const {
 export function runDiagnosis() {
   return (dispatch: AppDispatch, getState: () => RootState) => {
     dispatch(setAnalyzing(true));
-    // dynamic import to avoid circular dependency with coachEngine
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { analyze } = require('../engine/coachEngine');
 
     const state = getState();
     const { experiences, links } = state.experiences;
     const capabilities = state.capabilities.capabilities;
     const principles = state.principles.principles;
     const projects = state.projects.projects;
+    const now = new Date();
 
-    const diagnosis = analyze(experiences, capabilities, principles, projects, links);
-    dispatch(setDiagnosis(diagnosis));
-    dispatch(pushHistorySnapshot(diagnosis));
+    const diagnosis = analyze(experiences, capabilities, principles, projects, links, now);
+
+    // Compute completionRate from recommendation statuses
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+
+    let completedThisWeek = 0;
+    let totalThisWeek = diagnosis.recommendations.length;
+    for (const rec of diagnosis.recommendations) {
+      const stored = state.coach.recommendationStatuses[rec.id];
+      if (stored?.status === 'completed' && new Date(stored.updatedAt) >= weekStart) {
+        completedThisWeek++;
+      }
+    }
+
+    const diagnosisWithRate: CoachDiagnosis = {
+      ...diagnosis,
+      summary: {
+        ...diagnosis.summary,
+        completionRate: {
+          completedThisWeek,
+          totalThisWeek: totalThisWeek || 1,
+        },
+      },
+    };
+
+    dispatch(setDiagnosis(diagnosisWithRate));
+    dispatch(pushHistorySnapshot(diagnosisWithRate));
     dispatch(setAnalyzing(false));
-    dispatch(setLastAnalyzedAt(new Date().toISOString()));
+    dispatch(setLastAnalyzedAt(now.toISOString()));
   };
 }
 

@@ -33,6 +33,11 @@ const OtherRecommendations: React.FC<OtherRecommendationsProps> = React.memo(
               <Link
                 to={href}
                 onClick={() => dispatch(markRecommendationInProgress(rec.id))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    dispatch(markRecommendationInProgress(rec.id));
+                  }
+                }}
                 className="flex items-center gap-3 flex-1 min-w-0"
               >
                 <span className="flex-shrink-0 text-base">

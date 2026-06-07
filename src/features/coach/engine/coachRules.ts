@@ -458,7 +458,6 @@ export function generateRecommendations(
         sourceRule: 'stale',
         status: 'pending',
         statusUpdatedAt: currentISO,
-        linkTo: { route: '/experiences/new', label: '去记录' },
       });
     }
   }
@@ -488,7 +487,6 @@ export function generateRecommendations(
       sourceRule: 'project',
       status: 'pending',
       statusUpdatedAt: currentISO,
-      linkTo: { route: '/projects', label: '去复盘' },
     });
   }
 
@@ -509,7 +507,6 @@ export function generateRecommendations(
         sourceRule: 'retrospective',
         status: 'pending',
         statusUpdatedAt: currentISO,
-        linkTo: { route: '/capabilities', label: '去管理' },
       });
     }
   }
@@ -543,7 +540,6 @@ export function generateRecommendations(
         sourceRule: 'growth',
         status: 'pending',
         statusUpdatedAt: currentISO,
-        linkTo: { route: '/experiences/new', label: '去记录' },
       });
     }
   }
@@ -565,7 +561,6 @@ export function generateRecommendations(
         sourceRule: 'gap',
         status: 'pending',
         statusUpdatedAt: currentISO,
-        linkTo: { route: '/experiences/new', label: '去记录' },
       });
     }
   }
@@ -588,7 +583,6 @@ export function generateRecommendations(
       sourceRule: 'project',
       status: 'pending',
       statusUpdatedAt: currentISO,
-      linkTo: { route: '/experiences/new', label: '去记录' },
     });
   }
 
@@ -606,7 +600,6 @@ export function generateRecommendations(
       sourceRule: 'pattern',
       status: 'pending',
       statusUpdatedAt: currentISO,
-      linkTo: { route: '/principles', label: '去实践' },
     });
   }
 
@@ -622,7 +615,6 @@ export function generateRecommendations(
       sourceRule: 'fallback',
       status: 'pending',
       statusUpdatedAt: currentISO,
-      linkTo: { route: '/experiences/new', label: '去记录' },
     });
   }
 

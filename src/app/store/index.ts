@@ -45,6 +45,8 @@ listenerMiddleware.startListening({
     deleteProject.fulfilled,
   ),
   effect: (_, api) => {
+    const state = (api.getState as () => RootState)();
+    if (state.coach.isAnalyzing) return;
     api.dispatch(runDiagnosis());
   },
 });

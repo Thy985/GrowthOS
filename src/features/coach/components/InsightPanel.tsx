@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
+import type { RootState } from '../../../app/store';
 import type { Insight, InsightGroup } from '../types/coachTypes';
 import { selectCoachInsights } from '../utils/coachSelectors';
 
@@ -72,8 +73,14 @@ function groupInsights(insights: Insight[]): InsightGroup[] {
 const InsightPanel: React.FC = React.memo(function InsightPanel() {
   const { t } = useTranslation();
   const insights = useSelector(selectCoachInsights);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
-    // Default: only first group with important insights is expanded
+  const generatedAt = useSelector(
+    (state: RootState) => state.coach.diagnosis?.generatedAt ?? '',
+  );
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  // Re-initialize collapsed state when diagnosis changes
+  useEffect(() => {
     const groups = groupInsights(insights);
     const collapsed = new Set<string>();
     let foundImportant = false;
@@ -87,8 +94,8 @@ const InsightPanel: React.FC = React.memo(function InsightPanel() {
       }
       collapsed.add(group.type);
     }
-    return collapsed;
-  });
+    setCollapsedGroups(collapsed);
+  }, [generatedAt, insights]);
 
   const toggleGroup = (type: string) => {
     setCollapsedGroups((prev) => {

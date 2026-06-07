@@ -17,7 +17,12 @@ const CoachPage: React.FC = React.memo(function CoachPage() {
   const dispatch = useDispatch<AppDispatch>();
   const diagnosis = useSelector((state: RootState) => state.coach.diagnosis);
   const experiences = useSelector((state: RootState) => state.experiences.experiences);
-  const isLoading = useSelector((state: RootState) => state.experiences.isLoading);
+  const isLoading = useSelector(
+    (state: RootState) =>
+      state.experiences.isLoading ||
+      state.capabilities.isLoading ||
+      state.projects.isLoading,
+  );
 
   useEffect(() => {
     if (!diagnosis && experiences.length > 0 && !isLoading) {
@@ -25,7 +30,7 @@ const CoachPage: React.FC = React.memo(function CoachPage() {
     }
   }, [diagnosis, experiences.length, isLoading, dispatch]);
 
-  // Check for empty state
+  // Check for empty state — all three data types must be absent
   const hasCapabilities = useSelector(
     (state: RootState) => state.capabilities.capabilities.length > 0,
   );
@@ -33,7 +38,8 @@ const CoachPage: React.FC = React.memo(function CoachPage() {
     state.projects.projects.some((p) => p.retrospective),
   );
 
-  const isEmpty = experiences.length === 0 && !hasCapabilities && !hasRetrospectives;
+  const isEmpty =
+    experiences.length === 0 && !hasCapabilities && !hasRetrospectives;
 
   if (isLoading) {
     return (
