@@ -198,6 +198,22 @@ const DashboardPage: React.FC = () => {
         </div>
       </section>
 
+      {/* ── Reports ── */}
+      <section className="rounded-2xl border border-gray-200 bg-white p-4">
+        <Link
+          to="/reports"
+          className="flex items-center justify-between hover:opacity-80 transition-opacity"
+        >
+          <div>
+            <h2 className="text-lg font-semibold">{t('reports.title', '成长报告')}</h2>
+            <p className="text-sm text-gray-400 mt-1">
+              {t('reports.overview', '查看你的成长数据分析和趋势报告')}
+            </p>
+          </div>
+          <span className="text-blue-500 text-lg">→</span>
+        </Link>
+      </section>
+
       {/* ── Quick Record ── */}
       <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
         <h2 className="text-lg font-semibold">{t('dashboard.quickRecordTitle', '快速记录')}</h2>
