@@ -163,7 +163,7 @@ function Navbar() {
             {t('common.analytics')}
           </Link>
           <div className="nav-mobile-theme-toggle">
-            <span>主题</span>
+            <span>{t('common.theme')}</span>
             <button
               onClick={handleToggleTheme}
               className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
@@ -180,7 +180,7 @@ function Navbar() {
                 }}
                 className="nav-logout"
               >
-                登出
+                {t('common.logout')}
               </button>
             </div>
           )}
@@ -211,9 +211,9 @@ function BottomNav() {
 
   const navItems = [
     { path: '/', label: t('common.dashboard'), icon: '🏠' },
-    { path: '/experiences', label: '经历', icon: '📝' },
-    { path: '/capabilities', label: '能力', icon: '🌳' },
-    { path: '/projects', label: '项目', icon: '📁' },
+    { path: '/experiences', label: t('experiences.title', '经历'), icon: '📝' },
+    { path: '/capabilities', label: t('capabilities.title', '能力'), icon: '🌳' },
+    { path: '/projects', label: t('projects.title', '项目'), icon: '📁' },
     { path: '/analytics', label: t('common.analytics'), icon: '📈' },
   ];
 

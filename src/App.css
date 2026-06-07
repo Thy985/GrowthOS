@@ -831,13 +831,14 @@ body {
     height: 400px !important;
   }
 
-  /* 响应式网格 */
-  .grid {
+  /* 响应式网格 — 仅对 page content 网格生效 */
+  .card-grid {
     grid-template-columns: 1fr !important;
   }
 
   /* 响应式按钮组 */
-  .flex.space-x-4 {
+  .card .flex.space-x-4,
+  .goal-actions.flex.space-x-4 {
     flex-direction: column;
     gap: var(--spacing-sm);
   }
@@ -845,11 +846,6 @@ body {
   /* 响应式表单 */
   .form-input {
     width: 100%;
-  }
-
-  /* 响应式统计卡片 */
-  .grid-cols-1.md\:grid-cols-3 {
-    grid-template-columns: 1fr !important;
   }
 
   /* 响应式分析图表布局 */
@@ -879,43 +875,6 @@ body {
   .main {
     padding: var(--spacing-sm);
     padding-bottom: calc(var(--spacing-sm) + 56px + env(safe-area-inset-bottom, 0));
-  }
-
-  .page-title {
-    font-size: 1.75rem;
-  }
-
-  .card {
-    padding: var(--spacing-md);
-  }
-
-  .nav-logo {
-    font-size: 1.5rem;
-  }
-
-  .nav-logo::before {
-    font-size: 1.25rem;
-  }
-
-  /* 响应式统计卡片 */
-  .text-2xl {
-    font-size: 1.5rem;
-  }
-
-  /* 响应式表单 */
-  .form-group {
-    margin-bottom: var(--spacing-sm);
-  }
-
-  /* 响应式按钮 */
-  .btn {
-    font-size: 0.875rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .main {
-    padding: var(--spacing-sm);
   }
 
   .page-title {
