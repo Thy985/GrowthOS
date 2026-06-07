@@ -27,7 +27,6 @@ if (!Element.prototype.getBoundingClientRect) {
     } as DOMRect;
   };
 }
-
 // Flatten nested i18n keys: "experiences.managementTitle" → value
 function flattenTranslations(obj: Record<string, unknown>, prefix = ''): Record<string, string> {
   const result: Record<string, string> = {};

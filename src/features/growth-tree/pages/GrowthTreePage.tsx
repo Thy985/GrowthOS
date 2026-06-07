@@ -22,16 +22,23 @@ import ErrorBoundary from '../../../shared/components/ErrorBoundary';
 import type { RootState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 
+// 定义 NodeData 类型
 interface NodeData {
   label: string;
   description?: string;
   [key: string]: unknown;
 }
 
+/**
+ * GrowthTreePage - 从 Redux tags 数据派生 ReactFlow 节点/边
+ * 数据流: Redux tags -> useMemo 生成 nodes/edges (纯函数)
+ * 用户操作(添加/编辑/删除节点)仅修改本地 UI 状态，不影响 Redux 数据源
+ */
 const GrowthTree = () => {
   const { t } = useTranslation();
   const { tags } = useSelector((state: RootState) => state.records);
 
+  // 从 Redux 的 tags 生成树节点和边（纯函数派生，不依赖 localStorage）
   const generatedData = useMemo(() => {
     const nodes = tags.map((tag: string, index: number) => ({
       id: `node-${tag}`,
@@ -66,15 +73,18 @@ const GrowthTree = () => {
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [nodeFormData, setNodeFormData] = useState({ label: '', description: '' });
 
+  // 当 Redux tags 变化时，同步更新节点/边
   React.useEffect(() => {
     setNodes(generatedData.nodes as any);
     setEdges(generatedData.edges);
   }, [generatedData, setNodes, setEdges]);
 
+  // 处理节点点击
   const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node<NodeData>) => {
     setSelectedNode(node);
   }, []);
 
+  // 处理边的添加
   const handleConnect = useCallback(
     (params: Connection) => {
       setEdges((eds) => addEdge(params, eds));
@@ -150,6 +160,7 @@ const GrowthTree = () => {
     }
   };
 
+  // 记录数量统计
   const { records } = useSelector((state: RootState) => state.records);
   const relatedRecords = useMemo(() => {
     if (!selectedNode) return [];

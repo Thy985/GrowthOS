@@ -42,7 +42,7 @@ module.exports = {
       },
     },
     {
-      // 测试文件中 mock 和 vitest 全局变量
+      // 测试文件中 mock 和类型断言使用 any 是合理的;同时支持 __tests__ 目录和 features 下嵌套 __tests__
       files: ['src/__tests__/**/*.{ts,tsx}', 'src/features/**/__tests__/**/*.{ts,tsx}'],
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',

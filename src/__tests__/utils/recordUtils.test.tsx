@@ -60,6 +60,7 @@ describe('recordUtils', () => {
       expect(getMoodColor('不太好')).toContain('red');
     });
     it('returns gray classes for unknown', () => {
+      // @ts-expect-error - testing default
       expect(getMoodColor('unknown')).toContain('gray');
     });
   });

@@ -848,6 +848,11 @@ body {
     width: 100%;
   }
 
+  /* 响应式统计卡片 */
+  .grid-cols-1.md\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+
   /* 响应式分析图表布局 */
   .grid-cols-1.lg\:col-span-2 {
     grid-column: span 1 !important;
