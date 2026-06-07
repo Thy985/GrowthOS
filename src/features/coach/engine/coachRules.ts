@@ -438,6 +438,7 @@ export function generateRecommendations(
   now?: Date,
 ): Recommendation[] {
   const currentDate = now || new Date();
+  const currentISO = currentDate.toISOString();
   const recommendations: Recommendation[] = [];
 
   // HIGH: Stale capability > 60 days
@@ -446,11 +447,17 @@ export function generateRecommendations(
     const capability = capabilities.find((c) => insight.title.includes(c.name));
     if (capability) {
       recommendations.push({
+        id: `rec-stale-${capability.id}`,
+        actionId: 'record_experience',
+        actionParams: { capabilityId: capability.id },
         icon: '📝',
         title: `记录「${capability.name}」相关经历`,
         action: '该能力已超过 60 天未更新，建议补充新的实践经历',
         priority: 'high',
         relatedCapability: capability.id,
+        sourceRule: 'stale',
+        status: 'pending',
+        statusUpdatedAt: currentISO,
         linkTo: { route: '/experiences/new', label: '去记录' },
       });
     }
@@ -470,11 +477,17 @@ export function generateRecommendations(
       (currentDate.getTime() - new Date(project.startDate!).getTime()) / (1000 * 60 * 60 * 24),
     );
     recommendations.push({
+      id: `rec-project-retro-${project.id}`,
+      actionId: 'review_project',
+      actionParams: { projectId: project.id },
       icon: '🔄',
       title: `复盘「${project.name}」项目`,
       action: `已活跃 ${daysSince} 天，建议进行一次回顾总结`,
       priority: 'high',
       relatedProjectId: project.id,
+      sourceRule: 'project',
+      status: 'pending',
+      statusUpdatedAt: currentISO,
       linkTo: { route: '/projects', label: '去复盘' },
     });
   }
@@ -485,11 +498,17 @@ export function generateRecommendations(
     const capability = capabilities.find((c) => insight.title.includes(c.name));
     if (capability) {
       recommendations.push({
+        id: `rec-retro-${capability.id}`,
+        actionId: 'manage_capability',
+        actionParams: { capabilityId: capability.id },
         icon: '🎯',
         title: `重点突破「${capability.name}」`,
         action: '该能力在多次复盘中出现改进项，建议专项训练',
         priority: 'high',
         relatedCapability: capability.id,
+        sourceRule: 'retrospective',
+        status: 'pending',
+        statusUpdatedAt: currentISO,
         linkTo: { route: '/capabilities', label: '去管理' },
       });
     }
@@ -513,11 +532,17 @@ export function generateRecommendations(
     const capability = capabilities.find((c) => bestGrowth.title.includes(c.name));
     if (capability) {
       recommendations.push({
+        id: `rec-growth-${capability.id}`,
+        actionId: 'record_experience',
+        actionParams: { capabilityId: capability.id },
         icon: '🚀',
         title: `继续保持「${capability.name}」的增长势头`,
         action: '该能力本月增长显著，继续投入时间实践',
         priority: 'medium',
         relatedCapability: capability.id,
+        sourceRule: 'growth',
+        status: 'pending',
+        statusUpdatedAt: currentISO,
         linkTo: { route: '/experiences/new', label: '去记录' },
       });
     }
@@ -529,11 +554,17 @@ export function generateRecommendations(
     const gapCap = capabilities.find((c) => gapInsights[0].title.includes(c.name));
     if (gapCap) {
       recommendations.push({
+        id: `rec-gap-${gapCap.id}`,
+        actionId: 'record_experience',
+        actionParams: { capabilityId: gapCap.id },
         icon: '🏗️',
         title: `为「${gapCap.name}」补充实践经历`,
         action: '该能力还没有任何实践经验，从第一小步开始',
         priority: 'medium',
         relatedCapability: gapCap.id,
+        sourceRule: 'gap',
+        status: 'pending',
+        statusUpdatedAt: currentISO,
         linkTo: { route: '/experiences/new', label: '去记录' },
       });
     }
@@ -546,11 +577,17 @@ export function generateRecommendations(
   });
   for (const project of projectsWithNoExperiences.slice(0, 1)) {
     recommendations.push({
+      id: `rec-project-new-${project.id}`,
+      actionId: 'record_experience',
+      actionParams: { projectId: project.id },
       icon: '🏁',
       title: `开始记录「${project.name}」的相关经历`,
       action: '该项目还没有相关经历记录，从第一次实践开始吧',
       priority: 'medium',
       relatedProjectId: project.id,
+      sourceRule: 'project',
+      status: 'pending',
+      statusUpdatedAt: currentISO,
       linkTo: { route: '/experiences/new', label: '去记录' },
     });
   }
@@ -560,10 +597,15 @@ export function generateRecommendations(
   if (unusedPrinciples.length > 0) {
     const principle = unusedPrinciples[0];
     recommendations.push({
+      id: `rec-principle-${principle.id}`,
+      actionId: 'apply_principle',
       icon: '💡',
       title: `尝试运用「${principle.content}」`,
       action: '这条原则还没有被实践过，试试在工作中应用它',
       priority: 'low',
+      sourceRule: 'pattern',
+      status: 'pending',
+      statusUpdatedAt: currentISO,
       linkTo: { route: '/principles', label: '去实践' },
     });
   }
@@ -571,26 +613,70 @@ export function generateRecommendations(
   // LOW: Default
   if (recommendations.length === 0) {
     recommendations.push({
+      id: 'rec-default',
+      actionId: 'record_experience',
       icon: '✏️',
       title: '记录新经历，开始你的成长之旅',
       action: '每一次经历都是成长的机会',
       priority: 'low',
+      sourceRule: 'fallback',
+      status: 'pending',
+      statusUpdatedAt: currentISO,
       linkTo: { route: '/experiences/new', label: '去记录' },
     });
   }
 
-  return recommendations;
+  return deduplicateRecommendations(recommendations);
+}
+
+// ─── Deduplicate recommendations ─────────────────────────────────
+
+export function deduplicateRecommendations(
+  recommendations: Recommendation[],
+): Recommendation[] {
+  const dedupMap = new Map<string, Recommendation>();
+
+  for (const rec of recommendations) {
+    const key = `${rec.actionId}:${JSON.stringify(rec.actionParams ?? {})}`;
+    const existing = dedupMap.get(key);
+
+    if (!existing) {
+      dedupMap.set(key, rec);
+    } else {
+      // Keep higher priority; merge evidence
+      if (PRIORITY_ORDER[rec.priority] < PRIORITY_ORDER[existing.priority]) {
+        // Current rec has higher priority → use it as primary, push existing to evidence
+        rec.evidence = [
+          ...(existing.evidence ?? []),
+          `${existing.title}（${existing.sourceRule}）`,
+        ];
+        dedupMap.set(key, rec);
+      } else {
+        // Existing has higher or equal priority → push current to evidence
+        existing.evidence = [
+          ...(existing.evidence ?? []),
+          `${rec.title}（${rec.sourceRule}）`,
+        ];
+      }
+    }
+  }
+
+  return Array.from(dedupMap.values());
 }
 
 // ─── Summary generation (enhanced V2) ────────────────────────────
 
-export function generateSummary(insights: Insight[]): CoachSummary {
+export function generateSummary(
+  insights: Insight[],
+  completionRate?: { completedThisWeek: number; totalThisWeek: number },
+): CoachSummary {
   if (insights.length === 0) {
     return {
       headline: '记录第一条经历，开始你的成长之旅',
       highlights: [],
       concerns: [],
       nextAction: '创建第一条经历',
+      ...(completionRate ? { completionRate } : {}),
     };
   }
 
@@ -653,5 +739,5 @@ export function generateSummary(insights: Insight[]): CoachSummary {
     nextAction = '记录新经历，持续成长';
   }
 
-  return { headline, highlights, concerns, nextAction };
+  return { headline, highlights, concerns, nextAction, ...(completionRate ? { completionRate } : {}) };
 }

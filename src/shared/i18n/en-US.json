@@ -151,7 +151,40 @@
       "growth": "Your {{name}} grew by {{change}} points this month, keep the momentum going",
       "pattern": "Your experiences this month mainly revolved around {{name}}",
       "default": "Record your first experience and start your growth journey"
-    }
+    },
+    "actions": {
+      "review_project": "Retrospect",
+      "record_experience": "Record",
+      "manage_capability": "Manage",
+      "review_experiences": "Review",
+      "apply_principle": "Apply",
+      "complete_project": "Complete Project",
+      "pause_project": "Pause Project",
+      "create_goal": "Create Goal"
+    },
+    "status": {
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "dismissed": "Dismissed"
+    },
+    "emptyState": {
+      "title": "Start Your Growth Coach",
+      "step": "Step {{current}}/{{total}}",
+      "step1": "Create your first capability",
+      "step2": "Record your first experience",
+      "step3": "Complete your first retrospective",
+      "done": "All done! Coach will generate your diagnosis"
+    },
+    "metrics": {
+      "weeklyExecution": "This Week's Execution"
+    },
+    "evidence": "Evidence",
+    "dismiss": "Dismiss",
+    "retry": "Re-analyze",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All",
+    "completedGrowth": "Completed Growth"
   },
   "growthCurve": {
     "title": "Growth Trajectory",

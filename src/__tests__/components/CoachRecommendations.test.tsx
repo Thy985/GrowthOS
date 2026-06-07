@@ -53,19 +53,28 @@ describe('CoachRecommendations', () => {
     const store = makeStore({
       coach: {
         diagnosis: {
-          summary: 'Test',
+          summary: { headline: 'Test', highlights: [], concerns: [], nextAction: '' },
           insights: [],
           recommendations: [
             {
+              id: 'rec-1',
+              actionId: 'record_experience',
               icon: '📝',
               title: '记录相关经历',
               action: '该能力已 62 天未更新',
               priority: 'high',
+              sourceRule: 'stale',
+              status: 'pending',
+              statusUpdatedAt: recentTs,
+              linkTo: { route: '/experiences/new', label: '去记录' },
             },
           ],
           generatedAt: recentTs,
         },
-        lastGeneratedAt: recentTs,
+        history: [],
+        lastAnalyzedAt: recentTs,
+        isAnalyzing: false,
+        recommendationStatuses: {},
       },
       experiences: {
         experiences: [
@@ -94,15 +103,40 @@ describe('CoachRecommendations', () => {
     const store = makeStore({
       coach: {
         diagnosis: {
-          summary: 'Test',
+          summary: { headline: 'Test', highlights: [], concerns: [], nextAction: '' },
           insights: [],
           recommendations: [
-            { icon: '📝', title: 'High priority item', action: 'High action', priority: 'high' },
-            { icon: '💎', title: 'Low priority item', action: 'Low action', priority: 'low' },
+            {
+              id: 'rec-1',
+              actionId: 'record_experience',
+              icon: '📝',
+              title: 'High priority item',
+              action: 'High action',
+              priority: 'high',
+              sourceRule: 'stale',
+              status: 'pending',
+              statusUpdatedAt: recentTs,
+              linkTo: { route: '/experiences/new', label: '去记录' },
+            },
+            {
+              id: 'rec-2',
+              actionId: 'record_experience',
+              icon: '💎',
+              title: 'Low priority item',
+              action: 'Low action',
+              priority: 'low',
+              sourceRule: 'growth',
+              status: 'pending',
+              statusUpdatedAt: recentTs,
+              linkTo: { route: '/experiences/new', label: '去记录' },
+            },
           ],
           generatedAt: recentTs,
         },
-        lastGeneratedAt: recentTs,
+        history: [],
+        lastAnalyzedAt: recentTs,
+        isAnalyzing: false,
+        recommendationStatuses: {},
       },
       experiences: {
         experiences: [

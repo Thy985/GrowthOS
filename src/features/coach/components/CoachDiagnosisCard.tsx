@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
-import type { RootState, AppDispatch } from '../../../app/store';
-import { runCoachAnalysis } from '../store/coachSlice';
-import { selectCoachDiagnosis, selectIsCoachCacheValid } from '../utils/coachSelectors';
+import type { RootState } from '../../../app/store';
+import { selectCoachDiagnosis } from '../utils/coachSelectors';
 
 const SEVERITY_COLORS: Record<string, string> = {
   important: 'border-red-200 bg-red-50 text-red-800',
@@ -20,16 +19,8 @@ const SEVERITY_ICONS: Record<string, string> = {
 
 const CoachDiagnosisCard: React.FC = React.memo(function CoachDiagnosisCard() {
   const { t } = useTranslation();
-  const dispatch = useDispatch<AppDispatch>();
   const diagnosis = useSelector(selectCoachDiagnosis);
-  const isCacheValid = useSelector(selectIsCoachCacheValid);
   const experiences = useSelector((state: RootState) => state.experiences.experiences);
-
-  useMemo(() => {
-    if (!isCacheValid && experiences.length > 0) {
-      dispatch(runCoachAnalysis());
-    }
-  }, [isCacheValid, experiences.length, dispatch]);
 
   if (!diagnosis || experiences.length === 0) {
     return (

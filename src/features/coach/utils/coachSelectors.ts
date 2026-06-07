@@ -1,17 +1,22 @@
 import type { RootState } from '../../../app/store';
 import type { CoachDiagnosis, CoachSummary, Insight, Recommendation } from '../types/coachTypes';
 
-const CACHE_TTL_MS = 30 * 60 * 1000;
-
 export const selectCoachDiagnosis = (state: RootState): CoachDiagnosis | null =>
   state.coach.diagnosis;
 
-export const selectIsCoachCacheValid = (state: RootState): boolean => {
-  const { diagnosis, lastGeneratedAt } = state.coach;
-  if (!diagnosis || !lastGeneratedAt) return false;
-  const age = Date.now() - new Date(lastGeneratedAt).getTime();
-  return age < CACHE_TTL_MS;
-};
+export const selectCoachHistory = (state: RootState): CoachDiagnosis[] =>
+  state.coach.history;
+
+export const selectCoachIsAnalyzing = (state: RootState): boolean =>
+  state.coach.isAnalyzing;
+
+export const selectCoachLastAnalyzedAt = (state: RootState): string | null =>
+  state.coach.lastAnalyzedAt;
+
+export const selectRecommendationStatuses = (
+  state: RootState,
+): Record<string, { status: string; updatedAt: string }> =>
+  state.coach.recommendationStatuses;
 
 const EMPTY_ARRAY: never[] = [];
 

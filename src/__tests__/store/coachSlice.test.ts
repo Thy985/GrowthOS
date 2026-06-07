@@ -7,6 +7,11 @@ import capabilityReducer, {
 import coachReducer, {
   setDiagnosis,
   clearDiagnosis,
+  pushHistorySnapshot,
+  setAnalyzing,
+  setLastAnalyzedAt,
+  markRecommendationInProgress,
+  dismissRecommendation,
   runCoachAnalysis,
 } from '../../features/coach/store/coachSlice';
 import type { CoachDiagnosis, CoachState } from '../../features/coach/types/coachTypes';
@@ -54,17 +59,31 @@ describe('coachSlice', () => {
     vi.useRealTimers();
   });
 
-  test('initial state is { diagnosis: null, lastGeneratedAt: null }', () => {
+  test('initial state has diagnosis, history, analyzing, recommendationStatuses', () => {
     const store = makeStore({
-      coach: { diagnosis: null, lastGeneratedAt: null },
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
     });
     expect(store.getState().coach.diagnosis).toBeNull();
-    expect(store.getState().coach.lastGeneratedAt).toBeNull();
+    expect(store.getState().coach.history).toEqual([]);
+    expect(store.getState().coach.isAnalyzing).toBe(false);
+    expect(store.getState().coach.recommendationStatuses).toEqual({});
   });
 
-  test('setDiagnosis sets diagnosis and timestamp', () => {
+  test('setDiagnosis sets diagnosis', () => {
     const store = makeStore({
-      coach: { diagnosis: null, lastGeneratedAt: null },
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
     });
 
     const diagnosis: CoachDiagnosis = {
@@ -78,10 +97,37 @@ describe('coachSlice', () => {
     const state = store.getState().coach;
 
     expect(state.diagnosis).toEqual(diagnosis);
-    expect(state.lastGeneratedAt).toBe('2026-06-06T00:00:00.000Z');
   });
 
-  test('clearDiagnosis clears both fields', () => {
+  test('pushHistorySnapshot pushes and caps at 7', () => {
+    const store = makeStore({
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
+    });
+
+    const diagnosis: CoachDiagnosis = {
+      summary: { headline: 'Test', highlights: [], concerns: [], nextAction: '' },
+      insights: [],
+      recommendations: [],
+      generatedAt: '2026-06-06T00:00:00.000Z',
+    };
+
+    // Push 10 snapshots — only 7 should remain
+    for (let i = 0; i < 10; i++) {
+      store.dispatch(
+        pushHistorySnapshot({ ...diagnosis, generatedAt: `day-${i}` }),
+      );
+    }
+    expect(store.getState().coach.history.length).toBe(7);
+    expect(store.getState().coach.history[0].generatedAt).toBe('day-9');
+  });
+
+  test('clearDiagnosis clears diagnosis field', () => {
     const diagnosis: CoachDiagnosis = {
       summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
       insights: [],
@@ -90,114 +136,100 @@ describe('coachSlice', () => {
     };
 
     const store = makeStore({
-      coach: { diagnosis, lastGeneratedAt: '2026-06-06T00:00:00.000Z' },
+      coach: {
+        diagnosis,
+        history: [],
+        lastAnalyzedAt: '2026-06-06T00:00:00.000Z',
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
     });
 
     store.dispatch(clearDiagnosis());
-    const state = store.getState().coach;
-
-    expect(state.diagnosis).toBeNull();
-    expect(state.lastGeneratedAt).toBeNull();
+    expect(store.getState().coach.diagnosis).toBeNull();
   });
 
-  test('extraReducers matcher clears cache on experiences action', () => {
-    const diagnosis: CoachDiagnosis = {
-      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
-      insights: [],
-      recommendations: [],
-      generatedAt: '2026-06-06T00:00:00.000Z',
-    };
-
+  test('setAnalyzing toggles isAnalyzing', () => {
     const store = makeStore({
-      coach: { diagnosis, lastGeneratedAt: '2026-06-06T00:00:00.000Z' },
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
     });
 
-    // Dispatch an experiences action
-    store.dispatch({ type: 'experiences/addExperience/pending' });
-    const state = store.getState().coach;
+    store.dispatch(setAnalyzing(true));
+    expect(store.getState().coach.isAnalyzing).toBe(true);
 
-    expect(state.diagnosis).toBeNull();
-    expect(state.lastGeneratedAt).toBeNull();
+    store.dispatch(setAnalyzing(false));
+    expect(store.getState().coach.isAnalyzing).toBe(false);
   });
 
-  test('extraReducers matcher clears cache on capabilities action', () => {
-    const diagnosis: CoachDiagnosis = {
-      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
-      insights: [],
-      recommendations: [],
-      generatedAt: '2026-06-06T00:00:00.000Z',
-    };
-
+  test('setLastAnalyzedAt records timestamp', () => {
     const store = makeStore({
-      coach: { diagnosis, lastGeneratedAt: '2026-06-06T00:00:00.000Z' },
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
     });
 
-    store.dispatch({ type: 'capabilities/addCapability/pending' });
-    const state = store.getState().coach;
-
-    expect(state.diagnosis).toBeNull();
-    expect(state.lastGeneratedAt).toBeNull();
+    store.dispatch(setLastAnalyzedAt('2026-06-06T00:00:00.000Z'));
+    expect(store.getState().coach.lastAnalyzedAt).toBe('2026-06-06T00:00:00.000Z');
   });
 
-  test('extraReducers matcher clears cache on principles action', () => {
-    const diagnosis: CoachDiagnosis = {
-      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
-      insights: [],
-      recommendations: [],
-      generatedAt: '2026-06-06T00:00:00.000Z',
-    };
-
+  test('markRecommendationInProgress sets status', () => {
     const store = makeStore({
-      coach: { diagnosis, lastGeneratedAt: '2026-06-06T00:00:00.000Z' },
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
     });
 
-    store.dispatch({ type: 'principles/addPrinciple/pending' });
-    const state = store.getState().coach;
-
-    expect(state.diagnosis).toBeNull();
-    expect(state.lastGeneratedAt).toBeNull();
+    store.dispatch(markRecommendationInProgress('rec-1'));
+    expect(store.getState().coach.recommendationStatuses['rec-1'].status).toBe('in_progress');
   });
 
-  test('extraReducers matcher clears cache on projects action', () => {
-    const diagnosis: CoachDiagnosis = {
-      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
-      insights: [],
-      recommendations: [],
-      generatedAt: '2026-06-06T00:00:00.000Z',
-    };
-
+  test('markRecommendationInProgress does not change completed', () => {
     const store = makeStore({
-      coach: { diagnosis, lastGeneratedAt: '2026-06-06T00:00:00.000Z' },
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {
+          'rec-1': { status: 'completed', updatedAt: '2026-06-06T00:00:00.000Z' },
+        },
+      },
     });
 
-    store.dispatch({ type: 'projects/addProject/pending' });
-    const state = store.getState().coach;
-
-    expect(state.diagnosis).toBeNull();
-    expect(state.lastGeneratedAt).toBeNull();
+    store.dispatch(markRecommendationInProgress('rec-1'));
+    expect(store.getState().coach.recommendationStatuses['rec-1'].status).toBe('completed');
   });
 
-  test('extraReducers does NOT clear cache on coach action', () => {
-    const diagnosis: CoachDiagnosis = {
-      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
-      insights: [],
-      recommendations: [],
-      generatedAt: '2026-06-06T00:00:00.000Z',
-    };
-
+  test('dismissRecommendation sets dismissed status', () => {
     const store = makeStore({
-      coach: { diagnosis, lastGeneratedAt: '2026-06-06T00:00:00.000Z' },
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
     });
 
-    store.dispatch({ type: 'coach/someAction' });
-    const state = store.getState().coach;
-
-    expect(state.diagnosis).toEqual(diagnosis);
-    expect(state.lastGeneratedAt).toBe('2026-06-06T00:00:00.000Z');
+    store.dispatch(dismissRecommendation('rec-1'));
+    expect(store.getState().coach.recommendationStatuses['rec-1'].status).toBe('dismissed');
   });
 
   test('runCoachAnalysis thunk generates and sets diagnosis', () => {
-    // Seed data that will produce insights
     const cap: Capability = {
       id: 'cap-1',
       userId: 'user-1',
@@ -215,7 +247,7 @@ describe('coachSlice', () => {
       userId: 'user-1',
       event: 'Test event',
       confidence: 0.5,
-      occurredAt: '2026-04-01T00:00:00.000Z', // stale
+      occurredAt: '2026-04-01T00:00:00.000Z',
       createdAt: '2026-04-01T00:00:00.000Z',
       updatedAt: '2026-04-01T00:00:00.000Z',
     };
@@ -227,10 +259,15 @@ describe('coachSlice', () => {
     };
 
     const store = makeStore({
-      coach: { diagnosis: null, lastGeneratedAt: null },
+      coach: {
+        diagnosis: null,
+        history: [],
+        lastAnalyzedAt: null,
+        isAnalyzing: false,
+        recommendationStatuses: {},
+      },
     });
 
-    // Seed data via synchronous actions
     store.dispatch(setExperiences([exp]));
     store.dispatch(setLinks([link]));
     store.dispatch(setCapabilities([cap]));
@@ -239,7 +276,8 @@ describe('coachSlice', () => {
     const state = store.getState().coach;
 
     expect(state.diagnosis).not.toBeNull();
-    expect(state.lastGeneratedAt).toBe('2026-06-06T00:00:00.000Z');
+    expect(state.lastAnalyzedAt).toBe('2026-06-06T00:00:00.000Z');
+    expect(state.history.length).toBeGreaterThan(0);
     expect(state.diagnosis!.insights.length).toBeGreaterThan(0);
     expect(state.diagnosis!.recommendations.length).toBeGreaterThan(0);
     expect(state.diagnosis!.summary.headline.length).toBeGreaterThan(0);

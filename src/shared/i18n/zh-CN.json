@@ -151,7 +151,40 @@
       "growth": "你的 {{name}} 本月增长 {{change}} 分，继续保持这个势头",
       "pattern": "本月你的经历主要围绕 {{name}} 展开",
       "default": "记录第一条经历，开始你的成长之旅"
-    }
+    },
+    "actions": {
+      "review_project": "去复盘",
+      "record_experience": "去记录",
+      "manage_capability": "去管理",
+      "review_experiences": "去回顾",
+      "apply_principle": "去实践",
+      "complete_project": "完成项目",
+      "pause_project": "暂停项目",
+      "create_goal": "建立目标"
+    },
+    "status": {
+      "pending": "待处理",
+      "in_progress": "进行中",
+      "completed": "已完成",
+      "dismissed": "已忽略"
+    },
+    "emptyState": {
+      "title": "开启你的成长教练",
+      "step": "步骤 {{current}}/{{total}}",
+      "step1": "创建你的第一个能力",
+      "step2": "记录第一段经历",
+      "step3": "完成第一次复盘",
+      "done": "全部完成！Coach 即将为你生成诊断"
+    },
+    "metrics": {
+      "weeklyExecution": "本周执行力"
+    },
+    "evidence": "依据",
+    "dismiss": "忽略",
+    "retry": "重新分析",
+    "expandAll": "展开全部",
+    "collapseAll": "折叠全部",
+    "completedGrowth": "已完成的成长"
   },
   "growthCurve": {
     "title": "成长轨迹",

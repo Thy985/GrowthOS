@@ -8,18 +8,16 @@ import { runCoachAnalysis } from '../store/coachSlice';
 const CoachHeader: React.FC = React.memo(function CoachHeader() {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const lastGeneratedAt = useSelector((state: RootState) => state.coach.lastGeneratedAt);
-  const isLoading = useSelector(
-    (state: RootState) => state.coach.diagnosis === null && state.coach.lastGeneratedAt === null,
-  );
+  const lastAnalyzedAt = useSelector((state: RootState) => state.coach.lastAnalyzedAt);
+  const isAnalyzing = useSelector((state: RootState) => state.coach.isAnalyzing);
 
   const handleRefresh = () => {
     dispatch(runCoachAnalysis());
   };
 
   const relativeTime = (() => {
-    if (!lastGeneratedAt) return null;
-    const diff = Date.now() - new Date(lastGeneratedAt).getTime();
+    if (!lastAnalyzedAt) return null;
+    const diff = Date.now() - new Date(lastAnalyzedAt).getTime();
     const minutes = Math.floor(diff / 60000);
     if (minutes < 1) return t('coach.justNow', '刚刚');
     if (minutes < 60) return t('coach.minutesAgo', '{{minutes}} 分钟前', { minutes });
@@ -41,10 +39,10 @@ const CoachHeader: React.FC = React.memo(function CoachHeader() {
       </div>
       <button
         onClick={handleRefresh}
-        disabled={isLoading}
+        disabled={isAnalyzing}
         className="px-4 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {isLoading ? t('coach.analyzing', '分析中...') : t('coach.refresh', '刷新分析')}
+        {isAnalyzing ? t('coach.analyzing', '分析中...') : t('coach.retry', '重新分析')}
       </button>
     </div>
   );

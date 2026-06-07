@@ -54,58 +54,40 @@ describe('CoachDiagnosisCard', () => {
       coach: {
         diagnosis: {
           summary: {
-            headline: '你的系统设计能力本月增长 13 分！',
-            highlights: [],
-            concerns: [],
-            nextAction: '',
+            headline: '测试摘要内容',
+            highlights: ['亮点一', '亮点二'],
+            concerns: ['需关注的问题'],
+            nextAction: '采取行动',
           },
-          insights: [],
-          recommendations: [],
-          generatedAt: recentTs,
-        },
-        lastGeneratedAt: recentTs,
-      },
-      experiences: {
-        experiences: [
-          {
-            id: '1',
-            userId: 'test',
-            event: 'Test event',
-            reflection: '',
-            principle: '',
-            confidence: 0.8,
-            occurredAt: '2026-06-01',
-            createdAt: '2026-06-01',
-            updatedAt: '2026-06-01',
-          },
-        ],
-        links: [],
-        isLoading: false,
-        error: null,
-      },
-    });
-    renderCard(store);
-    expect(screen.getByText(/系统设计能力/)).toBeInTheDocument();
-  });
-
-  it('shows insights with severity colors', () => {
-    const store = makeStore({
-      coach: {
-        diagnosis: {
-          summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
           insights: [
             {
               type: 'stale',
-              icon: '🔴',
-              title: '战略思维已 62 天未更新',
-              description: '',
+              icon: '⚠️',
+              title: '能力过期',
+              description: '60天未更新',
               severity: 'important',
             },
           ],
-          recommendations: [],
+          recommendations: [
+            {
+              id: 'rec-1',
+              actionId: 'record_experience',
+              icon: '📝',
+              title: '记录经历',
+              action: '去记录',
+              priority: 'high',
+              sourceRule: 'stale',
+              status: 'pending',
+              statusUpdatedAt: recentTs,
+              linkTo: { route: '/experiences/new', label: '去记录' },
+            },
+          ],
           generatedAt: recentTs,
         },
-        lastGeneratedAt: recentTs,
+        history: [],
+        lastAnalyzedAt: recentTs,
+        isAnalyzing: false,
+        recommendationStatuses: {},
       },
       experiences: {
         experiences: [
@@ -127,6 +109,8 @@ describe('CoachDiagnosisCard', () => {
       },
     });
     renderCard(store);
-    expect(screen.getByText(/战略思维/)).toBeInTheDocument();
+    expect(screen.getByText(/测试摘要内容/)).toBeInTheDocument();
+    expect(screen.getByText(/亮点一/)).toBeInTheDocument();
+    expect(screen.getByText(/采取行动/)).toBeInTheDocument();
   });
 });

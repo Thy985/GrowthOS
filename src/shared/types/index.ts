@@ -227,7 +227,10 @@ export interface ProjectsState {
 // Coach state placeholder (actual type lives in features/coach)
 export interface CoachState {
   diagnosis: unknown;
-  lastGeneratedAt: string | null;
+  history: unknown[];
+  lastAnalyzedAt: string | null;
+  isAnalyzing: boolean;
+  recommendationStatuses: unknown;
 }
 
 // 根状态类型

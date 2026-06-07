@@ -72,7 +72,23 @@ function groupInsights(insights: Insight[]): InsightGroup[] {
 const InsightPanel: React.FC = React.memo(function InsightPanel() {
   const { t } = useTranslation();
   const insights = useSelector(selectCoachInsights);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
+    // Default: only first group with important insights is expanded
+    const groups = groupInsights(insights);
+    const collapsed = new Set<string>();
+    let foundImportant = false;
+    for (const group of groups) {
+      const hasImportant = group.insights.some(
+        (i) => i.severity === 'important',
+      );
+      if (!foundImportant && hasImportant) {
+        foundImportant = true;
+        continue;
+      }
+      collapsed.add(group.type);
+    }
+    return collapsed;
+  });
 
   const toggleGroup = (type: string) => {
     setCollapsedGroups((prev) => {
@@ -96,10 +112,28 @@ const InsightPanel: React.FC = React.memo(function InsightPanel() {
   }
 
   const groups = groupInsights(insights);
+  const allCollapsed = collapsedGroups.size === groups.length;
+  const allExpanded = collapsedGroups.size === 0;
+
+  const expandAll = () => setCollapsedGroups(new Set());
+  const collapseAll = () => setCollapsedGroups(new Set(groups.map((g) => g.type)));
 
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-      <h2 className="text-lg font-semibold">{t('coach.insightsTitle', '洞察分析')}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">
+          {t('coach.insightsTitle', '洞察分析')}
+          <span className="ml-1.5 text-xs text-gray-400">({insights.length})</span>
+        </h2>
+        <button
+          onClick={allCollapsed ? expandAll : collapseAll}
+          className="text-xs text-blue-500 hover:text-blue-600"
+        >
+          {allCollapsed
+            ? t('coach.expandAll', '展开全部')
+            : t('coach.collapseAll', '折叠全部')}
+        </button>
+      </div>
 
       {groups.map((group) => {
         const isCollapsed = collapsedGroups.has(group.type);

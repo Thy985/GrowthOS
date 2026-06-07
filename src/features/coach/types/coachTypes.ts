@@ -16,13 +16,27 @@ export interface Insight {
   severity: 'info' | 'notice' | 'important';
 }
 
+export type RecommendationStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'completed'
+  | 'dismissed';
+
 export interface Recommendation {
-  icon: string;
+  id: string;            // stable ID for lifecycle tracking
+  actionId: string;      // key in coachActionRegistry
+  actionParams?: Record<string, string>;
   title: string;
   action: string;
+  icon: string;
   priority: 'high' | 'medium' | 'low';
   relatedCapability?: string;
   relatedProjectId?: string;
+  evidence?: string[];
+  status: RecommendationStatus;
+  statusUpdatedAt: string;
+  sourceRule: string;
+  // backward compat for existing RecommendationPanel/Dashboard
   linkTo?: {
     route: string;
     label: string;
@@ -34,6 +48,10 @@ export interface CoachSummary {
   highlights: string[];
   concerns: string[];
   nextAction: string;
+  completionRate?: {
+    completedThisWeek: number;
+    totalThisWeek: number;
+  };
 }
 
 export interface CoachDiagnosis {
@@ -45,7 +63,13 @@ export interface CoachDiagnosis {
 
 export interface CoachState {
   diagnosis: CoachDiagnosis | null;
-  lastGeneratedAt: string | null;
+  history: CoachDiagnosis[];
+  lastAnalyzedAt: string | null;
+  isAnalyzing: boolean;
+  recommendationStatuses: Record<string, {
+    status: RecommendationStatus;
+    updatedAt: string;
+  }>;
 }
 
 export interface InsightGroup {

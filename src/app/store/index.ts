@@ -1,19 +1,53 @@
-import { configureStore } from '@reduxjs/toolkit';
+import {
+  configureStore,
+  createListenerMiddleware,
+  isAnyOf,
+} from '@reduxjs/toolkit';
 
 import authReducer from '../../features/auth/store/authSlice';
 import capabilityReducer from '../../features/capabilities/store/capabilitySlice';
-import coachReducer from '../../features/coach/store/coachSlice';
-import experienceReducer from '../../features/experiences/store/experienceSlice';
+import coachReducer, { runDiagnosis } from '../../features/coach/store/coachSlice';
+import experienceReducer, {
+  addExperience,
+  updateExperience,
+  deleteExperience,
+} from '../../features/experiences/store/experienceSlice';
 import goalReducer from '../../features/goals/store/goalSlice';
 import treeReducer from '../../features/growth-tree/store/treeSlice';
 import principleReducer from '../../features/principles/store/principleSlice';
-import projectReducer from '../../features/projects/store/projectSlice';
+import projectReducer, {
+  addProject,
+  updateProject,
+  deleteProject,
+} from '../../features/projects/store/projectSlice';
 import recordsReducer from '../../features/records/store/recordsSlice';
 import reminderReducer from '../../features/reminders/store/reminderSlice';
 import themeReducer from '../../features/theme/store/themeSlice';
 import growthReducer from '../../store/slices/growthSlice';
+import {
+  addCapability,
+  updateCapability,
+  deleteCapability,
+} from '../../features/capabilities/store/capabilitySlice';
 
-// 经验管理系统新 slices
+export const listenerMiddleware = createListenerMiddleware();
+
+listenerMiddleware.startListening({
+  matcher: isAnyOf(
+    addExperience.fulfilled,
+    updateExperience.fulfilled,
+    deleteExperience.fulfilled,
+    addCapability.fulfilled,
+    updateCapability.fulfilled,
+    deleteCapability.fulfilled,
+    addProject.fulfilled,
+    updateProject.fulfilled,
+    deleteProject.fulfilled,
+  ),
+  effect: (_, api) => {
+    api.dispatch(runDiagnosis());
+  },
+});
 
 export const store = configureStore({
   reducer: {
@@ -32,6 +66,8 @@ export const store = configureStore({
     // 成长教练
     coach: coachReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().prepend(listenerMiddleware.middleware),
 });
 
 // 导出类型
