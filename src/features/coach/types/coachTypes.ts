@@ -1,5 +1,15 @@
+export type InsightType =
+  | 'stale'
+  | 'growth'
+  | 'pattern'
+  | 'warning'
+  | 'retrospective'
+  | 'trend'
+  | 'gap'
+  | 'project';
+
 export interface Insight {
-  type: 'stale' | 'growth' | 'pattern' | 'warning';
+  type: InsightType;
   icon: string;
   title: string;
   description: string;
@@ -12,10 +22,22 @@ export interface Recommendation {
   action: string;
   priority: 'high' | 'medium' | 'low';
   relatedCapability?: string;
+  relatedProjectId?: string;
+  linkTo?: {
+    route: string;
+    label: string;
+  };
+}
+
+export interface CoachSummary {
+  headline: string;
+  highlights: string[];
+  concerns: string[];
+  nextAction: string;
 }
 
 export interface CoachDiagnosis {
-  summary: string;
+  summary: CoachSummary;
   insights: Insight[];
   recommendations: Recommendation[];
   generatedAt: string;
@@ -24,4 +46,11 @@ export interface CoachDiagnosis {
 export interface CoachState {
   diagnosis: CoachDiagnosis | null;
   lastGeneratedAt: string | null;
+}
+
+export interface InsightGroup {
+  type: InsightType;
+  label: string;
+  icon: string;
+  insights: Insight[];
 }

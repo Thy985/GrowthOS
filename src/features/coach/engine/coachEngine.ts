@@ -11,6 +11,10 @@ import {
   detectStaleCapabilities,
   detectGrowthCapabilities,
   detectPatterns,
+  detectRetrospectiveInsights,
+  detectCapabilityTrends,
+  detectExperienceGaps,
+  detectProjectHealth,
   generateRecommendations,
   generateSummary,
   SEVERITY_ORDER,
@@ -36,11 +40,21 @@ export function analyze(
     links,
     now,
   );
+  const retroInsights = detectRetrospectiveInsights(projects, capabilities);
+  const trendInsights = detectCapabilityTrends(capabilities, projects);
+  const gapInsights = detectExperienceGaps(capabilities, links);
+  const healthInsights = detectProjectHealth(projects, experiences, now);
 
   // 2. Combine and sort insights by severity
-  const allInsights = [...staleInsights, ...growthInsights, ...patternInsights].sort(
-    (a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity],
-  );
+  const allInsights = [
+    ...staleInsights,
+    ...growthInsights,
+    ...patternInsights,
+    ...retroInsights,
+    ...trendInsights,
+    ...gapInsights,
+    ...healthInsights,
+  ].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
 
   // 3. Generate recommendations from insights
   const recommendations = generateRecommendations(

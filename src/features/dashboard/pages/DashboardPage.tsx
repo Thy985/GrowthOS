@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import {
   RadarChart,
   Radar,
@@ -164,6 +165,14 @@ const DashboardPage: React.FC = () => {
 
       {/* ── Coach Diagnosis ── */}
       <CoachDiagnosisCard />
+      <div className="text-right">
+        <Link
+          to="/coach"
+          className="text-sm text-blue-500 hover:text-blue-700 font-medium transition-colors"
+        >
+          {t('coach.viewFullReport', '查看完整报告 →')}
+        </Link>
+      </div>
 
       {/* ── Radar Chart ── */}
       <RadarChartSection capabilities={capabilities} />

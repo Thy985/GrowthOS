@@ -47,7 +47,26 @@ const CoachDiagnosisCard: React.FC = React.memo(function CoachDiagnosisCard() {
       <h2 className="text-lg font-semibold">🧠 {t('coach.title', '成长诊断')}</h2>
 
       {/* Summary */}
-      <p className="text-base font-medium text-gray-900 leading-relaxed">{diagnosis.summary}</p>
+      <div className="space-y-2">
+        <p className="text-base font-medium text-gray-900 leading-relaxed">
+          {diagnosis.summary.headline}
+        </p>
+        {diagnosis.summary.highlights.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {diagnosis.summary.highlights.map((h, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700"
+              >
+                {h}
+              </span>
+            ))}
+          </div>
+        )}
+        {diagnosis.summary.nextAction && (
+          <p className="text-sm text-blue-600">{diagnosis.summary.nextAction}</p>
+        )}
+      </div>
 
       {/* Insights list */}
       {diagnosis.insights.length > 0 && (

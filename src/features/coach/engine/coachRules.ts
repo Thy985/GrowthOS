@@ -6,7 +6,7 @@ import type {
   ExperienceCapabilityLink,
 } from '../../../shared/types';
 import { calculateCapabilityLevel } from '../../capabilities/store/capabilitySlice';
-import type { Insight, Recommendation } from '../types/coachTypes';
+import type { Insight, Recommendation, CoachSummary } from '../types/coachTypes';
 
 // Constants
 const STALE_DAYS_INFO = 14;
@@ -16,6 +16,7 @@ const GROWTH_INFO = 5;
 const GROWTH_NOTICE = 15;
 const CONCENTRATION_THRESHOLD = 0.8;
 const MANY_PROJECTS_THRESHOLD = 3;
+const PROJECT_RETRO_DAYS = 30;
 
 export const SEVERITY_ORDER: Record<string, number> = {
   important: 0,
@@ -29,7 +30,8 @@ export const PRIORITY_ORDER: Record<string, number> = {
   low: 2,
 };
 
-// Rule 1: Detect stale capabilities
+// ─── Rule 1: Detect stale capabilities ──────────────────────────
+
 export function detectStaleCapabilities(
   capabilities: Capability[],
   experiences: Experience[],
@@ -39,18 +41,15 @@ export function detectStaleCapabilities(
   const currentDate = now || new Date();
   const insights: Insight[] = [];
 
-  // Build a map for O(1) experience lookup
   const expMap = new Map<string, Experience>();
   for (const exp of experiences) {
     expMap.set(exp.id, exp);
   }
 
   for (const capability of capabilities) {
-    // Find all links for this capability
     const capLinks = links.filter((link) => link.capabilityId === capability.id);
     if (capLinks.length === 0) continue;
 
-    // Find the most recent experience date
     let mostRecentDate: Date | null = null;
     for (const link of capLinks) {
       const exp = expMap.get(link.experienceId);
@@ -97,7 +96,8 @@ export function detectStaleCapabilities(
   return insights.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
 }
 
-// Rule 2: Detect growth capabilities
+// ─── Rule 2: Detect growth capabilities ──────────────────────────
+
 export function detectGrowthCapabilities(
   capabilities: Capability[],
   experiences: Experience[],
@@ -108,10 +108,8 @@ export function detectGrowthCapabilities(
   const insights: Insight[] = [];
 
   for (const capability of capabilities) {
-    // Current level
     const currentLevel = calculateCapabilityLevel(capability.id, experiences, links);
 
-    // Level 30 days ago (only use experiences older than 30 days)
     const thirtyDaysAgo = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
     const oldExperiences = experiences.filter((exp) => new Date(exp.occurredAt) <= thirtyDaysAgo);
     const oldLevel = calculateCapabilityLevel(capability.id, oldExperiences, links);
@@ -140,7 +138,8 @@ export function detectGrowthCapabilities(
   return insights.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
 }
 
-// Rule 3: Detect patterns
+// ─── Rule 3: Detect patterns ─────────────────────────────────────
+
 export function detectPatterns(
   experiences: Experience[],
   capabilities: Capability[],
@@ -152,12 +151,10 @@ export function detectPatterns(
   const currentDate = now || new Date();
   const insights: Insight[] = [];
 
-  // Check if 80%+ of last 30 days experiences are for one capability
   const thirtyDaysAgo = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
   const recentExperiences = experiences.filter((exp) => new Date(exp.occurredAt) >= thirtyDaysAgo);
 
   if (recentExperiences.length > 0) {
-    // Count experiences per capability
     const expMap = new Map<string, Experience>();
     for (const exp of recentExperiences) {
       expMap.set(exp.id, exp);
@@ -188,7 +185,6 @@ export function detectPatterns(
     }
   }
 
-  // Check if active projects > threshold
   const activeProjects = projects.filter((p) => p.status === 'active');
   if (activeProjects.length > MANY_PROJECTS_THRESHOLD) {
     insights.push({
@@ -200,7 +196,6 @@ export function detectPatterns(
     });
   }
 
-  // Check if principles have usageCount = 0
   const unusedPrinciples = principles.filter((p) => p.usageCount === 0);
   if (unusedPrinciples.length > 0) {
     insights.push({
@@ -215,20 +210,237 @@ export function detectPatterns(
   return insights.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
 }
 
-// Rule 4: Generate recommendations
+// ─── Rule 4: Detect retrospective insights (V2) ──────────────────
+
+export function detectRetrospectiveInsights(
+  projects: Project[],
+  capabilities: Capability[],
+): Insight[] {
+  const insights: Insight[] = [];
+  const projectsWithRetro = projects.filter(
+    (p) =>
+      p.retrospective &&
+      (p.retrospective.whatWentWell.length > 0 || p.retrospective.whatWentWrong.length > 0),
+  );
+
+  if (projectsWithRetro.length === 0) return insights;
+
+  const capMap = new Map(capabilities.map((c) => [c.id, c]));
+
+  // 统计每个能力在 whatWentWell 中出现的频率
+  const wellMentions = new Map<string, number>();
+  const wrongMentions = new Map<string, number>();
+
+  for (const project of projectsWithRetro) {
+    const retro = project.retrospective!;
+    const capsUsed = project.capabilitiesUsed || [];
+
+    for (const capId of capsUsed) {
+      // 正面提及：只要该能力在使用的项目中且有正面回顾
+      if (retro.whatWentWell.length > 0) {
+        wellMentions.set(capId, (wellMentions.get(capId) || 0) + 1);
+      }
+      if (retro.whatWentWrong.length > 0) {
+        wrongMentions.set(capId, (wrongMentions.get(capId) || 0) + 1);
+      }
+    }
+  }
+
+  // 正面信号
+  for (const [capId, count] of wellMentions.entries()) {
+    if (count >= 2) {
+      const cap = capMap.get(capId);
+      if (cap) {
+        insights.push({
+          type: 'retrospective',
+          icon: '🌟',
+          title: `你的「${cap.name}」能力在 ${count} 个项目中表现良好`,
+          description: '多次复盘中都获得正面反馈',
+          severity: 'info',
+        });
+      }
+    }
+  }
+
+  // 需关注信号
+  for (const [capId, count] of wrongMentions.entries()) {
+    if (count >= 2) {
+      const cap = capMap.get(capId);
+      if (cap) {
+        insights.push({
+          type: 'retrospective',
+          icon: '🔍',
+          title: `「${cap.name}」在 ${count} 次复盘改进项中重复出现`,
+          description: '建议对该能力进行重点突破',
+          severity: 'notice',
+        });
+      }
+    }
+  }
+
+  return insights.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+}
+
+// ─── Rule 5: Detect capability trends (V2) ───────────────────────
+
+export function detectCapabilityTrends(capabilities: Capability[], projects: Project[]): Insight[] {
+  const insights: Insight[] = [];
+  const projectsWithRetro = projects.filter(
+    (p) => p.retrospective && p.retrospective.whatWentWell.length > 0,
+  );
+
+  if (projectsWithRetro.length < 2) return insights;
+
+  for (const cap of capabilities) {
+    // 统计该能力涉及的项目复盘数
+    const projectCount = projectsWithRetro.filter(
+      (p) => p.capabilitiesUsed && p.capabilitiesUsed.includes(cap.id),
+    ).length;
+
+    if (projectCount >= 2) {
+      // 检查能力等级是否在增长
+      const growthRate = cap.growthRate || 0;
+      if (growthRate > 0 && cap.currentLevel < cap.targetLevel) {
+        insights.push({
+          type: 'trend',
+          icon: '📈',
+          title: `「${cap.name}」能力持续增长中`,
+          description: `已参与 ${projectCount} 次复盘，当前等级 ${cap.currentLevel}/${cap.targetLevel}`,
+          severity: 'info',
+        });
+      } else if (growthRate === 0 && projectCount >= 3) {
+        insights.push({
+          type: 'trend',
+          icon: '➡️',
+          title: `「${cap.name}」已参与 ${projectCount} 次复盘但等级未变化`,
+          description: '可能进入平台期，建议尝试新的训练方式',
+          severity: 'notice',
+        });
+      }
+    }
+
+    // 退化检测
+    if (cap.growthRate && cap.growthRate < 0) {
+      insights.push({
+        type: 'trend',
+        icon: '📉',
+        title: `「${cap.name}」能力等级出现下降`,
+        description: '建议增加相关实践以恢复增长',
+        severity: 'important',
+      });
+    }
+  }
+
+  return insights.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+}
+
+// ─── Rule 6: Detect experience gaps (V2) ─────────────────────────
+
+export function detectExperienceGaps(
+  capabilities: Capability[],
+  links: ExperienceCapabilityLink[],
+): Insight[] {
+  const insights: Insight[] = [];
+
+  const linkedCapIds = new Set(links.map((l) => l.capabilityId));
+  const gapped = capabilities.filter((c) => !linkedCapIds.has(c.id));
+
+  if (gapped.length === 0) return insights;
+
+  if (gapped.length === 1) {
+    insights.push({
+      type: 'gap',
+      icon: '📭',
+      title: `你的「${gapped[0].name}」能力从未关联任何经历`,
+      description: '创建能力后建议补充实践经验',
+      severity: 'info',
+    });
+  } else {
+    const names = gapped.map((c) => `「${c.name}」`).join('、');
+    insights.push({
+      type: 'gap',
+      icon: '📭',
+      title: `你有 ${gapped.length} 个能力处于未训练状态`,
+      description: `${names} 从未关联经历`,
+      severity: 'notice',
+    });
+  }
+
+  return insights;
+}
+
+// ─── Rule 7: Detect project health (V2) ──────────────────────────
+
+export function detectProjectHealth(
+  projects: Project[],
+  experiences: Experience[],
+  now?: Date,
+): Insight[] {
+  const currentDate = now || new Date();
+  const insights: Insight[] = [];
+
+  for (const project of projects) {
+    // 活跃项目 > 30 天未复盘
+    if (project.status === 'active' && project.startDate && !project.retrospective) {
+      const startDate = new Date(project.startDate);
+      const daysSince = Math.floor(
+        (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      if (daysSince > PROJECT_RETRO_DAYS) {
+        insights.push({
+          type: 'project',
+          icon: '⏰',
+          title: `「${project.name}」已活跃 ${daysSince} 天未复盘`,
+          description: '建议安排一次复盘回顾项目进展',
+          severity: 'important',
+        });
+      }
+    }
+
+    // 已完成项目未复盘
+    if (project.status === 'completed' && !project.retrospective) {
+      insights.push({
+        type: 'project',
+        icon: '📋',
+        title: `「${project.name}」已完成但缺少复盘记录`,
+        description: '完成的复盘能帮助提炼经验',
+        severity: 'notice',
+      });
+    }
+
+    // 活跃项目无关联经历
+    if (project.status === 'active') {
+      const projectExps = experiences.filter((exp) => exp.projectId === project.id);
+      if (projectExps.length === 0) {
+        insights.push({
+          type: 'project',
+          icon: '📝',
+          title: `「${project.name}」还没有任何经历记录`,
+          description: '建议在项目中记录实践经历',
+          severity: 'notice',
+        });
+      }
+    }
+  }
+
+  return insights.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+}
+
+// ─── Rule 4 (enhanced): Generate recommendations ─────────────────
+
 export function generateRecommendations(
   insights: Insight[],
   capabilities: Capability[],
   projects: Project[],
   principles: Principle[],
-  experiences: Experience[],
+  _experiences: Experience[],
   _links: ExperienceCapabilityLink[],
   now?: Date,
 ): Recommendation[] {
   const currentDate = now || new Date();
   const recommendations: Recommendation[] = [];
 
-  // HIGH: Stale capability > 60 days → recommend recording experience
+  // HIGH: Stale capability > 60 days
   const importantStale = insights.filter((i) => i.type === 'stale' && i.severity === 'important');
   for (const insight of importantStale) {
     const capability = capabilities.find((c) => insight.title.includes(c.name));
@@ -239,11 +451,12 @@ export function generateRecommendations(
         action: '该能力已超过 60 天未更新，建议补充新的实践经历',
         priority: 'high',
         relatedCapability: capability.id,
+        linkTo: { route: '/experiences/new', label: '去记录' },
       });
     }
   }
 
-  // HIGH: Active project > 30 days without retrospective → recommend retrospective
+  // HIGH: Project needs retrospective
   const thirtyDaysAgo = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
   const longActiveProjects = projects.filter(
     (p) =>
@@ -261,13 +474,30 @@ export function generateRecommendations(
       title: `复盘「${project.name}」项目`,
       action: `已活跃 ${daysSince} 天，建议进行一次回顾总结`,
       priority: 'high',
+      relatedProjectId: project.id,
+      linkTo: { route: '/projects', label: '去复盘' },
     });
   }
 
-  // MEDIUM: Fastest growing capability → recommend continuing
+  // HIGH: Retrospective pattern → focus on improvement
+  const retroBad = insights.filter((i) => i.type === 'retrospective' && i.severity === 'notice');
+  for (const insight of retroBad) {
+    const capability = capabilities.find((c) => insight.title.includes(c.name));
+    if (capability) {
+      recommendations.push({
+        icon: '🎯',
+        title: `重点突破「${capability.name}」`,
+        action: '该能力在多次复盘中出现改进项，建议专项训练',
+        priority: 'high',
+        relatedCapability: capability.id,
+        linkTo: { route: '/capabilities', label: '去管理' },
+      });
+    }
+  }
+
+  // MEDIUM: Fastest growing capability
   const growthInsights = insights.filter((i) => i.type === 'growth');
   if (growthInsights.length > 0) {
-    // Find the one with highest change
     let bestGrowth = growthInsights[0];
     let maxChange = 0;
     for (const insight of growthInsights) {
@@ -288,13 +518,30 @@ export function generateRecommendations(
         action: '该能力本月增长显著，继续投入时间实践',
         priority: 'medium',
         relatedCapability: capability.id,
+        linkTo: { route: '/experiences/new', label: '去记录' },
       });
     }
   }
 
-  // MEDIUM: New project with no experiences → recommend starting
+  // MEDIUM: Experience gap → fill it
+  const gapInsights = insights.filter((i) => i.type === 'gap');
+  if (gapInsights.length > 0) {
+    const gapCap = capabilities.find((c) => gapInsights[0].title.includes(c.name));
+    if (gapCap) {
+      recommendations.push({
+        icon: '🏗️',
+        title: `为「${gapCap.name}」补充实践经历`,
+        action: '该能力还没有任何实践经验，从第一小步开始',
+        priority: 'medium',
+        relatedCapability: gapCap.id,
+        linkTo: { route: '/experiences/new', label: '去记录' },
+      });
+    }
+  }
+
+  // MEDIUM: New project with no experiences
   const projectsWithNoExperiences = projects.filter((p) => {
-    const projectExps = experiences.filter((exp) => exp.projectId === p.id);
+    const projectExps = _experiences.filter((exp) => exp.projectId === p.id);
     return projectExps.length === 0;
   });
   for (const project of projectsWithNoExperiences.slice(0, 1)) {
@@ -303,10 +550,12 @@ export function generateRecommendations(
       title: `开始记录「${project.name}」的相关经历`,
       action: '该项目还没有相关经历记录，从第一次实践开始吧',
       priority: 'medium',
+      relatedProjectId: project.id,
+      linkTo: { route: '/experiences/new', label: '去记录' },
     });
   }
 
-  // LOW: Unused principles → recommend applying
+  // LOW: Unused principles
   const unusedPrinciples = principles.filter((p) => p.usageCount === 0);
   if (unusedPrinciples.length > 0) {
     const principle = unusedPrinciples[0];
@@ -315,55 +564,94 @@ export function generateRecommendations(
       title: `尝试运用「${principle.content}」`,
       action: '这条原则还没有被实践过，试试在工作中应用它',
       priority: 'low',
+      linkTo: { route: '/principles', label: '去实践' },
     });
   }
 
-  // LOW: Default → record new experience
+  // LOW: Default
   if (recommendations.length === 0) {
     recommendations.push({
       icon: '✏️',
       title: '记录新经历，开始你的成长之旅',
       action: '每一次经历都是成长的机会',
       priority: 'low',
+      linkTo: { route: '/experiences/new', label: '去记录' },
     });
   }
 
   return recommendations;
 }
 
-// Summary generation
-export function generateSummary(insights: Insight[]): string {
+// ─── Summary generation (enhanced V2) ────────────────────────────
+
+export function generateSummary(insights: Insight[]): CoachSummary {
   if (insights.length === 0) {
-    return '记录第一条经历，开始你的成长之旅';
+    return {
+      headline: '记录第一条经历，开始你的成长之旅',
+      highlights: [],
+      concerns: [],
+      nextAction: '创建第一条经历',
+    };
   }
 
-  // Priority 1: Important stale
+  // Headline: 综合最重要的一条 insight
   const importantStale = insights.find((i) => i.type === 'stale' && i.severity === 'important');
-  if (importantStale) {
-    const match = importantStale.title.match(/你的「(.+?)」已 (\d+) 天未更新/);
-    if (match) {
-      return `你的「${match[1]}」已 ${match[2]} 天未更新，是时候补充新经历了`;
-    }
-  }
-
-  // Priority 2: Notice growth
   const noticeGrowth = insights.find((i) => i.type === 'growth' && i.severity === 'notice');
-  if (noticeGrowth) {
-    const match = noticeGrowth.title.match(/你的「(.+?)」本月增长 (\d+) 分/);
-    if (match) {
-      return `你的「${match[1]}」本月增长 ${match[2]} 分，继续保持这个势头`;
+  const importantTrend = insights.find((i) => i.type === 'trend' && i.severity === 'important');
+
+  let headline = '';
+  if (importantStale) {
+    headline = importantStale.title;
+  } else if (importantTrend) {
+    headline = importantTrend.title;
+  } else if (noticeGrowth) {
+    headline = noticeGrowth.title;
+  } else {
+    headline = insights[0].title;
+  }
+
+  // Highlights: 正面信号
+  const highlights: string[] = [];
+  for (const insight of insights) {
+    if (insight.type === 'growth' && insight.severity !== 'important') {
+      highlights.push(insight.title);
+    }
+    if (insight.type === 'retrospective' && insight.severity === 'info') {
+      highlights.push(insight.title);
+    }
+    if (insight.type === 'trend' && insight.severity === 'info') {
+      highlights.push(insight.title);
     }
   }
 
-  // Priority 3: Pattern
-  const patternInsight = insights.find((i) => i.type === 'pattern');
-  if (patternInsight) {
-    const match = patternInsight.title.match(/经历都贡献给了「(.+?)」/);
-    if (match) {
-      return `本月你的经历主要围绕「${match[1]}」展开`;
+  // Concerns: 负面/需关注信号
+  const concerns: string[] = [];
+  for (const insight of insights) {
+    if (insight.type === 'stale' && insight.severity !== 'info') {
+      concerns.push(insight.title);
+    }
+    if (insight.type === 'gap') {
+      concerns.push(insight.title);
+    }
+    if (insight.type === 'project' && insight.severity === 'important') {
+      concerns.push(insight.title);
+    }
+    if (insight.type === 'trend' && insight.severity === 'important') {
+      concerns.push(insight.title);
     }
   }
 
-  // Default
-  return '记录第一条经历，开始你的成长之旅';
+  // NextAction: 取第一优先级
+  let nextAction = '';
+  if (importantStale) {
+    nextAction = `建议为相关能力补充新的实践经历`;
+  } else if (concerns.length > 0) {
+    nextAction = `关注 ${concerns.length} 个需要改进的方面`;
+  } else if (highlights.length > 0) {
+    nextAction = `继续保持当前的增长势头`;
+  } else {
+    nextAction = '记录新经历，持续成长';
+  }
+
+  return { headline, highlights, concerns, nextAction };
 }

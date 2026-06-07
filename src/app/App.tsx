@@ -73,6 +73,12 @@ function Navbar() {
             {t('projects.title', '项目')}
           </Link>
           <Link
+            to="/coach"
+            className={`nav-link ${location.pathname === '/coach' ? 'active' : ''}`}
+          >
+            {t('coach.title', '教练')}
+          </Link>
+          <Link
             to="/principles"
             className={`nav-link ${location.pathname === '/principles' ? 'active' : ''}`}
           >
@@ -149,6 +155,13 @@ function Navbar() {
             {t('projects.title', '项目')}
           </Link>
           <Link
+            to="/coach"
+            className={`nav-mobile-link ${location.pathname === '/coach' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            {t('coach.title', '教练')}
+          </Link>
+          <Link
             to="/principles"
             className={`nav-mobile-link ${location.pathname === '/principles' ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
@@ -214,6 +227,7 @@ function BottomNav() {
     { path: '/experiences', label: t('experiences.title', '经历'), icon: '📝' },
     { path: '/capabilities', label: t('capabilities.title', '能力'), icon: '🌳' },
     { path: '/projects', label: t('projects.title', '项目'), icon: '📁' },
+    { path: '/coach', label: t('coach.title', '教练'), icon: '🧠' },
     { path: '/analytics', label: t('common.analytics'), icon: '📈' },
   ];
 

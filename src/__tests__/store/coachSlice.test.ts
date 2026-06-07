@@ -68,7 +68,7 @@ describe('coachSlice', () => {
     });
 
     const diagnosis: CoachDiagnosis = {
-      summary: 'Test summary',
+      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
       insights: [],
       recommendations: [],
       generatedAt: '2026-06-06T00:00:00.000Z',
@@ -83,7 +83,7 @@ describe('coachSlice', () => {
 
   test('clearDiagnosis clears both fields', () => {
     const diagnosis: CoachDiagnosis = {
-      summary: 'Test summary',
+      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
       insights: [],
       recommendations: [],
       generatedAt: '2026-06-06T00:00:00.000Z',
@@ -102,7 +102,7 @@ describe('coachSlice', () => {
 
   test('extraReducers matcher clears cache on experiences action', () => {
     const diagnosis: CoachDiagnosis = {
-      summary: 'Test summary',
+      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
       insights: [],
       recommendations: [],
       generatedAt: '2026-06-06T00:00:00.000Z',
@@ -122,7 +122,7 @@ describe('coachSlice', () => {
 
   test('extraReducers matcher clears cache on capabilities action', () => {
     const diagnosis: CoachDiagnosis = {
-      summary: 'Test summary',
+      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
       insights: [],
       recommendations: [],
       generatedAt: '2026-06-06T00:00:00.000Z',
@@ -141,7 +141,7 @@ describe('coachSlice', () => {
 
   test('extraReducers matcher clears cache on principles action', () => {
     const diagnosis: CoachDiagnosis = {
-      summary: 'Test summary',
+      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
       insights: [],
       recommendations: [],
       generatedAt: '2026-06-06T00:00:00.000Z',
@@ -160,7 +160,7 @@ describe('coachSlice', () => {
 
   test('extraReducers matcher clears cache on projects action', () => {
     const diagnosis: CoachDiagnosis = {
-      summary: 'Test summary',
+      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
       insights: [],
       recommendations: [],
       generatedAt: '2026-06-06T00:00:00.000Z',
@@ -179,7 +179,7 @@ describe('coachSlice', () => {
 
   test('extraReducers does NOT clear cache on coach action', () => {
     const diagnosis: CoachDiagnosis = {
-      summary: 'Test summary',
+      summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
       insights: [],
       recommendations: [],
       generatedAt: '2026-06-06T00:00:00.000Z',
@@ -242,6 +242,6 @@ describe('coachSlice', () => {
     expect(state.lastGeneratedAt).toBe('2026-06-06T00:00:00.000Z');
     expect(state.diagnosis!.insights.length).toBeGreaterThan(0);
     expect(state.diagnosis!.recommendations.length).toBeGreaterThan(0);
-    expect(state.diagnosis!.summary.length).toBeGreaterThan(0);
+    expect(state.diagnosis!.summary.headline.length).toBeGreaterThan(0);
   });
 });

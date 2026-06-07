@@ -118,8 +118,7 @@ describe('coachEngine analyze', () => {
     expect(result).toBeDefined();
     expect(result.insights).toEqual([]);
     expect(result.recommendations).toBeDefined();
-    expect(typeof result.summary).toBe('string');
-    expect(result.summary.length).toBeGreaterThan(0);
+    expect(result.summary.headline.length).toBeGreaterThan(0);
     expect(result.generatedAt).toBe(FIXED_NOW.toISOString());
   });
 
@@ -134,8 +133,7 @@ describe('coachEngine analyze', () => {
     expect(result).toBeDefined();
     expect(result.insights).toBeDefined();
     expect(Array.isArray(result.recommendations)).toBe(true);
-    expect(typeof result.summary).toBe('string');
-    expect(result.summary.length).toBeGreaterThan(0);
+    expect(result.summary.headline.length).toBeGreaterThan(0);
     expect(result.generatedAt).toBe(FIXED_NOW.toISOString());
   });
 
@@ -154,8 +152,7 @@ describe('coachEngine analyze', () => {
     expect(result).toBeDefined();
     expect(result.insights.length).toBeGreaterThan(0);
     expect(result.recommendations.length).toBeGreaterThan(0);
-    expect(typeof result.summary).toBe('string');
-    expect(result.summary.length).toBeGreaterThan(0);
+    expect(result.summary.headline.length).toBeGreaterThan(0);
     expect(result.generatedAt).toBe(FIXED_NOW.toISOString());
   });
 
@@ -242,7 +239,6 @@ describe('coachEngine analyze', () => {
   test('summary is non-empty', () => {
     const result = analyze([], [], [], [], [], FIXED_NOW);
     expect(result.summary).toBeDefined();
-    expect(typeof result.summary).toBe('string');
-    expect(result.summary.length).toBeGreaterThan(0);
+    expect(result.summary.headline.length).toBeGreaterThan(0);
   });
 });

@@ -53,7 +53,12 @@ describe('CoachDiagnosisCard', () => {
     const store = makeStore({
       coach: {
         diagnosis: {
-          summary: '你的系统设计能力本月增长 13 分！',
+          summary: {
+            headline: '你的系统设计能力本月增长 13 分！',
+            highlights: [],
+            concerns: [],
+            nextAction: '',
+          },
           insights: [],
           recommendations: [],
           generatedAt: recentTs,
@@ -87,7 +92,7 @@ describe('CoachDiagnosisCard', () => {
     const store = makeStore({
       coach: {
         diagnosis: {
-          summary: 'Test summary',
+          summary: { headline: 'Test summary', highlights: [], concerns: [], nextAction: '' },
           insights: [
             {
               type: 'stale',

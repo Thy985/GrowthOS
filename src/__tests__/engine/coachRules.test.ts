@@ -455,8 +455,8 @@ describe('coachRules', () => {
       };
 
       const summary = generateSummary([insight]);
-      expect(summary).toContain('React 开发');
-      expect(summary).toContain('70');
+      expect(summary.headline).toContain('React 开发');
+      expect(summary.headline).toContain('70');
     });
 
     test('returns growth summary for notice growth insight', () => {
@@ -469,8 +469,8 @@ describe('coachRules', () => {
       };
 
       const summary = generateSummary([insight]);
-      expect(summary).toContain('公开演讲');
-      expect(summary).toContain('20');
+      expect(summary.headline).toContain('公开演讲');
+      expect(summary.headline).toContain('20');
     });
 
     test('returns pattern summary for pattern insight', () => {
@@ -483,15 +483,15 @@ describe('coachRules', () => {
       };
 
       const summary = generateSummary([insight]);
-      expect(summary).toContain('系统设计');
+      expect(summary.headline).toContain('系统设计');
     });
 
     test('returns default when no insights', () => {
       const summary = generateSummary([]);
-      expect(summary).toBe('记录第一条经历，开始你的成长之旅');
+      expect(summary.headline).toBe('记录第一条经历，开始你的成长之旅');
     });
 
-    test('returns default when no matching patterns', () => {
+    test('returns stale insight headline for stale info insight', () => {
       const insight: Insight = {
         type: 'stale',
         icon: 'ℹ️',
@@ -501,7 +501,7 @@ describe('coachRules', () => {
       };
 
       const summary = generateSummary([insight]);
-      expect(summary).toBe('记录第一条经历，开始你的成长之旅');
+      expect(summary.headline).toBe('你的「Test Cap」两周没有新经历了');
     });
   });
 });
