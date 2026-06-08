@@ -1,11 +1,11 @@
-import {
-  configureStore,
-  createListenerMiddleware,
-  isAnyOf,
-} from '@reduxjs/toolkit';
+import { configureStore, createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit';
 
 import authReducer from '../../features/auth/store/authSlice';
-import capabilityReducer from '../../features/capabilities/store/capabilitySlice';
+import capabilityReducer, {
+  addCapability,
+  updateCapability,
+  deleteCapability,
+} from '../../features/capabilities/store/capabilitySlice';
 import coachReducer, { runDiagnosis } from '../../features/coach/store/coachSlice';
 import experienceReducer, {
   addExperience,
@@ -24,11 +24,6 @@ import recordsReducer from '../../features/records/store/recordsSlice';
 import reminderReducer from '../../features/reminders/store/reminderSlice';
 import themeReducer from '../../features/theme/store/themeSlice';
 import growthReducer from '../../store/slices/growthSlice';
-import {
-  addCapability,
-  updateCapability,
-  deleteCapability,
-} from '../../features/capabilities/store/capabilitySlice';
 
 export const listenerMiddleware = createListenerMiddleware();
 
@@ -47,7 +42,7 @@ listenerMiddleware.startListening({
   effect: (_, api) => {
     const state = (api.getState as () => RootState)();
     if (state.coach.isAnalyzing) return;
-    api.dispatch(runDiagnosis());
+    (api.dispatch as AppDispatch)(runDiagnosis());
   },
 });
 

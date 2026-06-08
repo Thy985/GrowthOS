@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect } from 'vitest';
 
+import type { RootState } from '../../app/store';
 import { coachActionRegistry } from '../../features/coach/actions/coachActionRegistry';
 import coachReducer from '../../features/coach/store/coachSlice';
 import projectReducer from '../../features/projects/store/projectSlice';
@@ -38,9 +39,7 @@ describe('coachActionRegistry', () => {
     const action = coachActionRegistry.record_experience;
     expect(action.buildRoute).toBeDefined();
 
-    expect(action.buildRoute!({ capabilityId: 'c-3' })).toBe(
-      '/experiences/new?capability=c-3',
-    );
+    expect(action.buildRoute!({ capabilityId: 'c-3' })).toBe('/experiences/new?capability=c-3');
     expect(action.buildRoute!({})).toBe('/experiences/new');
   });
 
@@ -58,13 +57,13 @@ describe('coachActionRegistry', () => {
               id: 'p-1',
               name: 'Test Project',
               userId: 'user-1',
-              status: 'active',
+              status: 'active' as const,
               createdAt: '2026-01-01',
               updatedAt: '2026-01-01',
               retrospective: {
-                whatWentWell: 'Good stuff',
-                whatWentWrong: 'Bad stuff',
-                nextTime: 'Improve',
+                whatWentWell: ['Good stuff'],
+                whatWentWrong: ['Bad stuff'],
+                nextTime: ['Improve'],
                 capabilitiesUsed: {},
                 completedAt: '2026-06-01',
               },
@@ -77,7 +76,7 @@ describe('coachActionRegistry', () => {
     });
 
     const action = coachActionRegistry.review_project;
-    const result = action.isCompleted!(store.getState(), { projectId: 'p-1' });
+    const result = action.isCompleted!(store.getState() as RootState, { projectId: 'p-1' });
     expect(result).toBe(true);
   });
 
@@ -95,7 +94,7 @@ describe('coachActionRegistry', () => {
               id: 'p-2',
               name: 'No Retro',
               userId: 'user-1',
-              status: 'active',
+              status: 'active' as const,
               createdAt: '2026-01-01',
               updatedAt: '2026-01-01',
             },
@@ -107,7 +106,7 @@ describe('coachActionRegistry', () => {
     });
 
     const action = coachActionRegistry.review_project;
-    const result = action.isCompleted!(store.getState(), { projectId: 'p-2' });
+    const result = action.isCompleted!(store.getState() as RootState, { projectId: 'p-2' });
     expect(result).toBe(false);
   });
 

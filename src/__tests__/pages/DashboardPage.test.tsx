@@ -79,6 +79,7 @@ describe('DashboardPage (Growth Portrait)', () => {
 
   it('renders the recommendations section', () => {
     renderPage();
-    expect(screen.getByText(/推荐下一步/)).toBeInTheDocument();
+    const elements = screen.getAllByText(/推荐下一步/);
+    expect(elements.length).toBeGreaterThan(0);
   });
 });

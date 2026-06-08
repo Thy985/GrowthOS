@@ -1,27 +1,23 @@
 import React, { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 
 import type { RootState, AppDispatch } from '../../../app/store';
 import CoachHeader from '../components/CoachHeader';
 import CoachSummarySection from '../components/CoachSummarySection';
-import InsightPanel from '../components/InsightPanel';
-import TopRecommendationCard from '../components/TopRecommendationCard';
-import OtherRecommendations from '../components/OtherRecommendations';
 import CompletedGrowth from '../components/CompletedGrowth';
 import EmptyStateChecklist from '../components/EmptyStateChecklist';
+import InsightPanel from '../components/InsightPanel';
+import OtherRecommendations from '../components/OtherRecommendations';
+import TopRecommendationCard from '../components/TopRecommendationCard';
 import { runCoachAnalysis } from '../store/coachSlice';
 
 const CoachPage: React.FC = React.memo(function CoachPage() {
-  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const diagnosis = useSelector((state: RootState) => state.coach.diagnosis);
   const experiences = useSelector((state: RootState) => state.experiences.experiences);
   const isLoading = useSelector(
     (state: RootState) =>
-      state.experiences.isLoading ||
-      state.capabilities.isLoading ||
-      state.projects.isLoading,
+      state.experiences.isLoading || state.capabilities.isLoading || state.projects.isLoading,
   );
 
   useEffect(() => {
@@ -38,8 +34,7 @@ const CoachPage: React.FC = React.memo(function CoachPage() {
     state.projects.projects.some((p) => p.retrospective),
   );
 
-  const isEmpty =
-    experiences.length === 0 && !hasCapabilities && !hasRetrospectives;
+  const isEmpty = experiences.length === 0 && !hasCapabilities && !hasRetrospectives;
 
   if (isLoading) {
     return (
