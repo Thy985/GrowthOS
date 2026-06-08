@@ -251,4 +251,76 @@ describe('capabilitySlice', () => {
     expect(cap1Node!.children).toHaveLength(1);
     expect(cap1Node!.children[0].id).toBe('cap4');
   });
+
+  test('should return empty array for non-existent category', () => {
+    const result = getCapabilitiesByCategory(store.getState(), 'nonexistent');
+    expect(result).toHaveLength(0);
+  });
+
+  test('should handle capability tree with no children', () => {
+    const flatCaps = seedCapabilities.map((c) => ({ ...c, parentId: null }));
+    const flatStore = makeStore({
+      capabilities: {
+        capabilities: flatCaps,
+        history: [],
+        isLoading: false,
+        error: null,
+      },
+    });
+    const tree = getCapabilityTree(flatStore.getState());
+    expect(tree).toHaveLength(4);
+    tree.forEach((node) => {
+      expect(node.children).toHaveLength(0);
+    });
+  });
+
+  test('should handle updateCapability with partial data', async () => {
+    await store.dispatch(updateCapability({ id: 'cap1', currentLevel: 80 }));
+    const state = store.getState().capabilities;
+    const updated = state.capabilities.find((c) => c.id === 'cap1');
+    expect(updated!.currentLevel).toBe(80);
+    expect(updated!.targetLevel).toBe(90); // unchanged
+  });
+
+  test('should handle calculateCapabilityLevel with reflection and principle', () => {
+    const expsWithReflection: Experience[] = [
+      {
+        ...calcExperiences[0],
+        reflection: 'Deep learning experience',
+        principle: 'Practice makes perfect',
+      },
+    ];
+    const level = calculateCapabilityLevel('cap1', expsWithReflection, calcLinks);
+    expect(level).toBeGreaterThan(0);
+  });
+
+  test('should handle calculateCapabilityLevel with zero confidence', () => {
+    const expsZeroConf: Experience[] = [{ ...calcExperiences[0], confidence: 0 }];
+    const level = calculateCapabilityLevel('cap1', expsZeroConf, calcLinks);
+    expect(level).toBeGreaterThanOrEqual(0);
+  });
+
+  test('should handle calculateCapabilityLevel with missing experience', () => {
+    const badLinks: ExperienceCapabilityLink[] = [
+      { id: 'bad-link', experienceId: 'nonexistent', capabilityId: 'cap1', contribution: 0.8 },
+    ];
+    const level = calculateCapabilityLevel('cap1', calcExperiences, badLinks);
+    expect(level).toBe(0);
+  });
+
+  test('should handle empty capabilities list for tree', () => {
+    const emptyStore = makeStore({
+      capabilities: { capabilities: [], history: [], isLoading: false, error: null },
+    });
+    const tree = getCapabilityTree(emptyStore.getState());
+    expect(tree).toHaveLength(0);
+  });
+
+  test('should handle clearError action', () => {
+    const errorStore = makeStore({
+      capabilities: { capabilities: [], history: [], isLoading: false, error: 'Some error' },
+    });
+    errorStore.dispatch({ type: 'capabilities/clearError' });
+    expect(errorStore.getState().capabilities.error).toBeNull();
+  });
 });

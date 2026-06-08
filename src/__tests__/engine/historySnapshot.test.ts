@@ -167,4 +167,28 @@ describe('historySnapshot', () => {
       expect(mergeSnapshots([], [])).toEqual([]);
     });
   });
+
+  // ─── Edge cases ─────────────────────────────────────────
+
+  describe('edge cases', () => {
+    test('level 变化恰好 = 5（边界值）→ 记录', () => {
+      const last: CapabilityHistory = {
+        id: 'h1',
+        capabilityId: 'cap1',
+        level: 50,
+        recordedAt: new Date(FIXED_NOW_MS - 60 * 60 * 1000).toISOString(),
+      };
+      expect(shouldRecordSnapshot(50, 55, last)).toBe(true);
+    });
+
+    test('level 变化 = -5（下降边界值）→ 记录', () => {
+      const last: CapabilityHistory = {
+        id: 'h1',
+        capabilityId: 'cap1',
+        level: 50,
+        recordedAt: new Date(FIXED_NOW_MS - 60 * 60 * 1000).toISOString(),
+      };
+      expect(shouldRecordSnapshot(50, 45, last)).toBe(true);
+    });
+  });
 });
