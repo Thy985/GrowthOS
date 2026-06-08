@@ -23,6 +23,17 @@ module.exports = {
   },
   overrides: [
     {
+      // Service Worker 需要 serviceworker env 来识别 clients/self 等全局变量
+      files: ['public/service-worker.js'],
+      env: { serviceworker: true },
+    },
+    {
+      // JS 测试文件需要 vitest globals
+      files: ['src/__tests__/**/*.js'],
+      env: { browser: true, es2022: true },
+      globals: { describe: 'readonly', test: 'readonly', expect: 'readonly', it: 'readonly', vi: 'readonly', beforeEach: 'readonly', afterEach: 'readonly' },
+    },
+    {
       // 使用 @ts-nocheck 的遗留文件,留给后续 PR 处理
       files: [
         'src/shared/contexts/GrowthContext.tsx',
