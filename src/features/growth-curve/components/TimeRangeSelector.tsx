@@ -14,7 +14,7 @@ interface TimeRangeSelectorProps {
   onChange: (range: TimeRange) => void;
 }
 
-const RANGES: TimeRange[] = ['30d', '90d', '1y', 'all'];
+const RANGES: TimeRange[] = ['7d', '30d', '90d', 'all'];
 
 function TimeRangeSelectorInner({ value, onChange }: TimeRangeSelectorProps) {
   const { t } = useTranslation();

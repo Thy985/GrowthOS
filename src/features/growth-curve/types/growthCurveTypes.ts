@@ -2,7 +2,7 @@
  * 成长曲线 V1 类型定义
  */
 
-export type TimeRange = '30d' | '90d' | '1y' | 'all';
+export type TimeRange = '7d' | '30d' | '90d' | 'all';
 
 export type GrowthTrend = 'up' | 'down' | 'stable';
 

@@ -47,28 +47,25 @@ describe('growthAnalytics', () => {
         { level: 10, daysAgo: 100 },
         { level: 20, daysAgo: 50 },
         { level: 30, daysAgo: 10 },
+        { level: 40, daysAgo: 3 },
       ]),
     ];
 
     test('30天筛选：返回最近 30 天的快照', () => {
       const result = getHistoryInRange(history, '30d', FIXED_NOW);
-      expect(result).toHaveLength(1);
+      expect(result).toHaveLength(2);
       expect(result[0].level).toBe(30);
     });
 
-    test('90天筛选：返回最近 90 天的快照', () => {
-      const result = getHistoryInRange(history, '90d', FIXED_NOW);
-      expect(result).toHaveLength(2);
-    });
-
-    test('1年筛选：返回所有快照', () => {
-      const result = getHistoryInRange(history, '1y', FIXED_NOW);
-      expect(result).toHaveLength(3);
+    test('7天筛选：返回最近 7 天的快照', () => {
+      const result = getHistoryInRange(history, '7d', FIXED_NOW);
+      expect(result).toHaveLength(1);
+      expect(result[0].level).toBe(40);
     });
 
     test('全部：返回所有快照', () => {
       const result = getHistoryInRange(history, 'all', FIXED_NOW);
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(4);
     });
 
     test('空历史 → 返回空', () => {

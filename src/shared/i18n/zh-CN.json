@@ -191,15 +191,34 @@
     "topGrowth": "增长排行",
     "emptyState": "还没有成长记录，开始记录经历吧",
     "range": {
+      "7d": "7天",
       "30d": "30天",
       "90d": "90天",
-      "1y": "1年",
       "all": "全部"
     },
     "trend": {
       "up": "增长",
       "down": "下降",
       "stable": "持平"
+    },
+    "tooltip": {
+      "level": "等级",
+      "date": "日期",
+      "trigger": "触发经历：{{id}}",
+      "manual": "手动更新"
+    },
+    "detail": {
+      "title": "快照详情",
+      "snapshotId": "快照 ID",
+      "capabilityName": "能力名称",
+      "level": "等级",
+      "recordedAt": "记录时间",
+      "triggerSource": "触发来源",
+      "triggerExperience": "关联经历",
+      "experienceId": "经历 ID",
+      "manualUpdate": "手动更新",
+      "trigger": "触发方式",
+      "close": "关闭"
     }
   },
   "experiences": {

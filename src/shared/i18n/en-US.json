@@ -191,15 +191,34 @@
     "topGrowth": "Growth Ranking",
     "emptyState": "No growth records yet. Start recording experiences!",
     "range": {
+      "7d": "7 days",
       "30d": "30 days",
       "90d": "90 days",
-      "1y": "1 year",
       "all": "All"
     },
     "trend": {
       "up": "Growing",
       "down": "Declining",
       "stable": "Stable"
+    },
+    "tooltip": {
+      "level": "Level",
+      "date": "Date",
+      "trigger": "Trigger: {{id}}",
+      "manual": "Manual update"
+    },
+    "detail": {
+      "title": "Snapshot Details",
+      "snapshotId": "Snapshot ID",
+      "capabilityName": "Capability",
+      "level": "Level",
+      "recordedAt": "Recorded At",
+      "triggerSource": "Trigger Source",
+      "triggerExperience": "Linked Experience",
+      "experienceId": "Experience ID",
+      "manualUpdate": "Manual Update",
+      "trigger": "Trigger Type",
+      "close": "Close"
     }
   },
   "experiences": {

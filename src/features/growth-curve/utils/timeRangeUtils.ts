@@ -7,9 +7,9 @@
 import type { TimeRange } from '../types/growthCurveTypes';
 
 const RANGE_DAYS: Record<Exclude<TimeRange, 'all'>, number> = {
+  '7d': 7,
   '30d': 30,
   '90d': 90,
-  '1y': 365,
 };
 
 /**
@@ -34,5 +34,5 @@ export function getCutoffDate(range: TimeRange, now?: Date): Date {
  * 验证 TimeRange 值是否合法
  */
 export function isValidRange(range: unknown): range is TimeRange {
-  return range === '30d' || range === '90d' || range === '1y' || range === 'all';
+  return range === '7d' || range === '30d' || range === '90d' || range === 'all';
 }
