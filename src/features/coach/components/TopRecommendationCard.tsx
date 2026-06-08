@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import { coachActionRegistry } from '../actions/coachActionRegistry';
 import type { Recommendation } from '../types/coachTypes';
+
 import RecommendationStatusBadge from './RecommendationStatusBadge';
 
 interface TopRecommendationCardProps {

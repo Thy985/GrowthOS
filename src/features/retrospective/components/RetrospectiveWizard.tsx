@@ -75,7 +75,7 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
     [t],
   );
 
-  const canGoNext = (): boolean => {
+  const canGoNext = useCallback((): boolean => {
     switch (currentStep) {
       case 'capabilities':
         return wizardData.capabilitiesUsed.length > 0;
@@ -92,7 +92,7 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
       default:
         return true;
     }
-  };
+  }, [currentStep, wizardData]);
 
   const handleNext = useCallback(() => {
     if (!canGoNext()) return;
@@ -116,7 +116,7 @@ const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, proje
     }
 
     setCurrentStep(nextStep);
-  }, [currentStep, wizardData, capabilities]);
+  }, [currentStep, wizardData, capabilities, canGoNext]);
 
   const handleBack = useCallback(() => {
     const prevIndex = STEP_ORDER.indexOf(currentStep) - 1;

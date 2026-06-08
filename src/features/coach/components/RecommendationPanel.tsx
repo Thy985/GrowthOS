@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { selectCoachRecommendations } from '../utils/coachSelectors';
 import { coachActionRegistry } from '../actions/coachActionRegistry';
+import { selectCoachRecommendations } from '../utils/coachSelectors';
 
 const PRIORITY_COLORS: Record<string, string> = {
   high: 'border-red-200 bg-red-50',
@@ -73,7 +73,9 @@ const RecommendationPanel: React.FC = React.memo(function RecommendationPanel() 
                   key={rec.id ?? `${Math.random()}`}
                   type="button"
                   className={`w-full text-left rounded-lg border p-3 ${PRIORITY_COLORS[priority]} ${
-                    resolved ? 'hover:opacity-80 transition-opacity cursor-pointer' : 'cursor-default'
+                    resolved
+                      ? 'hover:opacity-80 transition-opacity cursor-pointer'
+                      : 'cursor-default'
                   }`}
                   onClick={() => {
                     if (resolved) {

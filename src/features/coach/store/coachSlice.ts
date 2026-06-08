@@ -1,8 +1,8 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 import type { RootState, AppDispatch } from '../../../app/store';
-import type { CoachState, CoachDiagnosis } from '../types/coachTypes';
 import { analyze } from '../engine/coachEngine';
+import type { CoachState, CoachDiagnosis } from '../types/coachTypes';
 
 const initialState: CoachState = {
   diagnosis: null,
@@ -82,14 +82,14 @@ export function runDiagnosis() {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     weekStart.setHours(0, 0, 0, 0);
 
-    let completedThisWeek = 0;
-    let totalThisWeek = diagnosis.recommendations.length;
-    for (const rec of diagnosis.recommendations) {
+    const completedThisWeek = diagnosis.recommendations.reduce((count, rec) => {
       const stored = state.coach.recommendationStatuses[rec.id];
       if (stored?.status === 'completed' && new Date(stored.updatedAt) >= weekStart) {
-        completedThisWeek++;
+        return count + 1;
       }
-    }
+      return count;
+    }, 0);
+    const totalThisWeek = diagnosis.recommendations.length;
 
     const diagnosisWithRate: CoachDiagnosis = {
       ...diagnosis,
