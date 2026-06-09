@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import encryptionUtil from './encryption';
 
 class SecureStorage {
@@ -9,7 +8,7 @@ class SecureStorage {
   }
 
   // 保存数据（加密）
-  setItem(key: string, value: any): boolean {
+  setItem(key: string, value: unknown): boolean {
     try {
       if (this.encryptionEnabled) {
         const encryptedValue = encryptionUtil.encrypt(value);

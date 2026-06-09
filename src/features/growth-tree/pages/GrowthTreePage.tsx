@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import React, { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -75,7 +74,7 @@ const GrowthTree = () => {
 
   // 当 Redux tags 变化时，同步更新节点/边
   React.useEffect(() => {
-    setNodes(generatedData.nodes as any);
+    setNodes(generatedData.nodes as Node<NodeData>[]);
     setEdges(generatedData.edges);
   }, [generatedData, setNodes, setEdges]);
 
@@ -107,8 +106,8 @@ const GrowthTree = () => {
 
   const handleEditNode = () => {
     if (selectedNode && nodeFormData.label) {
-      setNodes((prev: any) =>
-        prev.map((node: Node<NodeData>) => {
+      setNodes((prev) =>
+        prev.map((node) => {
           if (node.id === selectedNode.id) {
             return {
               ...node,
@@ -134,8 +133,8 @@ const GrowthTree = () => {
 
   const handleDeleteNode = () => {
     if (selectedNode) {
-      setNodes((prev: any) => prev.filter((node: Node) => node.id !== selectedNode.id));
-      setEdges((prev: any) =>
+      setNodes((prev) => prev.filter((node: Node<NodeData>) => node.id !== selectedNode.id));
+      setEdges((prev) =>
         prev.filter(
           (edge: Edge) => edge.source !== selectedNode.id && edge.target !== selectedNode.id,
         ),
