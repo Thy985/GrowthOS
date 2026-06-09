@@ -359,17 +359,18 @@ describe('EmptyStateChecklist', () => {
       </MemoryRouter>,
     );
     expect(screen.getByText('开启你的成长教练')).toBeInTheDocument();
-    // i18n not initialized → shows raw default text
-    expect(screen.getByText(/步骤/)).toBeInTheDocument();
-    // Check the rendered text content contains step labels
+    // Check for progress bar elements (i18n not initialized → returns key)
     const textContent = container.textContent;
+    expect(textContent).toContain('0/3');
+    expect(textContent).toContain('0%');
+    // Check the rendered text content contains step labels
     expect(textContent).toContain('创建你的第一个能力');
     expect(textContent).toContain('记录第一段经历');
     expect(textContent).toContain('完成第一次复盘');
   });
 
   test('shows partial progress when capability exists', () => {
-    render(
+    const { container } = render(
       <MemoryRouter>
         <EmptyStateChecklist
           hasCapabilities={true}
@@ -378,8 +379,10 @@ describe('EmptyStateChecklist', () => {
         />
       </MemoryRouter>,
     );
-    // i18n not initialized → raw default text
-    expect(screen.getByText(/步骤/)).toBeInTheDocument();
+    // Check progress bar shows 1/3
+    const textContent = container.textContent;
+    expect(textContent).toContain('1/3');
+    expect(textContent).toContain('33%');
   });
 
   test('shows all completed when everything exists', () => {
@@ -392,8 +395,10 @@ describe('EmptyStateChecklist', () => {
         />
       </MemoryRouter>,
     );
-    expect(screen.getByText(/步骤/)).toBeInTheDocument();
-    expect(container.textContent).toContain('全部完成');
+    const textContent = container.textContent;
+    expect(textContent).toContain('3/3');
+    expect(textContent).toContain('100%');
+    expect(textContent).toContain('全部完成');
   });
 
   test('navigates to correct page on step click', () => {

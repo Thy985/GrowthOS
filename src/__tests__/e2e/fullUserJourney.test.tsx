@@ -212,7 +212,9 @@ describe('E2E Scenario 1: Auth Lifecycle', () => {
 
     renderDashboard(store);
     expect(screen.getByText(/你正在成为谁/)).toBeInTheDocument();
-    expect(screen.getByText('能力画像')).toBeInTheDocument();
+    // Radar chart is only shown when hasData is true (capabilities || experiences)
+    // With no data, the empty state for coach diagnosis is shown instead
+    expect(screen.getByText('成长诊断')).toBeInTheDocument();
     expect(screen.getByText('快速记录')).toBeInTheDocument();
   });
 });
@@ -513,8 +515,8 @@ describe('E2E Scenario 4: Coach Integration', () => {
 
   it('coach diagnosis card renders on dashboard', () => {
     renderDashboard();
-    // "成长诊断" heading is present (use getByText with exact match to avoid multiple results)
-    expect(screen.getByText('🧠 成长诊断')).toBeInTheDocument();
+    // "成长诊断" heading is present (emoji is now in a separate div)
+    expect(screen.getByText('成长诊断')).toBeInTheDocument();
   });
 
   it('coach slice initializes with correct default state', () => {

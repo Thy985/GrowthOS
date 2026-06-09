@@ -21,7 +21,7 @@ function GrowthOverviewSectionInner({ defaultRange = '30d' }: GrowthOverviewSect
   const [range, setRange] = useState<TimeRange>(defaultRange);
 
   return (
-    <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+    <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900">{t('growthCurve.title')}</h2>
         <TimeRangeSelector value={range} onChange={setRange} />

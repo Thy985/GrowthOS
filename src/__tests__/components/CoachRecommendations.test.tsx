@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 import capabilityReducer from '../../features/capabilities/store/capabilitySlice';
@@ -37,7 +38,9 @@ function makeStore(preloadedState = {}) {
 function renderRecs(store = makeStore()) {
   return render(
     <Provider store={store}>
-      <CoachRecommendations />
+      <MemoryRouter>
+        <CoachRecommendations />
+      </MemoryRouter>
     </Provider>,
   );
 }

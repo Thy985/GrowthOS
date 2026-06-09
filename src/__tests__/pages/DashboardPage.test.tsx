@@ -22,7 +22,7 @@ vi.mock('../../shared/utils/logger.ts', () => ({
   default: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-function makeStore() {
+function makeStore(preloadedState = {}) {
   return configureStore({
     reducer: {
       growth: growthReducer,
@@ -38,6 +38,7 @@ function makeStore() {
       projects: projectReducer,
       coach: coachReducer,
     },
+    preloadedState,
   });
 }
 
@@ -52,6 +53,38 @@ function renderPage(store?: ReturnType<typeof makeStore>) {
   );
 }
 
+function makeCapabilityData() {
+  const capId = 'test-cap-1';
+  return {
+    capabilities: {
+      capabilities: [
+        {
+          id: capId,
+          userId: 'test',
+          name: 'TypeScript',
+          category: 'skill' as const,
+          parentId: null,
+          currentLevel: 50,
+          targetLevel: 80,
+          growthRate: 0,
+          createdAt: '2026-06-01',
+          updatedAt: '2026-06-01',
+        },
+      ],
+      history: [
+        {
+          id: 'hist-1',
+          capabilityId: capId,
+          level: 50,
+          recordedAt: '2026-06-01',
+        },
+      ],
+      isLoading: false,
+      error: null,
+    },
+  };
+}
+
 describe('DashboardPage (Growth Portrait)', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -63,7 +96,8 @@ describe('DashboardPage (Growth Portrait)', () => {
   });
 
   it('renders the capability radar chart section', () => {
-    renderPage();
+    const store = makeStore(makeCapabilityData());
+    renderPage(store);
     expect(screen.getByText('能力画像')).toBeInTheDocument();
   });
 
@@ -73,7 +107,8 @@ describe('DashboardPage (Growth Portrait)', () => {
   });
 
   it('renders the principles section', () => {
-    renderPage();
+    const store = makeStore(makeCapabilityData());
+    renderPage(store);
     expect(screen.getByText(/核心原则/)).toBeInTheDocument();
   });
 

@@ -24,9 +24,14 @@ const CoachDiagnosisCard: React.FC = React.memo(function CoachDiagnosisCard() {
 
   if (!diagnosis || experiences.length === 0) {
     return (
-      <section className="rounded-2xl border border-gray-200 bg-white p-4">
-        <h2 className="text-lg font-semibold mb-3">🧠 {t('coach.title', '成长诊断')}</h2>
-        <p className="text-gray-400 text-sm">
+      <section className="rounded-2xl border border-gray-200 bg-white p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-xl">
+            🧠
+          </div>
+          <h2 className="text-lg font-semibold">{t('coach.title', '成长诊断')}</h2>
+        </div>
+        <p className="text-gray-500 text-sm">
           {t('coach.emptyMessage', '记录第一条经历后，成长教练会为你生成诊断。')}
         </p>
       </section>
@@ -34,8 +39,14 @@ const CoachDiagnosisCard: React.FC = React.memo(function CoachDiagnosisCard() {
   }
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-      <h2 className="text-lg font-semibold">🧠 {t('coach.title', '成长诊断')}</h2>
+    <section className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-xl">
+          🧠
+        </div>
+        <h2 className="text-lg font-semibold">{t('coach.title', '成长诊断')}</h2>
+      </div>
 
       {/* Summary */}
       <div className="space-y-2">
@@ -65,7 +76,7 @@ const CoachDiagnosisCard: React.FC = React.memo(function CoachDiagnosisCard() {
           {diagnosis.insights.map((insight, i) => (
             <div
               key={i}
-              className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${SEVERITY_COLORS[insight.severity]}`}
+              className={`flex items-start gap-2 rounded-lg border p-3 text-sm animate-fade-in stagger-${Math.min(i + 1, 4)} ${SEVERITY_COLORS[insight.severity]}`}
             >
               <span className="flex-shrink-0">{SEVERITY_ICONS[insight.severity]}</span>
               <div>

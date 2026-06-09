@@ -18,6 +18,7 @@ import CoachRecommendations from '../../coach/components/CoachRecommendations';
 import GrowthOverviewSection from '../../growth-curve/components/GrowthOverviewSection';
 import { InsightCards } from '../components/InsightCards';
 import { QuickRecordForm } from '../components/QuickRecordForm';
+import EmptyState from '../../../shared/components/common/EmptyState';
 
 const PRINCIPLE_CATEGORY_LABELS: Record<string, string> = {
   learning: '学习',
@@ -56,30 +57,38 @@ const RadarChartSection: React.FC<RadarChartSectionProps> = React.memo(function 
     }));
   }, [capabilities, experiences, links]);
 
+  if (radarData.length === 0) {
+    return (
+      <EmptyState
+        icon="🎯"
+        title={t('dashboard.noRadarTitle', '构建你的能力画像')}
+        description={t('dashboard.noRadarDesc', '创建能力并记录经历后，这里将展示你的能力雷达图')}
+        primaryAction={{
+          label: t('dashboard.createCapability', '创建第一个能力'),
+          href: '/capabilities',
+        }}
+      />
+    );
+  }
+
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4">
-      <h2 className="text-lg font-semibold mb-2">{t('dashboard.portraitTitle', '能力画像')}</h2>
-      <div className="h-64 sm:h-80">
-        {radarData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={radarData}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} />
-              <Radar
-                name={t('dashboard.capabilityValue', '能力值')}
-                dataKey="value"
-                stroke="#6366f1"
-                fill="#6366f1"
-                fillOpacity={0.3}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex h-full items-center justify-center text-gray-400 text-sm">
-            {t('dashboard.noRadarData', '记录经历后将在此展示能力画像')}
-          </div>
-        )}
+    <section className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
+      <h2 className="text-base sm:text-lg font-semibold mb-2">{t('dashboard.portraitTitle', '能力画像')}</h2>
+      <div className="h-56 sm:h-64 md:h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart data={radarData}>
+            <PolarGrid />
+            <PolarAngleAxis dataKey="name" tick={{ fontSize: 12 }} />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} />
+            <Radar
+              name={t('dashboard.capabilityValue', '能力值')}
+              dataKey="value"
+              stroke="#6366f1"
+              fill="#6366f1"
+              fillOpacity={0.3}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
       </div>
     </section>
   );
@@ -104,8 +113,8 @@ const PrinciplesSection: React.FC<PrinciplesSectionProps> = React.memo(function 
   );
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-      <h2 className="text-lg font-semibold">
+    <section className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 space-y-3">
+      <h2 className="text-base sm:text-lg font-semibold">
         {t('dashboard.topPrinciplesTitle', '核心原则（Top 5）')}
       </h2>
       {topPrinciples.length > 0 ? (
@@ -207,9 +216,9 @@ const Recommendations: React.FC<RecommendationsProps> = React.memo(function Reco
   }, [projects, capabilities, recentPrinciple, t]);
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-      <h2 className="text-lg font-semibold">{t('dashboard.recommendationsTitle', '推荐下一步')}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <section className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 space-y-3">
+      <h2 className="text-base sm:text-lg font-semibold">{t('dashboard.recommendationsTitle', '推荐下一步')}</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
         {recommendations.map((rec, i) => (
           <div
             key={i}
@@ -237,87 +246,129 @@ const DashboardPage: React.FC = () => {
 
   const totalExperiences = experiences.length;
   const totalPrinciples = principles.length;
+  const hasData = capabilities.length > 0 || experiences.length > 0;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 space-y-8">
+    <div className="mx-auto max-w-5xl px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* ── Greeting ── */}
-      <section>
-        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.greeting', '你好')}</h1>
-        <p className="text-lg text-gray-500 mt-1">
+      <section className="mb-1 sm:mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('dashboard.greeting', '你好')}</h1>
+        <p className="text-sm sm:text-base text-gray-500 mt-1">
           {t('dashboard.whoAreYouBecoming', '你正在成为谁？')}
         </p>
       </section>
 
-      {/* ── Coach Diagnosis ── */}
-      <CoachDiagnosisCard />
-      <div className="text-right">
-        <Link
-          to="/coach"
-          className="text-sm text-blue-500 hover:text-blue-700 font-medium transition-colors"
-        >
-          {t('coach.viewFullReport', '查看完整报告 →')}
-        </Link>
-      </div>
-
-      {/* ── Radar Chart ── */}
-      <RadarChartSection capabilities={capabilities} />
-
-      {/* ── Insights + Stats ── */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-4">
-        <h2 className="text-lg font-semibold">{t('dashboard.insightsTitle', '本周洞察')}</h2>
-        <InsightCards capabilities={capabilities} />
-
-        <div className="grid grid-cols-2 gap-3 pt-2">
-          <div className="rounded-lg bg-gray-50 p-3 text-center">
-            <p className="text-2xl font-bold text-indigo-600">{totalExperiences}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {t('dashboard.totalExperiences', '经历总数')}
-            </p>
-          </div>
-          <div className="rounded-lg bg-gray-50 p-3 text-center">
-            <p className="text-2xl font-bold text-indigo-600">{totalPrinciples}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {t('dashboard.totalPrinciples', '原则总数')}
-            </p>
+      {/* ── Tier 1: Coach (Hero) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2">
+          <CoachDiagnosisCard />
+          <div className="text-right mt-2">
+            <Link
+              to="/coach"
+              className="text-sm text-blue-500 hover:text-blue-700 font-medium transition-colors"
+            >
+              {t('coach.viewFullReport', '查看完整报告 →')}
+            </Link>
           </div>
         </div>
-      </section>
+        <div className="lg:col-span-1">
+          <QuickStatsCard totalExperiences={totalExperiences} totalPrinciples={totalPrinciples} />
+        </div>
+      </div>
 
-      {/* ── Reports ── */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-4">
-        <Link
-          to="/reports"
-          className="flex items-center justify-between hover:opacity-80 transition-opacity"
-        >
-          <div>
-            <h2 className="text-lg font-semibold">{t('reports.title', '成长报告')}</h2>
-            <p className="text-sm text-gray-400 mt-1">
-              {t('reports.overview', '查看你的成长数据分析和趋势报告')}
-            </p>
+      {/* ── Tier 2: Radar + Insights ── */}
+      {hasData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <RadarChartSection capabilities={capabilities} />
+          <div className="space-y-4 sm:space-y-6">
+            <section className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 space-y-3">
+              <h2 className="text-base sm:text-lg font-semibold">{t('dashboard.insightsTitle', '本周洞察')}</h2>
+              <InsightCards capabilities={capabilities} />
+            </section>
           </div>
-          <span className="text-blue-500 text-lg">→</span>
-        </Link>
-      </section>
-
-      {/* ── Quick Record ── */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-        <h2 className="text-lg font-semibold">{t('dashboard.quickRecordTitle', '快速记录')}</h2>
-        <QuickRecordForm onSubmitted={() => window.location.reload()} />
-      </section>
-
-      {/* ── Principles ── */}
-      <PrinciplesSection principles={principles} />
-
-      {/* ── Coach Recommendations ── */}
-      <CoachRecommendations />
+        </div>
+      )}
 
       {/* ── Growth Trajectory ── */}
       <GrowthOverviewSection defaultRange="30d" />
 
-      {/* ── Recommendations ── */}
-      <Recommendations capabilities={capabilities} projects={projects} principles={principles} />
+      {/* ── Tier 3: Supporting Content ── */}
+      {hasData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <PrinciplesSection principles={principles} />
+          <CoachRecommendations />
+        </div>
+      )}
+
+      {/* ── Quick Actions ── */}
+      <section className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 space-y-3">
+        <h2 className="text-base sm:text-lg font-semibold">{t('dashboard.quickRecordTitle', '快速记录')}</h2>
+        <QuickRecordForm onSubmitted={() => window.location.reload()} />
+      </section>
+
+      {/* ── Footer: Reports + Recommendations ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <ReportLinkCard />
+        <Recommendations capabilities={capabilities} projects={projects} principles={principles} />
+      </div>
     </div>
   );
 };
+
+/* ─── Quick Stats Card ─── */
+
+interface QuickStatsCardProps {
+  totalExperiences: number;
+  totalPrinciples: number;
+}
+
+const QuickStatsCard: React.FC<QuickStatsCardProps> = React.memo(function QuickStatsCard({
+  totalExperiences,
+  totalPrinciples,
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-gradient-to-br from-indigo-50 to-purple-50 p-5 space-y-4">
+      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+        {t('dashboard.statsOverview', '成长概览')}
+      </h2>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-3xl font-bold text-indigo-600">{totalExperiences}</span>
+          <span className="text-xs text-gray-500">
+            {t('dashboard.totalExperiences', '经历总数')}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-3xl font-bold text-purple-600">{totalPrinciples}</span>
+          <span className="text-xs text-gray-500">
+            {t('dashboard.totalPrinciples', '原则总数')}
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+});
+
+/* ─── Report Link Card ─── */
+
+const ReportLinkCard: React.FC = React.memo(function ReportLinkCard() {
+  const { t } = useTranslation();
+
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white p-5 hover:shadow-md transition-shadow">
+      <Link to="/reports" className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">{t('reports.title', '成长报告')}</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {t('reports.overview', '查看你的成长数据分析和趋势报告')}
+          </p>
+        </div>
+        <span className="text-blue-500 text-lg flex-shrink-0 ml-3">→</span>
+      </Link>
+    </section>
+  );
+});
 
 export default React.memo(DashboardPage);
