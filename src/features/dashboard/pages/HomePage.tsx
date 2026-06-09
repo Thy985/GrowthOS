@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const Home = () => {
+const Home = memo(() => {
   const { t } = useTranslation();
 
   return (
@@ -80,6 +81,6 @@ const Home = () => {
       </div>
     </div>
   );
-};
+});
 
 export default Home;

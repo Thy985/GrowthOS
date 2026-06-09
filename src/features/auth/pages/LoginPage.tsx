@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import type { AuthState } from '../../../shared/types';
 import { login, register } from '../store/authSlice';
 
-const Auth = () => {
+const Auth = memo(() => {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -14,8 +14,7 @@ const Auth = () => {
   const dispatch = useDispatch<any>();
   const { isLoading, error } = useSelector((state: { auth: AuthState }) => state.auth);
 
-  // 表单验证
-  const validateForm = (): { [key: string]: string } => {
+  const validateForm = useCallback((): { [key: string]: string } => {
     const newErrors: { [key: string]: string } = {};
 
     if (!username.trim()) {
@@ -39,24 +38,26 @@ const Auth = () => {
     }
 
     return newErrors;
-  };
+  }, [username, password, confirmPassword, isLogin]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
 
-    // 验证表单
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+      const validationErrors = validateForm();
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
 
-    if (isLogin) {
-      dispatch(login({ username, password }));
-    } else {
-      dispatch(register({ username, password, confirmPassword }));
-    }
-  };
+      if (isLogin) {
+        dispatch(login({ username, password }));
+      } else {
+        dispatch(register({ username, password, confirmPassword }));
+      }
+    },
+    [isLogin, username, password, confirmPassword, dispatch, validateForm],
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
@@ -175,6 +176,6 @@ const Auth = () => {
       </div>
     </div>
   );
-};
+});
 
 export default Auth;

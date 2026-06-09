@@ -107,7 +107,7 @@ const errorHandler = {
       }
 
       componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        logger.error('Error Boundary', error, errorInfo);
+        logger.error('Error Boundary', error, { ...errorInfo });
       }
 
       render() {

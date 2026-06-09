@@ -11,7 +11,9 @@ class SecureStorage {
   setItem(key: string, value: unknown): boolean {
     try {
       if (this.encryptionEnabled) {
-        const encryptedValue = encryptionUtil.encrypt(value);
+        const encryptable: string | object =
+          value === null ? 'null' : typeof value === 'object' ? value : String(value);
+        const encryptedValue = encryptionUtil.encrypt(encryptable);
         if (encryptedValue !== null) {
           localStorage.setItem(key, encryptedValue);
           return true;

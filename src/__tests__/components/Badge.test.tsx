@@ -12,7 +12,7 @@ describe('Badge', () => {
   it('applies default variant class', () => {
     const { container } = render(<Badge>x</Badge>);
     const badge = container.querySelector('span');
-    expect(badge?.className).toContain('bg-gray-100');
+    expect(badge?.className).toContain('bg-surface-muted');
   });
 
   it('applies primary variant class', () => {

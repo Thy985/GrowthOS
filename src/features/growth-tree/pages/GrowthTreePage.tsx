@@ -74,7 +74,7 @@ const GrowthTree = () => {
 
   // 当 Redux tags 变化时，同步更新节点/边
   React.useEffect(() => {
-    setNodes(generatedData.nodes as Node<NodeData>[]);
+    setNodes(generatedData.nodes as Node[]);
     setEdges(generatedData.edges);
   }, [generatedData, setNodes, setEdges]);
 

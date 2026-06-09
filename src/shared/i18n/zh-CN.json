@@ -527,7 +527,15 @@
     "nodeAdded": "节点添加成功",
     "nodeUpdated": "节点更新成功",
     "nodeDeleted": "节点删除成功",
-    "connectionAdded": "连接添加成功"
+    "connectionAdded": "连接添加成功",
+    "aiGardener": {
+      "title": "AI 园丁模式",
+      "smartSortTitle": "智能归类建议",
+      "smartSortDesc": "检测到你有多个关于「编程」的记录，是否自动创建一个「编程语言」分类，并将它们归纳进去？",
+      "confirm": "确认",
+      "subClassTitle": "子分类建议",
+      "subClassDesc": "你的「技能树」太茂盛了，检测到其中「设计」、「插画」、「Figma」关联度高，是否创建一个「设计能力」子分类？"
+    }
   },
   "analytics": {
     "title": "分析",
@@ -583,16 +591,17 @@
     "finish": "完成"
   },
   "keyboardShortcuts": {
-    "title": "快捷键",
+    "title": "键盘快捷键",
     "h": "返回首页",
-    "r": "查看记录",
+    "r": "查看记录列表",
     "g": "查看目标",
     "m": "查看提醒",
     "t": "查看成长树",
-    "a": "查看分析",
-    "k": "打开搜索",
-    "question": "打开快捷键帮助",
-    "escape": "关闭当前弹窗"
+    "a": "查看数据分析",
+    "question": "显示/隐藏快捷键帮助",
+    "k": "快速搜索",
+    "escape": "关闭弹窗",
+    "hint": "提示：在输入框中使用快捷键无效"
   },
   "records": {
     "title": "记录列表",

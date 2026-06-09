@@ -4,13 +4,13 @@ type CardVariant = 'default' | 'elevated' | 'outlined' | 'filled' | 'gradient';
 
 const cardVariants: Record<CardVariant, string> = {
   default:
-    'bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg hover:border-gray-200',
+    'bg-surface rounded-xl shadow-md border border-border-subtle hover:shadow-lg hover:border-border-DEFAULT',
   elevated:
-    'bg-white rounded-2xl shadow-lg border-0 hover:shadow-xl',
+    'bg-surface rounded-2xl shadow-lg border-0 hover:shadow-xl',
   outlined:
-    'bg-transparent rounded-xl border-2 border-gray-200 shadow-none hover:border-gray-300 hover:shadow-sm',
+    'bg-transparent rounded-xl border-2 border-border-DEFAULT shadow-none hover:border-border-strong hover:shadow-sm',
   filled:
-    'bg-gray-50 rounded-xl shadow-none border-0 hover:shadow-sm',
+    'bg-surface-subtle rounded-xl shadow-none border-0 hover:shadow-sm',
   gradient:
     'bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 hover:shadow-md hover:border-indigo-200',
 };
@@ -46,11 +46,11 @@ const Card = ({
       {...props}
     >
       {(title || subtitle || headerAction) && (
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-border-subtle">
           <div className="flex items-center justify-between">
             <div>
-              {title && <h3 className="text-lg font-semibold text-gray-800">{title}</h3>}
-              {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+              {title && <h3 className="text-lg font-semibold text-text-primary">{title}</h3>}
+              {subtitle && <p className="text-sm text-text-secondary mt-1">{subtitle}</p>}
             </div>
             {headerAction && <div>{headerAction}</div>}
           </div>
