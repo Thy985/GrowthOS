@@ -4,8 +4,13 @@ import {
   detectStaleCapabilities,
   detectGrowthCapabilities,
   detectPatterns,
+  detectRetrospectiveInsights,
+  detectCapabilityTrends,
+  detectExperienceGaps,
+  detectProjectHealth,
   generateRecommendations,
   generateSummary,
+  deduplicateRecommendations,
 } from '../../features/coach/engine/coachRules';
 import type { Insight } from '../../features/coach/types/coachTypes';
 import type {
@@ -100,6 +105,7 @@ function makeProject(overrides: Partial<Project> = {}): Project {
     startDate: overrides.startDate ?? now,
     endDate: overrides.endDate,
     retrospective: overrides.retrospective,
+    capabilitiesUsed: overrides.capabilitiesUsed ?? [],
     createdAt: overrides.createdAt ?? now,
     updatedAt: overrides.updatedAt ?? now,
   };
@@ -502,6 +508,477 @@ describe('coachRules', () => {
 
       const summary = generateSummary([insight]);
       expect(summary.headline).toBe('你的「Test Cap」两周没有新经历了');
+    });
+
+    test('includes completionRate when provided', () => {
+      const summary = generateSummary([], { completedThisWeek: 3, totalThisWeek: 5 });
+      expect(summary.completionRate).toEqual({ completedThisWeek: 3, totalThisWeek: 5 });
+    });
+
+    test('highlights include growth and retrospective info insights', () => {
+      const insights: Insight[] = [
+        {
+          type: 'growth',
+          icon: '📈',
+          title: 'TypeScript 本月 +15',
+          description: '',
+          severity: 'info',
+        },
+        {
+          type: 'retrospective',
+          icon: '🌟',
+          title: '系统设计在 3 个项目中表现良好',
+          description: '',
+          severity: 'info',
+        },
+      ];
+
+      const summary = generateSummary(insights);
+      expect(summary.highlights).toHaveLength(2);
+    });
+
+    test('concerns include stale, gap, important project, and important trend', () => {
+      const insights: Insight[] = [
+        {
+          type: 'stale',
+          icon: '⚠️',
+          title: '系统设计已 60 天未训练',
+          description: '',
+          severity: 'important',
+        },
+        {
+          type: 'gap',
+          icon: '📭',
+          title: '沟通表达从未关联经历',
+          description: '',
+          severity: 'notice',
+        },
+        {
+          type: 'project',
+          icon: '⏰',
+          title: '项目已活跃 45 天未复盘',
+          description: '',
+          severity: 'important',
+        },
+        {
+          type: 'trend',
+          icon: '📉',
+          title: '测试能力等级出现下降',
+          description: '',
+          severity: 'important',
+        },
+      ];
+
+      const summary = generateSummary(insights);
+      expect(summary.concerns.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+// V2 New Rule Tests
+// ═══════════════════════════════════════════════════════════
+
+describe('V2 Coach Rules', () => {
+  const FIXED_NOW = new Date('2026-06-06T00:00:00Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // ─── detectRetrospectiveInsights ──────────────────────
+
+  describe('detectRetrospectiveInsights', () => {
+    test('returns empty when no projects have retrospectives', () => {
+      const projects = [makeProject({ id: 'p1', retrospective: undefined })];
+      const results = detectRetrospectiveInsights(projects, []);
+      expect(results).toEqual([]);
+    });
+
+    test('returns empty when retrospectives have no whatWentWell/wentWrong', () => {
+      const projects = [
+        makeProject({
+          id: 'p1',
+          retrospective: {
+            whatWentWell: [],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+        }),
+      ];
+      const results = detectRetrospectiveInsights(projects, []);
+      expect(results).toEqual([]);
+    });
+
+    test('returns info insight when capability mentioned well in 2+ projects', () => {
+      const cap = makeCapability({ id: 'cap-sys', name: '系统设计' });
+      const projects = [
+        makeProject({
+          id: 'p1',
+          retrospective: {
+            whatWentWell: ['Good'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-sys'],
+        }),
+        makeProject({
+          id: 'p2',
+          retrospective: {
+            whatWentWell: ['Great'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-sys'],
+        }),
+      ];
+      const results = detectRetrospectiveInsights(projects, [cap]);
+      expect(results.length).toBeGreaterThanOrEqual(1);
+      const retroInsight = results.find((r) => r.type === 'retrospective' && r.severity === 'info');
+      expect(retroInsight).toBeDefined();
+    });
+
+    test('returns notice insight when capability mentioned wrong in 2+ projects', () => {
+      const cap = makeCapability({ id: 'cap-sm', name: '状态管理' });
+      const projects = [
+        makeProject({
+          id: 'p1',
+          retrospective: {
+            whatWentWell: ['Good'],
+            whatWentWrong: ['Bad'],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-sm'],
+        }),
+        makeProject({
+          id: 'p2',
+          retrospective: {
+            whatWentWell: ['Great'],
+            whatWentWrong: ['Also bad'],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-sm'],
+        }),
+      ];
+      const results = detectRetrospectiveInsights(projects, [cap]);
+      expect(results.length).toBeGreaterThanOrEqual(1);
+      const retroNotice = results.find(
+        (r) => r.type === 'retrospective' && r.severity === 'notice',
+      );
+      expect(retroNotice).toBeDefined();
+    });
+  });
+
+  // ─── detectCapabilityTrends ───────────────────────────
+
+  describe('detectCapabilityTrends', () => {
+    test('returns empty when fewer than 2 projects with retros', () => {
+      const cap = makeCapability({ id: 'cap-1', growthRate: 0 });
+      const projects = [
+        makeProject({
+          id: 'p1',
+          retrospective: {
+            whatWentWell: ['Good'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-1'],
+        }),
+      ];
+      const results = detectCapabilityTrends([cap], projects);
+      expect(results).toEqual([]);
+    });
+
+    test('returns info insight for continuous growth', () => {
+      const cap = makeCapability({
+        id: 'cap-ts',
+        name: 'TypeScript',
+        currentLevel: 70,
+        targetLevel: 90,
+        growthRate: 0.5,
+      });
+      const projects = [
+        makeProject({
+          id: 'p1',
+          retrospective: {
+            whatWentWell: ['Good'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-ts'],
+        }),
+        makeProject({
+          id: 'p2',
+          retrospective: {
+            whatWentWell: ['Better'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-ts'],
+        }),
+      ];
+      const results = detectCapabilityTrends([cap], projects);
+      const growth = results.find((r) => r.type === 'trend' && r.severity === 'info');
+      expect(growth).toBeDefined();
+    });
+
+    test('returns notice insight for plateau (growthRate=0, 3+ projects)', () => {
+      const cap = makeCapability({
+        id: 'cap-sys',
+        name: '系统设计',
+        currentLevel: 70,
+        targetLevel: 90,
+        growthRate: 0,
+      });
+      const projects = [
+        makeProject({
+          id: 'p1',
+          retrospective: {
+            whatWentWell: ['OK'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-sys'],
+        }),
+        makeProject({
+          id: 'p2',
+          retrospective: {
+            whatWentWell: ['OK'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-sys'],
+        }),
+        makeProject({
+          id: 'p3',
+          retrospective: {
+            whatWentWell: ['OK'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+          capabilitiesUsed: ['cap-sys'],
+        }),
+      ];
+      const results = detectCapabilityTrends([cap], projects);
+      const plateau = results.find((r) => r.type === 'trend' && r.severity === 'notice');
+      expect(plateau).toBeDefined();
+    });
+
+    test('returns important insight for degradation (negative growthRate)', () => {
+      const cap = makeCapability({
+        id: 'cap-test',
+        name: '测试',
+        currentLevel: 40,
+        targetLevel: 80,
+        growthRate: -0.3,
+      });
+      const projects = [
+        makeProject({
+          id: 'p1',
+          retrospective: {
+            whatWentWell: ['OK'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+        }),
+        makeProject({
+          id: 'p2',
+          retrospective: {
+            whatWentWell: ['OK'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+        }),
+      ];
+      const results = detectCapabilityTrends([cap], projects);
+      const degradation = results.find((r) => r.type === 'trend' && r.severity === 'important');
+      expect(degradation).toBeDefined();
+    });
+  });
+
+  // ─── detectExperienceGaps ─────────────────────────────
+
+  describe('detectExperienceGaps', () => {
+    test('returns empty when all capabilities are linked', () => {
+      const caps = [makeCapability({ id: 'cap-1' }), makeCapability({ id: 'cap-2' })];
+      const links = [makeLink({ capabilityId: 'cap-1' }), makeLink({ capabilityId: 'cap-2' })];
+      const results = detectExperienceGaps(caps, links);
+      expect(results).toEqual([]);
+    });
+
+    test('returns info insight for single gapped capability', () => {
+      const cap1 = makeCapability({ id: 'cap-1', name: 'Linked Cap' });
+      const cap2 = makeCapability({ id: 'cap-2', name: 'Unlinked Cap' });
+      const links = [makeLink({ capabilityId: 'cap-1' })];
+      const results = detectExperienceGaps([cap1, cap2], links);
+      expect(results).toHaveLength(1);
+      expect(results[0].type).toBe('gap');
+      expect(results[0].severity).toBe('info');
+      expect(results[0].title).toContain('Unlinked Cap');
+    });
+
+    test('returns notice insight for multiple gapped capabilities', () => {
+      const caps = [
+        makeCapability({ id: 'cap-1', name: 'A' }),
+        makeCapability({ id: 'cap-2', name: 'B' }),
+        makeCapability({ id: 'cap-3', name: 'C' }),
+      ];
+      const links = [makeLink({ capabilityId: 'cap-1' })];
+      const results = detectExperienceGaps(caps, links);
+      expect(results).toHaveLength(1);
+      expect(results[0].severity).toBe('notice');
+      expect(results[0].title).toContain('2 个能力');
+    });
+  });
+
+  // ─── detectProjectHealth ──────────────────────────────
+
+  describe('detectProjectHealth', () => {
+    test('returns important insight for active project > 30 days without retrospective', () => {
+      const projects = [
+        makeProject({
+          id: 'p1',
+          name: 'Flutter 重构',
+          status: 'active',
+          startDate: '2026-04-01T00:00:00Z',
+          retrospective: undefined,
+        }),
+      ];
+      const results = detectProjectHealth(projects, [], FIXED_NOW);
+      const important = results.find((r) => r.severity === 'important');
+      expect(important).toBeDefined();
+      expect(important?.title).toContain('Flutter 重构');
+    });
+
+    test('returns notice insight for completed project without retrospective', () => {
+      const projects = [
+        makeProject({
+          id: 'p1',
+          name: '性能优化',
+          status: 'completed',
+          retrospective: undefined,
+        }),
+      ];
+      const results = detectProjectHealth(projects, [], FIXED_NOW);
+      const notice = results.find((r) => r.severity === 'notice' && r.type === 'project');
+      expect(notice).toBeDefined();
+    });
+
+    test('returns notice insight for active project with no experiences', () => {
+      const projects = [
+        makeProject({
+          id: 'p1',
+          name: '空壳项目',
+          status: 'active',
+          startDate: new Date().toISOString(),
+        }),
+      ];
+      const results = detectProjectHealth(projects, [], FIXED_NOW);
+      const noExp = results.find((r) => r.type === 'project' && r.title.includes('空壳项目'));
+      expect(noExp).toBeDefined();
+    });
+
+    test('returns empty for healthy project with retrospective and experiences', () => {
+      const exp = makeExperience({ id: 'exp-1', projectId: 'p1' });
+      const projects = [
+        makeProject({
+          id: 'p1',
+          name: '健康项目',
+          status: 'active',
+          startDate: new Date().toISOString(),
+          retrospective: {
+            whatWentWell: ['Good'],
+            whatWentWrong: [],
+            nextTime: [],
+            capabilitiesUsed: [],
+          },
+        }),
+      ];
+      const results = detectProjectHealth(projects, [exp], FIXED_NOW);
+      const projectInsights = results.filter((r) => r.type === 'project');
+      expect(projectInsights).toEqual([]);
+    });
+  });
+
+  // ─── deduplicateRecommendations ───────────────────────
+
+  describe('deduplicateRecommendations', () => {
+    const makeRec = (
+      id: string,
+      actionId: string,
+      params: Record<string, string> | undefined,
+      priority: 'high' | 'medium' | 'low',
+      source: string,
+    ) => ({
+      id,
+      actionId,
+      actionParams: params,
+      title: `${actionId} rec`,
+      action: 'do it',
+      icon: '🎯',
+      priority,
+      sourceRule: source,
+      status: 'pending' as const,
+      statusUpdatedAt: FIXED_NOW.toISOString(),
+    });
+
+    test('returns same recommendations when no duplicates', () => {
+      const recs = [
+        makeRec('r1', 'review_project', { projectId: 'p1' }, 'high', 'stale'),
+        makeRec('r2', 'record_experience', { capabilityId: 'c1' }, 'medium', 'growth'),
+      ];
+      const result = deduplicateRecommendations(recs);
+      expect(result).toHaveLength(2);
+    });
+
+    test('merges duplicates with same actionId + actionParams, keeping higher priority', () => {
+      const recs = [
+        makeRec('r1', 'review_project', { projectId: 'p1' }, 'medium', 'project'),
+        makeRec('r2', 'review_project', { projectId: 'p1' }, 'high', 'stale'),
+      ];
+      const result = deduplicateRecommendations(recs);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('r2'); // higher priority keeps id
+      expect(result[0].priority).toBe('high');
+      expect(result[0].evidence).toContain('review_project rec（project）');
+    });
+
+    test('keeps first as primary when both have same priority', () => {
+      const recs = [
+        makeRec('r1', 'record_experience', { capabilityId: 'c1' }, 'medium', 'stale'),
+        makeRec('r2', 'record_experience', { capabilityId: 'c1' }, 'medium', 'gap'),
+      ];
+      const result = deduplicateRecommendations(recs);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('r1');
+      expect(result[0].evidence).toContain('record_experience rec（gap）');
+    });
+
+    test('treats undefined actionParams as empty object for dedup key', () => {
+      const recs = [
+        makeRec('r1', 'review_experiences', undefined, 'low', 'pattern'),
+        makeRec('r2', 'review_experiences', {}, 'medium', 'pattern'),
+      ];
+      const result = deduplicateRecommendations(recs);
+      expect(result).toHaveLength(1);
     });
   });
 });
