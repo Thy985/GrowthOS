@@ -9,6 +9,7 @@ import {
 import type { Principle } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
+import { generateId } from '../../../shared/utils/idGenerator';
 import { loadData, importData } from '../../../store/slices/growthSlice';
 
 // Local storage keys
@@ -39,7 +40,7 @@ export const addPrinciple = createAsyncThunk(
       const principles = (secureStorage.getItem<Principle[]>(PRINCIPLES_KEY) || []) as Principle[];
       const newPrinciple: Principle = {
         ...data,
-        id: Date.now().toString(),
+        id: generateId(),
         createdAt: new Date().toISOString(),
       };
       const updatedPrinciples = [newPrinciple, ...principles];

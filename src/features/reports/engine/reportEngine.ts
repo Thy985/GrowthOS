@@ -77,7 +77,8 @@ export function getCapabilityChanges(
   topGainers: ReportCapabilityChange[];
   decliners: ReportCapabilityChange[];
 } {
-  const metrics = rankByGrowth(capabilities, history, mapPeriodToRange(period), now);
+  const periodForRanking = period === '7d' ? '7d' : period === '30d' ? '30d' : '90d';
+  const metrics = rankByGrowth(capabilities, history, periodForRanking, now);
 
   const gainers = metrics
     .filter((m) => m.growthRate > 0)
@@ -98,17 +99,6 @@ export function getCapabilityChanges(
     }));
 
   return { topGainers: gainers, decliners };
-}
-
-function mapPeriodToRange(period: ReportPeriod): '30d' | '90d' | '1y' | 'all' {
-  switch (period) {
-    case '7d':
-      return '30d';
-    case '30d':
-      return '30d';
-    case '90d':
-      return '90d';
-  }
 }
 
 export function generateReport(

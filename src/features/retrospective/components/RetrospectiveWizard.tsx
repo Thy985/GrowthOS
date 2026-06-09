@@ -1,9 +1,9 @@
 // RetrospectiveWizard - 复盘向导主容器
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useCallback, useReducer, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 
+import type { AppDispatch } from '../../../app/store';
 import type { RootState, Project } from '../../../shared/types';
 import { updateCapability } from '../../capabilities/store/capabilitySlice';
 import { addExperience, deleteExperience } from '../../experiences/store/experienceSlice';
@@ -27,7 +27,7 @@ const STEP_ORDER: WizardStep[] = ['capabilities', 'retrospective', 'experiences'
 
 const RetrospectiveWizard: React.FC<RetrospectiveWizardProps> = ({ isOpen, project, onClose }) => {
   const { t } = useTranslation();
-  const dispatch = useDispatch<any>();
+  const dispatch = useDispatch<AppDispatch>();
   const capabilities = useSelector((state: RootState) => state.capabilities.capabilities);
 
   const [wizardData, dataDispatch] = useReducer(wizardReducer, INITIAL_WIZARD_DATA);

@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { Reminder, ReminderState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
+import { generateId } from '../../../shared/utils/idGenerator';
 
 // 初始状态
 const initialState: ReminderState = {
@@ -34,7 +35,7 @@ export const addReminder = createAsyncThunk(
         []) as Reminder[];
       const newReminder: Reminder = {
         ...reminder,
-        id: Date.now().toString(),
+        id: generateId(),
         isCompleted: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

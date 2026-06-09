@@ -9,6 +9,7 @@ import {
 import type { Record, Tag } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
+import { generateId } from '../../../shared/utils/idGenerator';
 import { loadData, importData } from '../../../store/slices/growthSlice';
 
 export interface RecordsState {
@@ -38,7 +39,7 @@ export const addRecord = createAsyncThunk(
       const records = (secureStorage.getItem<Record[]>('growth-records') || []) as Record[];
       const newRecord: Record = {
         ...record,
-        id: Date.now().toString(),
+        id: generateId(),
         createdAt: new Date().toISOString(),
       };
       const updatedRecords = [newRecord, ...records];

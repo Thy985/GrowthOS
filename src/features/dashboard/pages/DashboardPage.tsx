@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
   RadarChart,
@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 
 import type { RootState, Capability } from '../../../shared/types';
+import type { AppDispatch } from '../../../app/store';
 import { calculateCapabilityLevel } from '../../capabilities/store/capabilitySlice';
 import CoachDiagnosisCard from '../../coach/components/CoachDiagnosisCard';
 import CoachRecommendations from '../../coach/components/CoachRecommendations';
@@ -19,6 +20,7 @@ import GrowthOverviewSection from '../../growth-curve/components/GrowthOverviewS
 import { InsightCards } from '../components/InsightCards';
 import { QuickRecordForm } from '../components/QuickRecordForm';
 import EmptyState from '../../../shared/components/common/EmptyState';
+import { runCoachAnalysis } from '../../coach/store/coachSlice';
 
 const PRINCIPLE_CATEGORY_LABELS: Record<string, string> = {
   learning: '学习',
@@ -151,94 +153,11 @@ const PrinciplesSection: React.FC<PrinciplesSectionProps> = React.memo(function 
   );
 });
 
-/* ─── Recommendations Section ─── */
-
-interface RecommendationsProps {
-  capabilities: Capability[];
-  projects: NonNullable<RootState['projects']>['projects'];
-  principles: NonNullable<RootState['principles']>['principles'];
-}
-
-const Recommendations: React.FC<RecommendationsProps> = React.memo(function Recommendations({
-  capabilities,
-  projects,
-  principles,
-}) {
-  const { t } = useTranslation();
-  const recentPrinciple = useMemo(
-    () =>
-      [...principles].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )[0] ?? null,
-    [principles],
-  );
-
-  const recommendations = useMemo(() => {
-    const recs: { icon: string; title: string; action: string }[] = [];
-    const activeProjects = projects.filter((p) => p.status === 'active');
-    if (activeProjects.length > 0) {
-      recs.push({
-        icon: '🎯',
-        title: t('dashboard.reviewProject', '回顾项目'),
-        action: `${t('dashboard.reviewProject', '回顾项目')} "${activeProjects[0].name}" ${t('common.progress', '进度')}`,
-      });
-    }
-    const lowCapabilities = capabilities
-      .filter((c) => c.currentLevel < 30)
-      .sort((a, b) => a.currentLevel - b.currentLevel)
-      .slice(0, 2);
-    for (const cap of lowCapabilities) {
-      recs.push({
-        icon: '📈',
-        title: t('dashboard.improveCapability', '提升能力'),
-        action: `${cap.name} ${t('dashboard.collectMoreExperiences', '收集更多经历')}`,
-      });
-    }
-    if (
-      recentPrinciple &&
-      (!recentPrinciple.lastUsedAt ||
-        new Date(recentPrinciple.lastUsedAt) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
-    ) {
-      recs.push({
-        icon: '💎',
-        title: t('dashboard.applyPrinciple', '应用原则'),
-        action: `${t('dashboard.tryApply', '尝试运用')}「${recentPrinciple.content.slice(0, 20)}…」`,
-      });
-    }
-    if (recs.length === 0) {
-      recs.push({
-        icon: '📝',
-        title: t('dashboard.recordNewExperience', '记录新经历'),
-        action: t('dashboard.writeReflection', '写下今天的反思'),
-      });
-    }
-    return recs;
-  }, [projects, capabilities, recentPrinciple, t]);
-
-  return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 space-y-3">
-      <h2 className="text-base sm:text-lg font-semibold">{t('dashboard.recommendationsTitle', '推荐下一步')}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-        {recommendations.map((rec, i) => (
-          <div
-            key={i}
-            className="rounded-lg border border-indigo-100 bg-indigo-50 p-3 hover:bg-indigo-100 transition-colors cursor-pointer"
-          >
-            <p className="text-sm font-semibold text-indigo-800">
-              {rec.icon} {rec.title}
-            </p>
-            <p className="text-xs text-indigo-600 mt-1">{rec.action}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-});
-
 /* ─── Main Page ─── */
 
 const DashboardPage: React.FC = () => {
   const { t } = useTranslation();
+  const dispatch = useDispatch<AppDispatch>();
   const experiences = useSelector((state: RootState) => state.experiences.experiences);
   const capabilities = useSelector((state: RootState) => state.capabilities.capabilities);
   const principles = useSelector((state: RootState) => state.principles.principles);
@@ -247,6 +166,10 @@ const DashboardPage: React.FC = () => {
   const totalExperiences = experiences.length;
   const totalPrinciples = principles.length;
   const hasData = capabilities.length > 0 || experiences.length > 0;
+
+  const handleRecordSubmitted = useCallback(() => {
+    dispatch(runCoachAnalysis());
+  }, [dispatch]);
 
   return (
     <div className="mx-auto max-w-5xl px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
@@ -303,13 +226,13 @@ const DashboardPage: React.FC = () => {
       {/* ── Quick Actions ── */}
       <section className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4 space-y-3">
         <h2 className="text-base sm:text-lg font-semibold">{t('dashboard.quickRecordTitle', '快速记录')}</h2>
-        <QuickRecordForm onSubmitted={() => window.location.reload()} />
+        <QuickRecordForm onSubmitted={handleRecordSubmitted} />
       </section>
 
-      {/* ── Footer: Reports + Recommendations ── */}
+      {/* ── Footer: Reports ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <ReportLinkCard />
-        <Recommendations capabilities={capabilities} projects={projects} principles={principles} />
+        <CoachRecommendations />
       </div>
     </div>
   );

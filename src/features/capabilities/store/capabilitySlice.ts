@@ -14,6 +14,7 @@ import type {
 } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
+import { generateId } from '../../../shared/utils/idGenerator';
 import { loadData, importData } from '../../../store/slices/growthSlice';
 import { shouldRecordSnapshot, createSnapshot } from '../../growth-curve/engine/historySnapshot';
 
@@ -50,7 +51,7 @@ export const addCapability = createAsyncThunk(
       const now = new Date().toISOString();
       const newCapability: Capability = {
         ...data,
-        id: Date.now().toString(),
+        id: generateId(),
         createdAt: now,
         lastUpdated: now,
       };

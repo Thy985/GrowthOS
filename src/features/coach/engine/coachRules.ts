@@ -8,6 +8,13 @@ import type {
 import { calculateCapabilityLevel } from '../../capabilities/store/capabilitySlice';
 import type { Insight, Recommendation, CoachSummary } from '../types/coachTypes';
 
+// Helper: match a capability name in text using word boundaries
+function matchCapabilityInText(text: string, capability: Capability): boolean {
+  const escaped = capability.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const wordBoundary = new RegExp(`(^|[^a-zA-Z0-9])${escaped}([^a-zA-Z0-9]|$)`);
+  return wordBoundary.test(text);
+}
+
 // Constants
 const STALE_DAYS_INFO = 14;
 const STALE_DAYS_NOTICE = 30;
@@ -444,7 +451,7 @@ export function generateRecommendations(
   // HIGH: Stale capability > 60 days
   const importantStale = insights.filter((i) => i.type === 'stale' && i.severity === 'important');
   for (const insight of importantStale) {
-    const capability = capabilities.find((c) => insight.title.includes(c.name));
+    const capability = capabilities.find((c) => matchCapabilityInText(insight.title, c));
     if (capability) {
       recommendations.push({
         id: `rec-stale-${capability.id}`,
@@ -493,7 +500,7 @@ export function generateRecommendations(
   // HIGH: Retrospective pattern → focus on improvement
   const retroBad = insights.filter((i) => i.type === 'retrospective' && i.severity === 'notice');
   for (const insight of retroBad) {
-    const capability = capabilities.find((c) => insight.title.includes(c.name));
+    const capability = capabilities.find((c) => matchCapabilityInText(insight.title, c));
     if (capability) {
       recommendations.push({
         id: `rec-retro-${capability.id}`,
@@ -526,7 +533,7 @@ export function generateRecommendations(
         }
       }
     }
-    const capability = capabilities.find((c) => bestGrowth.title.includes(c.name));
+    const capability = capabilities.find((c) => matchCapabilityInText(bestGrowth.title, c));
     if (capability) {
       recommendations.push({
         id: `rec-growth-${capability.id}`,
@@ -547,7 +554,7 @@ export function generateRecommendations(
   // MEDIUM: Experience gap → fill it
   const gapInsights = insights.filter((i) => i.type === 'gap');
   if (gapInsights.length > 0) {
-    const gapCap = capabilities.find((c) => gapInsights[0].title.includes(c.name));
+    const gapCap = capabilities.find((c) => matchCapabilityInText(gapInsights[0].title, c));
     if (gapCap) {
       recommendations.push({
         id: `rec-gap-${gapCap.id}`,
