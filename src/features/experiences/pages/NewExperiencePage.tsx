@@ -145,10 +145,10 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
             </svg>
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+        <h2 className="text-2xl font-bold text-text-primary mb-2">
           {t('experiences.experienceRecorded')}
         </h2>
-        <p className="text-gray-500 text-center">{t('experiences.growthForward')}</p>
+        <p className="text-text-secondary text-center">{t('experiences.growthForward')}</p>
       </div>
     );
   }
@@ -157,10 +157,10 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
+        <h1 className="text-2xl font-bold text-text-primary mb-2">
           {t('experiences.recordNewExperience')}
         </h1>
-        <p className="text-gray-500">{t('experiences.structuredReflection')}</p>
+        <p className="text-text-secondary">{t('experiences.structuredReflection')}</p>
       </div>
 
       {/* Step indicator */}
@@ -175,7 +175,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
                     ? 'bg-green-500 text-white'
                     : index === currentStep
                       ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 text-gray-500'
+                      : 'bg-border-DEFAULT text-text-secondary'
                 }`}
               >
                 {index < currentStep ? (
@@ -193,7 +193,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
               </div>
               <span
                 className={`text-xs mt-1 hidden sm:block ${
-                  index <= currentStep ? 'text-green-600 font-medium' : 'text-gray-400'
+                  index <= currentStep ? 'text-green-600 font-medium' : 'text-text-muted'
                 }`}
               >
                 {step.title}
@@ -204,7 +204,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
             {index < STEPS.length - 1 && (
               <div
                 className={`flex-1 h-0.5 mx-2 ${
-                  index < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                  index < currentStep ? 'bg-green-500' : 'bg-border-DEFAULT'
                 }`}
               />
             )}
@@ -220,21 +220,21 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
       )}
 
       {/* Step content */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+      <div className="bg-surface rounded-xl shadow-md border border-border-subtle p-6">
         {/* Step 1: Event */}
         {currentStep === 0 && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-1">
+            <h2 className="text-xl font-semibold text-text-primary mb-1">
               {t('experiences.step1Title')}
             </h2>
-            <p className="text-sm text-gray-500 mb-4">{t('experiences.step1Desc')}</p>
+            <p className="text-sm text-text-secondary mb-4">{t('experiences.step1Desc')}</p>
             <textarea
               value={formData.event}
               onChange={(e) => handleChange('event', e.target.value)}
               placeholder={t('experiences.eventPlaceholder')}
               rows={6}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-gray-800 placeholder-gray-400"
+              className="w-full px-4 py-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-text-primary placeholder-text-muted"
             />
           </div>
         )}
@@ -242,16 +242,16 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
         {/* Step 2: Reflection */}
         {currentStep === 1 && (
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-1">
+            <h2 className="text-xl font-semibold text-text-primary mb-1">
               {t('experiences.step2Title')}
             </h2>
-            <p className="text-sm text-gray-500 mb-4">{t('experiences.step2Desc')}</p>
+            <p className="text-sm text-text-secondary mb-4">{t('experiences.step2Desc')}</p>
             <textarea
               value={formData.reflection}
               onChange={(e) => handleChange('reflection', e.target.value)}
               placeholder={t('experiences.reflectionPlaceholder')}
               rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-gray-800 placeholder-gray-400"
+              className="w-full px-4 py-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-text-primary placeholder-text-muted"
             />
           </div>
         )}
@@ -261,23 +261,23 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
           <div className="space-y-6">
             {/* Principle */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-1">
+              <h2 className="text-xl font-semibold text-text-primary mb-1">
                 {t('experiences.step3Title')}
               </h2>
-              <p className="text-sm text-gray-500 mb-4">{t('experiences.step3Desc')}</p>
+              <p className="text-sm text-text-secondary mb-4">{t('experiences.step3Desc')}</p>
               <input
                 type="text"
                 value={formData.principle}
                 onChange={(e) => handleChange('principle', e.target.value)}
                 placeholder={t('experiences.principlePlaceholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 placeholder-gray-400"
+                className="w-full px-4 py-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-text-primary placeholder-text-muted"
               />
             </div>
 
             {/* Confidence slider */}
             {formData.principle.trim() && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-primary mb-2">
                   {t('experiences.confidence')}：{Math.round(formData.confidence * 100)}%
                 </label>
                 <input
@@ -288,7 +288,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
                   onChange={(e) => handleChange('confidence', Number(e.target.value) / 100)}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-500"
                 />
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <div className="flex justify-between text-xs text-text-muted mt-1">
                   <span>{t('experiences.uncertain')}</span>
                   <span>{t('experiences.veryCertain')}</span>
                 </div>
@@ -297,14 +297,14 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
 
             {/* Capability multi-select */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-primary mb-2">
                 {t('experiences.linkCapabilities')}
               </label>
-              <p className="text-xs text-gray-400 mb-3">
+              <p className="text-xs text-text-muted mb-3">
                 {t('experiences.capabilityContribution')}
               </p>
               {capabilities.length === 0 ? (
-                <p className="text-sm text-gray-400 italic">{t('experiences.noCapabilitiesYet')}</p>
+                <p className="text-sm text-text-muted italic">{t('experiences.noCapabilitiesYet')}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {capabilities.map((cap: Capability) => {
@@ -317,7 +317,7 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
                         className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                           isSelected
                             ? 'bg-green-100 border-green-500 text-green-700'
-                            : 'bg-white border-gray-300 text-gray-600 hover:border-green-300 hover:bg-green-50'
+                            : 'bg-surface border-border-strong text-text-secondary hover:border-green-300 hover:bg-green-50'
                         }`}
                       >
                         {isSelected && <span className="mr-1">✓</span>}
@@ -332,15 +332,15 @@ const NewExperiencePage = React.memo(function NewExperiencePage() {
         )}
 
         {/* Navigation buttons */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+        <div className="flex items-center justify-between mt-8 pt-6 border-t border-border-subtle">
           <button
             type="button"
             onClick={handleBack}
             disabled={currentStep === 0}
             className={`px-5 py-2.5 rounded-lg font-medium transition-colors ${
               currentStep === 0
-                ? 'text-gray-300 cursor-not-allowed'
-                : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                ? 'text-text-disabled cursor-not-allowed'
+                : 'text-text-primary bg-surface-muted hover:bg-border-subtle'
             }`}
           >
             {t('common.previous')}

@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import { memo, useState, useCallback, type ChangeEvent } from 'react';
 
 interface NodeDetailsState {
   name: string;
@@ -8,7 +8,7 @@ interface NodeDetailsState {
   lastUpdate: string;
 }
 
-const NodeDetails = () => {
+const NodeDetails = memo(() => {
   const [nodeDetails, setNodeDetails] = useState<NodeDetailsState>({
     name: 'React 技能',
     mastery: 75,
@@ -17,14 +17,16 @@ const NodeDetails = () => {
     lastUpdate: '2024-01-15',
   });
 
-  // 处理节点详情变化
-  const handleNodeDetailChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNodeDetails((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const handleNodeDetailChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setNodeDetails((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    },
+    [],
+  );
 
   return (
     <div className="mt-6 card">
@@ -84,6 +86,6 @@ const NodeDetails = () => {
       </div>
     </div>
   );
-};
+});
 
 export default NodeDetails;

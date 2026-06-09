@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 
 import type { Project, RootState } from '../../../shared/types';
+import RetrospectiveWizard from '../../retrospective/components/RetrospectiveWizard';
 import { addProject, updateProject, deleteProject } from '../store/projectSlice';
 
 type ProjectStatus = Project['status'];
@@ -108,113 +109,6 @@ const NewProjectModal: React.FC<{
               className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
             >
               {t('common.create')}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-            >
-              {t('common.cancel')}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// ─── Retrospective Modal ────────────────────────────────────────
-
-const RetrospectiveModal: React.FC<{
-  isOpen: boolean;
-  project: Project | null;
-  onClose: () => void;
-  onSubmit: (retrospective: {
-    whatWentWell: string[];
-    whatWentWrong: string[];
-    nextTime: string[];
-  }) => void;
-}> = ({ isOpen, project, onClose, onSubmit }) => {
-  const { t } = useTranslation();
-  const [whatWentWell, setWhatWentWell] = useState('');
-  const [whatWentWrong, setWhatWentWrong] = useState('');
-  const [nextTime, setNextTime] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      whatWentWell: whatWentWell.split('\n').filter(Boolean),
-      whatWentWrong: whatWentWrong.split('\n').filter(Boolean),
-      nextTime: nextTime.split('\n').filter(Boolean),
-    });
-    setWhatWentWell('');
-    setWhatWentWrong('');
-    setNextTime('');
-    onClose();
-  };
-
-  if (!isOpen || !project) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">{t('projects.retrospectiveTitle')}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
-          >
-            &times;
-          </button>
-        </div>
-        <p className="text-sm text-gray-500 mb-4">{project.name}</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('projects.whatWentWellLabel')}
-            </label>
-            <textarea
-              value={whatWentWell}
-              onChange={(e) => setWhatWentWell(e.target.value)}
-              rows={3}
-              placeholder={t('projects.whatWentWellPlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('projects.whatWentWrongLabel')}
-            </label>
-            <textarea
-              value={whatWentWrong}
-              onChange={(e) => setWhatWentWrong(e.target.value)}
-              rows={3}
-              placeholder={t('projects.whatWentWrongPlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">{t('projects.nextTimeLabel')}</label>
-            <textarea
-              value={nextTime}
-              onChange={(e) => setNextTime(e.target.value)}
-              rows={3}
-              placeholder={t('projects.nextTimePlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
-            />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-            >
-              {t('common.save')}
             </button>
             <button
               type="button"
@@ -381,15 +275,6 @@ const ProjectsPage: React.FC = () => {
     [dispatch],
   );
 
-  const handleRetrospective = useCallback(
-    (retro: { whatWentWell: string[]; whatWentWrong: string[]; nextTime: string[] }) => {
-      if (retroProject) {
-        dispatch(updateProject({ id: retroProject.id, retrospective: retro }));
-      }
-    },
-    [retroProject, dispatch],
-  );
-
   const handleDelete = useCallback(
     (id: string) => {
       dispatch(deleteProject(id));
@@ -501,11 +386,10 @@ const ProjectsPage: React.FC = () => {
         onClose={() => setShowNewProject(false)}
         onSubmit={handleAdd}
       />
-      <RetrospectiveModal
+      <RetrospectiveWizard
         isOpen={!!retroProject}
         project={retroProject}
         onClose={() => setRetroProject(null)}
-        onSubmit={handleRetrospective}
       />
     </div>
   );

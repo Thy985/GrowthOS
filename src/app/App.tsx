@@ -73,6 +73,18 @@ function Navbar() {
             {t('projects.title', '项目')}
           </Link>
           <Link
+            to="/coach"
+            className={`nav-link ${location.pathname === '/coach' ? 'active' : ''}`}
+          >
+            {t('coach.title', '教练')}
+          </Link>
+          <Link
+            to="/reports"
+            className={`nav-link ${location.pathname === '/reports' ? 'active' : ''}`}
+          >
+            {t('reports.title', '报告')}
+          </Link>
+          <Link
             to="/principles"
             className={`nav-link ${location.pathname === '/principles' ? 'active' : ''}`}
           >
@@ -149,6 +161,20 @@ function Navbar() {
             {t('projects.title', '项目')}
           </Link>
           <Link
+            to="/coach"
+            className={`nav-mobile-link ${location.pathname === '/coach' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            {t('coach.title', '教练')}
+          </Link>
+          <Link
+            to="/reports"
+            className={`nav-mobile-link ${location.pathname === '/reports' ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            {t('reports.title', '报告')}
+          </Link>
+          <Link
             to="/principles"
             className={`nav-mobile-link ${location.pathname === '/principles' ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
@@ -163,7 +189,7 @@ function Navbar() {
             {t('common.analytics')}
           </Link>
           <div className="nav-mobile-theme-toggle">
-            <span>主题</span>
+            <span>{t('common.theme')}</span>
             <button
               onClick={handleToggleTheme}
               className={`theme-toggle ${isDarkMode ? 'dark' : ''}`}
@@ -180,7 +206,7 @@ function Navbar() {
                 }}
                 className="nav-logout"
               >
-                登出
+                {t('common.logout')}
               </button>
             </div>
           )}
@@ -211,9 +237,11 @@ function BottomNav() {
 
   const navItems = [
     { path: '/', label: t('common.dashboard'), icon: '🏠' },
-    { path: '/experiences', label: '经历', icon: '📝' },
-    { path: '/capabilities', label: '能力', icon: '🌳' },
-    { path: '/projects', label: '项目', icon: '📁' },
+    { path: '/experiences', label: t('experiences.title', '经历'), icon: '📝' },
+    { path: '/capabilities', label: t('capabilities.title', '能力'), icon: '🌳' },
+    { path: '/projects', label: t('projects.title', '项目'), icon: '📁' },
+    { path: '/coach', label: t('coach.title', '教练'), icon: '🧠' },
+    { path: '/reports', label: t('reports.title', '报告'), icon: '📊' },
     { path: '/analytics', label: t('common.analytics'), icon: '📈' },
   ];
 

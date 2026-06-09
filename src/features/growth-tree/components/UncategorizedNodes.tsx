@@ -1,13 +1,23 @@
 /* eslint-disable react/no-unescaped-entities */
-const UncategorizedNodes = () => {
-  // 模拟未分类节点数据
-  const uncategorizedNodes = [
-    { id: 1, name: '#Python', status: 'normal' },
-    { id: 2, name: '#阅读', status: 'normal' },
-    { id: 3, name: '#React', status: 'wilting' },
-    { id: 4, name: '#跑步', status: 'wilting' },
-    { id: 5, name: '#王者荣耀', status: 'wilted' },
-  ];
+import { useMemo, memo } from 'react';
+
+interface Node {
+  id: number;
+  name: string;
+  status: string;
+}
+
+const UncategorizedNodes = memo(() => {
+  const uncategorizedNodes: Node[] = useMemo(
+    () => [
+      { id: 1, name: '#Python', status: 'normal' },
+      { id: 2, name: '#阅读', status: 'normal' },
+      { id: 3, name: '#React', status: 'wilting' },
+      { id: 4, name: '#跑步', status: 'wilting' },
+      { id: 5, name: '#王者荣耀', status: 'wilted' },
+    ],
+    [],
+  );
 
   return (
     <div className="mt-6">
@@ -35,6 +45,6 @@ const UncategorizedNodes = () => {
       </div>
     </div>
   );
-};
+});
 
 export default UncategorizedNodes;

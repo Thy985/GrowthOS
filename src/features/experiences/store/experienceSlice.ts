@@ -9,6 +9,7 @@ import {
 import type { Experience, ExperienceCapabilityLink } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
+import { generateId } from '../../../shared/utils/idGenerator';
 import { loadData, importData } from '../../../store/slices/growthSlice';
 
 // Local storage keys
@@ -48,7 +49,7 @@ export const addExperience = createAsyncThunk(
       const now = new Date().toISOString();
       const newExperience: Experience = {
         ...data,
-        id: Date.now().toString(),
+        id: generateId(),
         createdAt: now,
         updatedAt: now,
       };

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { Badge } from './common/index.ts';
 
 interface KeyboardShortcutsHelpProps {
@@ -7,28 +9,32 @@ interface KeyboardShortcutsHelpProps {
 
 interface Shortcut {
   keys: string[];
-  description: string;
+  i18nKey: string;
 }
 
 const KeyboardShortcutsHelp = ({ isOpen, onClose }: KeyboardShortcutsHelpProps) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   const shortcuts: Shortcut[] = [
-    { keys: ['H'], description: '回到首页' },
-    { keys: ['R'], description: '查看记录列表' },
-    { keys: ['T'], description: '查看成长树' },
-    { keys: ['A'], description: '查看数据分析' },
-    { keys: ['?'], description: '显示/隐藏快捷键帮助' },
-    { keys: ['Ctrl', 'K'], description: '快速搜索' },
-    { keys: ['Esc'], description: '关闭弹窗' },
+    { keys: ['H'], i18nKey: 'keyboardShortcuts.h' },
+    { keys: ['R'], i18nKey: 'keyboardShortcuts.r' },
+    { keys: ['T'], i18nKey: 'keyboardShortcuts.t' },
+    { keys: ['A'], i18nKey: 'keyboardShortcuts.a' },
+    { keys: ['?'], i18nKey: 'keyboardShortcuts.question' },
+    { keys: ['Ctrl', 'K'], i18nKey: 'keyboardShortcuts.k' },
+    { keys: ['Esc'], i18nKey: 'keyboardShortcuts.escape' },
   ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">键盘快捷键</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
+          <h2 className="text-xl font-bold text-text-primary">
+            {t('keyboardShortcuts.title', '键盘快捷键')}
+          </h2>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-2xl">
             ×
           </button>
         </div>
@@ -39,7 +45,7 @@ const KeyboardShortcutsHelp = ({ isOpen, onClose }: KeyboardShortcutsHelpProps) 
               key={index}
               className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0"
             >
-              <span className="text-gray-700">{shortcut.description}</span>
+              <span className="text-text-primary">{t(shortcut.i18nKey, shortcut.i18nKey)}</span>
               <div className="flex gap-2">
                 {shortcut.keys.map((key, i) => (
                   <Badge key={i} variant="outline" size="small">
@@ -51,7 +57,9 @@ const KeyboardShortcutsHelp = ({ isOpen, onClose }: KeyboardShortcutsHelpProps) 
           ))}
         </div>
 
-        <div className="mt-6 text-sm text-gray-500">提示：在输入框中使用快捷键无效</div>
+        <div className="mt-6 text-sm text-text-secondary">
+          {t('keyboardShortcuts.hint', '提示：在输入框中使用快捷键无效')}
+        </div>
       </div>
     </div>
   );

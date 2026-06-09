@@ -4,6 +4,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { Goal, GoalState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
+import { generateId } from '../../../shared/utils/idGenerator';
 
 // 初始状态
 const initialState: GoalState = {
@@ -35,7 +36,7 @@ export const addGoal = createAsyncThunk(
 
       const newGoal: Goal = {
         ...goal,
-        id: Date.now().toString(),
+        id: generateId(),
         currentValue: 0,
         status: 'active',
         createdAt: new Date().toISOString(),

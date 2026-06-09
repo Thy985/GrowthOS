@@ -181,6 +181,8 @@ export interface Project {
   status: 'active' | 'completed' | 'paused' | 'abandoned';
   startDate?: string;
   endDate?: string;
+  capabilitiesUsed?: string[]; // 涉及的能力 ID 列表
+  experienceGained?: string[]; // 提炼的经验 ID 列表
   retrospective?: {
     whatWentWell: string[];
     whatWentWrong: string[];
@@ -222,6 +224,15 @@ export interface ProjectsState {
   error: string | null;
 }
 
+// Coach state placeholder (actual type lives in features/coach)
+export interface CoachState {
+  diagnosis: unknown;
+  history: unknown[];
+  lastAnalyzedAt: string | null;
+  isAnalyzing: boolean;
+  recommendationStatuses: unknown;
+}
+
 // 根状态类型
 export interface RootState {
   auth: AuthState;
@@ -235,4 +246,5 @@ export interface RootState {
   capabilities: CapabilitiesState;
   principles: PrinciplesState;
   projects: ProjectsState;
+  coach: CoachState;
 }

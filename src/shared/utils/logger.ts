@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // 日志级别
 export enum LOG_LEVELS {
   DEBUG = 'debug',
@@ -6,6 +5,9 @@ export enum LOG_LEVELS {
   WARN = 'warn',
   ERROR = 'error',
 }
+
+// 附加日志数据的类型
+export type LogData = Record<string, unknown>;
 
 // 当前日志级别
 let currentLogLevel: LOG_LEVELS = LOG_LEVELS.INFO;
@@ -26,35 +28,35 @@ const logger = {
   },
 
   // 调试日志
-  debug: (message: string, data: any = {}): void => {
+  debug: (message: string, data: LogData = {}): void => {
     if (logger.shouldLog(LOG_LEVELS.DEBUG)) {
       console.debug(`[DEBUG] ${new Date().toISOString()} - ${message}`, data);
     }
   },
 
   // 信息日志
-  info: (message: string, data: any = {}): void => {
+  info: (message: string, data: LogData = {}): void => {
     if (logger.shouldLog(LOG_LEVELS.INFO)) {
       console.info(`[INFO] ${new Date().toISOString()} - ${message}`, data);
     }
   },
 
   // 警告日志
-  warn: (message: string, data: any = {}): void => {
+  warn: (message: string, data: LogData = {}): void => {
     if (logger.shouldLog(LOG_LEVELS.WARN)) {
       console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, data);
     }
   },
 
   // 错误日志
-  error: (message: string, error: any = null, data: any = {}): void => {
+  error: (message: string, error: unknown = null, data: LogData = {}): void => {
     if (logger.shouldLog(LOG_LEVELS.ERROR)) {
       console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error, data);
     }
   },
 
   // 记录API错误
-  logApiError: (endpoint: string, error: any, data: any = {}): void => {
+  logApiError: (endpoint: string, error: unknown, data: LogData = {}): void => {
     logger.error(`API Error: ${endpoint}`, error, {
       endpoint,
       ...data,
@@ -62,12 +64,12 @@ const logger = {
   },
 
   // 记录用户操作
-  logUserAction: (action: string, data: any = {}): void => {
+  logUserAction: (action: string, data: LogData = {}): void => {
     logger.info(`User Action: ${action}`, data);
   },
 
   // 记录系统事件
-  logSystemEvent: (event: string, data: any = {}): void => {
+  logSystemEvent: (event: string, data: LogData = {}): void => {
     logger.info(`System Event: ${event}`, data);
   },
 };

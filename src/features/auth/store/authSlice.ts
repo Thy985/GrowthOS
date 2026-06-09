@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { AuthState } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
+import { generateId } from '../../../shared/utils/idGenerator';
 
 // 用户类型（不再存储密码明文）
 interface User {
@@ -95,7 +96,7 @@ export const register = createAsyncThunk(
       }
 
       const newUser: User = {
-        id: Date.now().toString(),
+        id: generateId(),
         username,
         email: `${username}@example.com`,
         passwordHash: await hashPassword(password),

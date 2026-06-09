@@ -14,14 +14,14 @@ describe('KeyboardShortcutsHelp', () => {
   it('renders heading and all 7 shortcut descriptions when open', () => {
     render(<KeyboardShortcutsHelp isOpen onClose={() => undefined} />);
     expect(screen.getByText('键盘快捷键')).toBeInTheDocument();
-    expect(screen.getByText('回到首页')).toBeInTheDocument();
+    expect(screen.getByText('返回首页')).toBeInTheDocument();
     expect(screen.getByText('查看记录列表')).toBeInTheDocument();
     expect(screen.getByText('查看成长树')).toBeInTheDocument();
     expect(screen.getByText('查看数据分析')).toBeInTheDocument();
     expect(screen.getByText('显示/隐藏快捷键帮助')).toBeInTheDocument();
     expect(screen.getByText('快速搜索')).toBeInTheDocument();
     expect(screen.getByText('关闭弹窗')).toBeInTheDocument();
-    expect(screen.getByText(/提示[：:]在输入框中使用快捷键无效/)).toBeInTheDocument();
+    expect(screen.getByText('提示：在输入框中使用快捷键无效')).toBeInTheDocument();
   });
 
   it('renders all key badges', () => {

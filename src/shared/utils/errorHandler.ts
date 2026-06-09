@@ -1,21 +1,31 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ComponentType, ErrorInfo } from 'react';
 import { Component, createElement } from 'react';
 
 import logger from './logger';
 
+// 表单错误对象类型
+type FormErrors = Record<string, string | Record<string, unknown>>;
+
 // 错误处理工具
 const errorHandler = {
   // 处理API错误
-  handleApiError: (error: any, fallbackMessage: string = '网络请求失败，请稍后重试'): string => {
-    logger.logApiError(error.config?.url || 'unknown', error);
+  handleApiError(error: unknown, fallbackMessage: string = '网络请求失败，请稍后重试'): string {
+    const endpoint =
+      error && typeof error === 'object' && 'config' in error
+        ? (error as { config?: { url?: string } }).config?.url || 'unknown'
+        : 'unknown';
+    logger.logApiError(endpoint, error);
 
-    if (error.response) {
-      // 服务器返回错误状态码
-      const status = error.response.status;
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as {
+        response?: { status?: number; data?: { message?: string } };
+        request?: unknown;
+        message?: string;
+      };
+      const status = axiosError.response?.status;
       switch (status) {
         case 400:
-          return error.response.data?.message || '请求参数错误';
+          return axiosError.response?.data?.message || '请求参数错误';
         case 401:
           return '未授权，请重新登录';
         case 403:
@@ -25,26 +35,29 @@ const errorHandler = {
         case 500:
           return '服务器内部错误';
         default:
-          return error.response.data?.message || fallbackMessage;
+          return axiosError.response?.data?.message || fallbackMessage;
       }
-    } else if (error.request) {
-      // 请求已发出但没有收到响应
+    } else if (error && typeof error === 'object' && 'request' in error) {
       return '网络连接失败，请检查网络设置';
     } else {
-      // 请求配置出错
-      return error.message || fallbackMessage;
+      const msg =
+        error instanceof Error
+          ? error.message
+          : error && typeof error === 'object' && 'message' in error
+            ? String((error as { message?: string }).message)
+            : null;
+      return msg || fallbackMessage;
     }
   },
 
   // 处理表单错误
-  handleFormError: (errors: any, fallbackMessage: string = '表单数据有误'): string => {
+  handleFormError(errors: unknown, fallbackMessage: string = '表单数据有误'): string {
     if (typeof errors === 'string') {
       return errors;
     }
 
     if (errors && typeof errors === 'object') {
-      // 提取第一个错误信息
-      const firstError = Object.values(errors)[0];
+      const firstError = Object.values(errors as FormErrors)[0];
       return typeof firstError === 'string' ? firstError : fallbackMessage;
     }
 
@@ -52,7 +65,7 @@ const errorHandler = {
   },
 
   // 处理通用错误
-  handleError: (error: any, fallbackMessage: string = '操作失败，请稍后重试'): string => {
+  handleError(error: unknown, fallbackMessage: string = '操作失败，请稍后重试'): string {
     if (error instanceof Error) {
       logger.error('Error', error);
       return error.message || fallbackMessage;
@@ -83,10 +96,7 @@ const errorHandler = {
     WrappedComponent: ComponentType<P>,
     fallbackComponent: ComponentType<{ error: Error }>,
   ): ComponentType<P> {
-    return class ErrorBoundary extends Component<
-      P,
-      { hasError: boolean; error: Error | null }
-    > {
+    return class ErrorBoundary extends Component<P, { hasError: boolean; error: Error | null }> {
       constructor(props: P) {
         super(props);
         this.state = { hasError: false, error: null };
@@ -97,7 +107,7 @@ const errorHandler = {
       }
 
       componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        logger.error('Error Boundary', error, errorInfo);
+        logger.error('Error Boundary', error, { ...errorInfo });
       }
 
       render() {

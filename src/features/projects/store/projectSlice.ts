@@ -9,6 +9,7 @@ import {
 import type { Project } from '../../../shared/types';
 import logger from '../../../shared/utils/logger';
 import { secureStorage } from '../../../shared/utils/secureStorage';
+import { generateId } from '../../../shared/utils/idGenerator';
 import { loadData, importData } from '../../../store/slices/growthSlice';
 
 // Local storage keys
@@ -40,7 +41,7 @@ export const addProject = createAsyncThunk(
       const now = new Date().toISOString();
       const newProject: Project = {
         ...data,
-        id: Date.now().toString(),
+        id: generateId(),
         createdAt: now,
         updatedAt: now,
       };
