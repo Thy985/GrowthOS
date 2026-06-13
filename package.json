@@ -19,15 +19,20 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
+    "@sentry/browser": "^7.119.0",
+    "@sentry/react": "^7.119.0",
     "crypto-js": "^4.2.0",
+    "framer-motion": "^12.40.0",
     "i18next": "^26.0.8",
+    "lucide-react": "^1.17.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^17.0.4",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.22.0",
     "reactflow": "^11.8.3",
-    "recharts": "^2.10.4"
+    "recharts": "^2.10.4",
+    "web-vitals": "^3.5.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
